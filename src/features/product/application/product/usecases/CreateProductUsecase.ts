@@ -1,7 +1,7 @@
 import { EntityId } from '../../../../../lib/EntityId.js'
 import { IdGenerator } from '../../../../../lib/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../../../lib/interfaces/TransactionManager.js'
-import { UserRepositoryFactory } from '../../../../account/domain/repositories/UserRepository.js'
+import { SellerRepositoryFactory } from '../../../../account/domain/repositories/SellerRepository.js'
 import { Money } from '../../../domain/entities/product/Money.js'
 import { ProductDescription } from '../../../domain/entities/product/ProductDescription.js'
 import { ProductName } from '../../../domain/entities/product/ProductName.js'
@@ -29,7 +29,7 @@ export class CreateProductUsecase {
     constructor(
         private readonly tm: TransactionManager,
         private readonly prf: ProductRepositoryFactory,
-        private readonly arf: UserRepositoryFactory,
+        private readonly srf: SellerRepositoryFactory,
         private readonly ps: ProductService,
         private readonly idGen: IdGenerator,
     ) {}
@@ -37,7 +37,7 @@ export class CreateProductUsecase {
     async execute(input: CreateProductCmd) {
         return await this.tm.runInTransaction(async trx => {
             const pr = this.prf.create(trx)
-            const ar = this.arf.create(trx)
+            const ar = this.srf.create(trx)
 
             // check if seller exists
             const sellerId = new EntityId(input.sellerId)

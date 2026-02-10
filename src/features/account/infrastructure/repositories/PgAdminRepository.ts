@@ -7,13 +7,13 @@ import {
     AdminRepositoryFactory,
 } from '../../domain/repositories/AdminRepository.js'
 
-export class PostgresqlAdminRepositoryFactory implements AdminRepositoryFactory {
+export class PgAdminRepositoryFactory implements AdminRepositoryFactory {
     create(props: any): Repository<any, any> {
         throw new Error('Method not implemented.')
     }
 }
 
-export class PostgresqlAdminRepository implements AdminRepository {
+export class PgAdminRepository implements AdminRepository {
     constructor(private readonly k: Knex.Transaction) {}
 
     findById(id: EntityId): Promise<Admin | null> {

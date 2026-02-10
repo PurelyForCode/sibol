@@ -6,7 +6,6 @@ import {
     ProductRepositoryFactory,
 } from '../../domain/repositories/ProductRepository.js'
 import { ProductName } from '../../domain/entities/product/ProductName.js'
-import { ProductRating } from '../../domain/entities/product/ProductRating.js'
 import { ProductStock } from '../../domain/entities/product/ProductStock.js'
 import {
     UnitOfMeasure,
@@ -14,26 +13,13 @@ import {
 } from '../../domain/entities/product/UnitOfMeasurement.js'
 import { Money } from '../../domain/entities/product/Money.js'
 import { ProductDescription } from '../../domain/entities/product/ProductDescription.js'
+import { Rating } from '../../../shared/value_objects/Rating.js'
+import { ProductRow } from '../../../../lib/database_tables/ProductRow.js'
 
 export class PgProductRepositoryFactory implements ProductRepositoryFactory {
     create(trx: Knex.Transaction): PgProductRepository {
         return new PgProductRepository(trx)
     }
-}
-
-export type ProductRow = {
-    id: string
-    seller_id: string
-    name: string
-    description: string | null
-    stock: number
-    unit_of_measure: string
-    unit_value: number
-    price_per_unit: number
-    rating: number | null
-    created_at: Date
-    updated_at: Date
-    deleted_at: Date | null
 }
 
 export class PgProductRepository implements ProductRepository {
@@ -115,7 +101,7 @@ export class PgProductRepository implements ProductRepository {
             row.unit_value,
         )
         const pricePerUnit = Money.create(row.price_per_unit)
-        const rating = row.rating ? ProductRating.create(row.rating) : null
+        const rating = row.rating ? Rating.create(row.rating) : null
 
         return Product.create(
             id,

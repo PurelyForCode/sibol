@@ -2,7 +2,7 @@ import { EntityId } from '../../../../../lib/EntityId.js'
 import { Money } from './Money.js'
 import { ProductDescription } from './ProductDescription.js'
 import { ProductName } from './ProductName.js'
-import { ProductRating } from './ProductRating.js'
+import { Rating } from '../../../../shared/value_objects/Rating.js'
 import { ProductStock } from './ProductStock.js'
 import { UnitOfMeasurement } from './UnitOfMeasurement.js'
 
@@ -27,7 +27,7 @@ export class Product {
         private _stock: ProductStock,
         private _unit: UnitOfMeasurement,
         private _pricePerUnit: Money,
-        private _rating: ProductRating | null,
+        private _rating: Rating | null,
         private _createdAt: Date,
         private _updatedAt: Date,
         private _deletedAt: Date | null,
@@ -41,7 +41,7 @@ export class Product {
         stock: ProductStock,
         unit: UnitOfMeasurement,
         pricePerUnit: Money,
-        rating: ProductRating | null,
+        rating: Rating | null,
         createdAt: Date,
         updatedAt: Date,
         deletedAt: Date | null,
@@ -61,10 +61,10 @@ export class Product {
         )
     }
 
-    public get rating(): ProductRating | null {
+    public get rating(): Rating | null {
         return this._rating
     }
-    public set rating(value: ProductRating | null) {
+    public set rating(value: Rating | null) {
         this._rating = value
     }
     public get pricePerUnit(): Money {

@@ -1,11 +1,10 @@
 import { Knex } from 'knex'
 import { EntityId } from '../../../../lib/EntityId.js'
-import { Product } from '../../domain/entities/product/Product.js'
 import { ProductQueryRepository } from '../../domain/repositories/ProductRepository.js'
 import { ProductDto } from '../../adapters/dto/ProductDto.js'
-import { ProductRow } from './PostgresqlProductRepository.js'
+import { ProductRow } from '../../../../lib/database_tables/ProductRow.js'
 
-export class PostgresqlProductQueryRepository implements ProductQueryRepository {
+export class PgProductQueryRepository implements ProductQueryRepository {
     constructor(private readonly k: Knex) {}
 
     async findById(id: EntityId): Promise<ProductDto | null> {

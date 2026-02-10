@@ -1,6 +1,6 @@
 import 'dotenv/config'
 import express, { json, urlencoded } from 'express'
-import { productRouter } from './features/product/infrastructure/routers/ProductRouter.js'
+import { productRouter } from './features/product/infrastructure/ProductRouter.js'
 import { apiRouter } from './api.js'
 
 function main() {

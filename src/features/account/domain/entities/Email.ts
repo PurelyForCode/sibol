@@ -1,19 +1,11 @@
-import { Result } from '../../../../../lib/utils/Result.js'
-import { ValueObject } from '../../../../../lib/ValueObject.js'
+import { SingleValueObject } from '../../../../lib/SingleValueObject.js'
+import { Result } from '../../../../lib/utils/Result.js'
 
-export type EmailProps = {
-    value: string
-}
-
-export class Email extends ValueObject<EmailProps> {
+export class Email extends SingleValueObject<string> {
     private static readonly EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
-    private constructor(props: EmailProps) {
-        super(props)
-    }
-
-    get value(): string {
-        return this.props.value
+    private constructor(email: string) {
+        super(email)
     }
 
     public static create(email: string): Result<Email> {
@@ -31,6 +23,6 @@ export class Email extends ValueObject<EmailProps> {
             Result.fail('Invalid email formakt')
         }
 
-        return Result.ok(new Email({ value: normalized }))
+        return Result.ok(new Email(normalized))
     }
 }

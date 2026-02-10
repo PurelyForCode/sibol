@@ -1,17 +1,12 @@
 import { EntityId } from '../../../../../lib/EntityId.js'
+import { Email } from '../Email.js'
 
 export class Buyer {
     private constructor(
         private id: EntityId,
-        private email: string,
+        private email: Email,
         private password: string,
-        private role: string,
     ) {}
 
-    static create(
-        id: EntityId,
-        email: string,
-        password: string,
-        role: string,
-    ) {}
+    static create(id: EntityId, email: Email, password: string) {}
 }

@@ -1,14 +1,15 @@
-export abstract class ValueObject<T> {
-    protected readonly props: T;
+export abstract class ValueObject<T extends Record<string, unknown>> {
+    protected readonly props: Readonly<T>
 
     protected constructor(props: T) {
-        this.props = Object.freeze(props);
+        this.props = Object.freeze({ ...props })
     }
 
     equals(vo?: ValueObject<T>): boolean {
-        if (vo === null || vo === undefined) return false;
-        if (vo.props === undefined) return false;
+        if (!vo) return false
+        if (vo.constructor !== this.constructor) return false
 
-        return JSON.stringify(this.props) === JSON.stringify(vo.props);
+        const keys = Object.keys(this.props) as (keyof T)[]
+        return keys.every(key => Object.is(this.props[key], vo.props[key]))
     }
 }

@@ -1,5 +1,5 @@
 import { Repository } from './Repository.js'
 
 export interface RepositoryFactory<T extends Repository<any, any>> {
-    create(props: any): T
+    create(props: unknown): T
 }

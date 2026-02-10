@@ -3,7 +3,6 @@ import { Money } from '../entities/product/Money.js'
 import { Product } from '../entities/product/Product.js'
 import { ProductDescription } from '../entities/product/ProductDescription.js'
 import { ProductName } from '../entities/product/ProductName.js'
-import { ProductRating } from '../entities/product/ProductRating.js'
 import { ProductStock } from '../entities/product/ProductStock.js'
 import { UnitOfMeasurement } from '../entities/product/UnitOfMeasurement.js'
 

@@ -1,13 +1,13 @@
 import { NextFunction, Router, Request, Response } from 'express'
 import z from 'zod'
-import { fakeSellerId } from '../../../../fakeData/fakeId.js'
-import { validateInput } from '../../../../lib/middleware/InputValidationMiddleware.js'
+import { fakeSellerId } from '../../../fakeData/fakeId.js'
+import { validateInput } from '../../../lib/middleware/InputValidationMiddleware.js'
 import {
     productController,
     productQueryRepository,
-} from '../../../../compositionRoot.js'
-import { UnitOfMeasure } from '../../domain/entities/product/UnitOfMeasurement.js'
-import { EntityId } from '../../../../lib/EntityId.js'
+} from '../../../compositionRoot.js'
+import { UnitOfMeasure } from '../domain/entities/product/UnitOfMeasurement.js'
+import { EntityId } from '../../../lib/EntityId.js'
 
 export const productRouter = Router({
     mergeParams: true,
