@@ -1,36 +1,26 @@
-import { CreateProductUsecase } from "../../application/product/CreateProductUseCase.js";
-
-export type CreateProductCommand = {
-    description: string | null,
-    name: string,
-    price: number,
-    rating: number,
-    sellerId: string
-}
-
-export type DeleteProductCommand = {
-    sellerId: string
-    productId: string
-}
+import {
+    CreateProductCmd,
+    CreateProductUsecase,
+} from '../../application/product/usecases/CreateProductUsecase.js'
+import {
+    DeleteProductBySellerCmd,
+    DeleteProductBySellerUsecase,
+} from '../../application/product/usecases/DeleteProductBySellerUsecase.js'
+import { UpdateProductCmd } from '../../application/product/usecases/UpdateProductUsecase.js'
 
 export class ProductController {
-    constructor(private readonly createProductUseCase: CreateProductUsecase) { }
-    async createProduct(cmd: CreateProductCommand) {
-        const { id } = await this.createProductUseCase.execute(
-            {
-                description: cmd.description,
-                name: cmd.name,
-                price: cmd.price,
-                rating: cmd.rating,
-                sellerId: cmd.sellerId
-            }
-        )
-        return {
-            id
-        };
+    constructor(
+        private readonly createUsecase: CreateProductUsecase,
+        private readonly deleteUsecase: DeleteProductBySellerUsecase,
+    ) {}
+
+    async createProduct(cmd: CreateProductCmd) {
+        return await this.createUsecase.execute(cmd)
     }
 
-    async deleteProduct(cmd: DeleteProductCommand) {
-
+    async deleteProduct(cmd: DeleteProductBySellerCmd) {
+        return await this.deleteUsecase.execute(cmd)
     }
+
+    async updateProduct(cmd: UpdateProductCmd) {}
 }

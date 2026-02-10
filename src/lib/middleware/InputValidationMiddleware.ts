@@ -1,37 +1,29 @@
-import { Request, Response, NextFunction } from "express";
-import { z } from "zod";
+import { Request, Response, NextFunction } from 'express'
+import { ZodType } from 'zod'
 
-type ValidationInput = z.ZodObject<{
-    body?: z.ZodType;
-    params?: z.ZodType;
-    query?: z.ZodType;
-}>;
-
-
-export function validateInput(input: ValidationInput) {
+export function validateInput<T extends ZodType>(schema: T) {
     return (req: Request, res: Response, next: NextFunction) => {
-        const toParse: any = {
+        const toParse = {
             body: req.body,
             params: req.params,
             query: req.query,
-        };
+        }
 
-        const result = input.safeParse(toParse);
+        const result = schema.safeParse(toParse)
 
         if (!result.success) {
             return res.status(400).json({
-                status: "error",
-                message: "Validation failed",
-                errors: result.error.issues.map((err) => ({
-                    path: err.path.join("."),
+                status: 'error',
+                message: 'Validation failed',
+                errors: result.error.issues.map(err => ({
+                    path: err.path.join('.'),
                     message: err.message,
                     code: err.code,
                 })),
-            });
+            })
         }
 
-        const parsed = result.data;
-        if (parsed.body) req.body = parsed.body;
-        next();
-    };
+        req.validated = result.data
+        next()
+    }
 }

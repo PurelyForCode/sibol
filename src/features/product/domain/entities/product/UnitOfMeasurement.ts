@@ -1,4 +1,4 @@
-import { ValueObject } from "../../../../lib/ValueObject.js"
+import { ValueObject } from "../../../../../lib/ValueObject.js"
 
 // Dimensions (what is being measured)
 export enum MeasurementType {

@@ -1,4 +1,4 @@
-import { ValueObject } from "../../../../lib/ValueObject.js";
+import { ValueObject } from '../../../../../lib/ValueObject.js'
 
 export interface ProductStockProps {
     stock: number
@@ -11,8 +11,12 @@ export class ProductStock extends ValueObject<ProductStockProps> {
 
     static create(stock: number) {
         if (stock < 0) {
-            throw new Error("Product stock can not reach negative")
+            throw new Error('Product stock can not reach negative')
         }
         return new ProductStock({ stock })
+    }
+
+    get value() {
+        return this.props.stock
     }
 }

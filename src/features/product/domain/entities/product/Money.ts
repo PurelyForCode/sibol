@@ -1,4 +1,4 @@
-import { ValueObject } from "../../../../lib/ValueObject.js";
+import { ValueObject } from "../../../../../lib/ValueObject.js";
 
 interface MoneyProps {
     amount: number
