@@ -33,7 +33,7 @@ sellerRouter.get(
             const validated = req.validated as z.infer<
                 typeof getSellerBySellerIdSchema
             >
-            const sellerId = new EntityId(validated.params.sellerId)
+            const sellerId = EntityId.create(validated.params.sellerId)
             const seller = await sellerQueryRepository.findById(sellerId)
             if (!seller) {
                 res.status(404).json({ message: 'Seller could not be found' })

@@ -30,8 +30,9 @@ export class PgProductRepository implements ProductRepository {
         sellerId: EntityId,
     ): Promise<boolean> {
         const row = await this.k('products')
+            .select(1)
             .where('name', name.value)
-            .and.where('seller_id', sellerId.value)
+            .where('seller_id', sellerId.value)
             .first()
         return !!row
     }
@@ -48,7 +49,10 @@ export class PgProductRepository implements ProductRepository {
     }
 
     async existsById(id: EntityId): Promise<boolean> {
-        const row = await this.k('products').where('id', id.value).first()
+        const row = await this.k('products')
+            .select(1)
+            .where('id', id.value)
+            .first()
         return !!row
     }
 
@@ -89,8 +93,8 @@ export class PgProductRepository implements ProductRepository {
     }
 
     private map(row: ProductRow): Product {
-        const id = new EntityId(row.id)
-        const sellerId = new EntityId(row.seller_id)
+        const id = EntityId.create(row.id)
+        const sellerId = EntityId.create(row.seller_id)
         const name = ProductName.create(row.name)
         const description = row.description
             ? ProductDescription.create(row.description)

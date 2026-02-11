@@ -6,12 +6,12 @@ import { SellerDto } from '../../adapter/dto/SellerDto.js'
 import { Email } from '../entities/Email.js'
 import { HashedPassword } from '../entities/HashedPassword.js'
 import { Seller } from '../entities/seller/Seller.js'
-import { SellerCredential } from '../entities/seller/SellerCredential.js'
+import { UserCredential } from '../entities/UserCredential.js'
 
 export interface SellerRepository extends Repository<Seller, EntityId> {
     register(T: { seller: Seller; passwordHash: HashedPassword }): Promise<void>
     existsByEmail(email: Email): Promise<boolean>
-    getCredentialByEmail(email: Email): Promise<SellerCredential | null>
+    getCredentialByEmail(email: Email): Promise<UserCredential | null>
 }
 
 export interface SellerQueryRepository extends QueryRepository<

@@ -1,8 +1,8 @@
-import { EntityId } from '../../../../../lib/EntityId.js'
-import { Email } from '../Email.js'
-import { HashedPassword } from '../HashedPassword.js'
+import { EntityId } from '../../../../lib/EntityId.js'
+import { Email } from './Email.js'
+import { HashedPassword } from './HashedPassword.js'
 
-export class SellerCredential {
+export class UserCredential {
     private constructor(
         private readonly _id: EntityId,
         private readonly _email: Email,
@@ -10,7 +10,7 @@ export class SellerCredential {
     ) {}
 
     static create(id: EntityId, email: Email, passwordHash: HashedPassword) {
-        return new SellerCredential(id, email, passwordHash)
+        return new UserCredential(id, email, passwordHash)
     }
 
     public get passwordHash(): HashedPassword {

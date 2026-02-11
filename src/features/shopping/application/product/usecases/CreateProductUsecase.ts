@@ -40,7 +40,7 @@ export class CreateProductUsecase {
             const ar = this.srf.create(trx)
 
             // check if seller exists
-            const sellerId = new EntityId(input.sellerId)
+            const sellerId = EntityId.create(input.sellerId)
             if (!(await ar.existsById(sellerId))) {
                 throw new Error('Seller account does not exist')
             }

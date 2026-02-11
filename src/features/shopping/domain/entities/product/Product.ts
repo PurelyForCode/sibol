@@ -7,18 +7,35 @@ import { ProductStock } from './ProductStock.js'
 import { UnitOfMeasurement } from './UnitOfMeasurement.js'
 
 export class Product {
-    public get updatedAt(): Date {
-        return this._updatedAt
+    changeName(name: ProductName) {
+        this._updatedAt = new Date()
+        this._name = name
     }
-    public set updatedAt(value: Date) {
-        this._updatedAt = value
+
+    changeDescription(description: ProductDescription | null) {
+        this._updatedAt = new Date()
+        this._description = description
     }
-    public get createdAt(): Date {
-        return this._createdAt
+
+    updateStock(stock: ProductStock) {
+        this._updatedAt = new Date()
+        this._stock = stock
     }
-    public set createdAt(value: Date) {
-        this._createdAt = value
+
+    updateUnitOfMeasurement(unit: UnitOfMeasurement) {
+        this._updatedAt = new Date()
+        this._unit = unit
     }
+
+    updatePrice(price: Money) {
+        this._updatedAt = new Date()
+        this._pricePerUnit = price
+    }
+
+    archive() {
+        this._deletedAt = new Date()
+    }
+
     private constructor(
         private _id: EntityId,
         private _sellerId: EntityId,
@@ -61,59 +78,37 @@ export class Product {
         )
     }
 
+    public get deletedAt(): Date | null {
+        return this._deletedAt
+    }
+    public get updatedAt(): Date {
+        return this._updatedAt
+    }
+    public get createdAt(): Date {
+        return this._createdAt
+    }
     public get rating(): Rating | null {
         return this._rating
-    }
-    public set rating(value: Rating | null) {
-        this._rating = value
     }
     public get pricePerUnit(): Money {
         return this._pricePerUnit
     }
-    public set pricePerUnit(value: Money) {
-        this._pricePerUnit = value
-    }
-    public get description(): ProductDescription | null {
-        return this._description
-    }
-    public set description(value: ProductDescription | null) {
-        this._description = value
-    }
-    public get name(): ProductName {
-        return this._name
-    }
-    public set name(value: ProductName) {
-        this._name = value
-    }
-    public get id(): EntityId {
-        return this._id
-    }
-
-    public get sellerId(): EntityId {
-        return this._sellerId
-    }
-    public set sellerId(value: EntityId) {
-        this._sellerId = value
-    }
-    public set id(value: EntityId) {
-        this._id = value
+    public get unit(): UnitOfMeasurement {
+        return this._unit
     }
     public get stock(): ProductStock {
         return this._stock
     }
-    public set stock(value: ProductStock) {
-        this._stock = value
+    public get description(): ProductDescription | null {
+        return this._description
     }
-    public get unit(): UnitOfMeasurement {
-        return this._unit
+    public get name(): ProductName {
+        return this._name
     }
-    public set unit(value: UnitOfMeasurement) {
-        this._unit = value
+    public get sellerId(): EntityId {
+        return this._sellerId
     }
-    public get deletedAt(): Date | null {
-        return this._deletedAt
-    }
-    public set deletedAt(value: Date | null) {
-        this._deletedAt = value
+    public get id(): EntityId {
+        return this._id
     }
 }

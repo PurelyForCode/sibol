@@ -1,8 +1,12 @@
 export class EntityId {
     private readonly id: string
 
-    constructor(value: string) {
+    private constructor(value: string) {
         this.id = value
+    }
+
+    static create(value: string) {
+        return new EntityId(value)
     }
 
     get value(): string {

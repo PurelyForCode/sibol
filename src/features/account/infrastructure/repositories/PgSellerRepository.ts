@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../../lib/EntityId.js'
+import { EntityId } from '../../../../lib/EntityId.js'SellerRepo
 import {
     SellerRepository,
     SellerRepositoryFactory,
@@ -12,7 +12,7 @@ import { StoreName } from '../../domain/entities/seller/StoreName.js'
 import { Rating } from '../../../shared/value_objects/Rating.js'
 import { TotalSales } from '../../domain/entities/seller/TotalSales.js'
 import { UserRow } from '../../../../lib/database_tables/UserRow.js'
-import { SellerCredential } from '../../domain/entities/seller/SellerCredential.js'
+import { UserCredential } from '../../domain/entities/UserCredential.js'
 import { SellerUserRow } from '../../../../lib/database_tables/SellerUserRow.js'
 
 export class PgSellerRepositoryFactory implements SellerRepositoryFactory {
@@ -23,14 +23,17 @@ export class PgSellerRepositoryFactory implements SellerRepositoryFactory {
 
 export class PgSellerRepository implements SellerRepository {
     constructor(private readonly k: Knex.Transaction) {}
+
     async existsByEmail(email: Email): Promise<boolean> {
-        const row = await this.k<UserRow>('users')
+        const row = await this.k('users').select('id')
             .where('email', email.value)
             .first()
+
         if (!row) {
             return false
         }
-        const exists = await this.k('sellers').where('id', row.id).first()
+
+        const exists = await this.k('sellers').select(1).where('id', row.id).first()
         return !!exists
     }
 
@@ -55,7 +58,7 @@ export class PgSellerRepository implements SellerRepository {
     }
 
     async existsById(id: EntityId): Promise<boolean> {
-        const row = await this.k('sellers').where('id', id.value).first()
+        const row = await this.k('sellers').select(1).where('id', id.value).first()
         return !!row
     }
 
@@ -75,7 +78,7 @@ export class PgSellerRepository implements SellerRepository {
             })
     }
 
-    async changeCredentials(credential: SellerCredential): Promise<void> {
+    async changeCredentials(credential: UserCredential): Promise<void> {
         await this.k<UserRow>('users')
             .update({
                 password_hash: credential.passwordHash.value,
@@ -102,7 +105,7 @@ export class PgSellerRepository implements SellerRepository {
         })
     }
 
-    async getCredentialByEmail(email: Email): Promise<SellerCredential | null> {
+    async getCredentialByEmail(email: Email): Promise<UserCredential | null> {
         const row = await this.k<UserRow>('users as u')
             .select('u.id', 'u.email', 'u.password_hash')
             .where('u.email', email.value)
@@ -113,8 +116,8 @@ export class PgSellerRepository implements SellerRepository {
 
         if (!row) return null
 
-        return SellerCredential.create(
-            new EntityId(row.id),
+        return UserCredential.create(
+            EntityId.create(row.id),
             Email.create(row.email).value,
             HashedPassword.create(row.password_hash),
         )
@@ -125,7 +128,7 @@ export class PgSellerRepository implements SellerRepository {
     }
 
     private map(row: SellerUserRow): Seller {
-        const id = new EntityId(row.id)
+        const id = EntityId.create(row.id)
         const email = Email.create(row.email)
         const rating = row.rating ? Rating.create(row.rating) : null
         const storeName = StoreName.create(row.store_name)

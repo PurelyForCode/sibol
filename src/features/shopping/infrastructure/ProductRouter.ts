@@ -37,7 +37,7 @@ productRouter.get(
             const validated = req.validated as z.infer<
                 typeof getProductBySellerIdSchema
             >
-            const productId = new EntityId(validated.params.productId)
+            const productId = EntityId.create(validated.params.productId)
             const products = await productQueryRepository.findById(productId)
             res.status(200).json({ data: products })
         } catch (e: unknown) {

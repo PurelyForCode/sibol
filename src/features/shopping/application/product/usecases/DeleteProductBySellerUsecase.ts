@@ -22,13 +22,13 @@ export class DeleteProductBySellerUsecase {
         return await this.tm.runInTransaction(async trx => {
             const ar = this.arf.create(trx)
             const pr = this.prf.create(trx)
-            const sellerId = new EntityId(input.sellerId)
+            const sellerId = EntityId.create(input.sellerId)
             const seller = await ar.findById(sellerId)
             if (seller === null) {
                 throw new Error('Seller account does not exist')
             }
             // check if product exists
-            const productId = new EntityId(input.productId)
+            const productId = EntityId.create(input.productId)
             const product = await pr.findById(productId)
             if (product === null) {
                 throw new Error('Product not found')
