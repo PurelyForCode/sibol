@@ -11,6 +11,6 @@ export class BuyerService {
             throw new Error()
         }
 
-        return Buyer.create(id, email, username, false, totalOrders.value)
+        return Buyer.rehydrate(id, email, username, false, totalOrders.value)
     }
 }

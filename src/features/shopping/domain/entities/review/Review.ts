@@ -1,5 +1,6 @@
 import { EntityId } from '../../../../../lib/EntityId.js'
 import { Rating } from '../../../../shared/value_objects/Rating.js'
+import { ReviewImage } from './ReviewImage.js'
 import { ReviewMessage } from './ReviewMessage.js'
 
 export class Review {
@@ -8,19 +9,49 @@ export class Review {
         private _buyerId: EntityId,
         private _message: ReviewMessage | null,
         private _rating: Rating,
+        private _images: ReviewImage[],
         private _createdAt: Date,
         private _updatedAt: Date,
     ) {}
+
+    static rehydrate(
+        id: EntityId,
+        buyerId: EntityId,
+        message: ReviewMessage | null,
+        rating: Rating,
+        images: ReviewImage[],
+        createdAt: Date,
+        updatedAt: Date,
+    ) {
+        return new Review(
+            id,
+            buyerId,
+            message,
+            rating,
+            images,
+            createdAt,
+            updatedAt,
+        )
+    }
 
     static create(
         id: EntityId,
         buyerId: EntityId,
         message: ReviewMessage | null,
         rating: Rating,
+        images: ReviewImage[],
         createdAt: Date,
         updatedAt: Date,
     ) {
-        return new Review(id, buyerId, message, rating, createdAt, updatedAt)
+        return new Review(
+            id,
+            buyerId,
+            message,
+            rating,
+            images,
+            createdAt,
+            updatedAt,
+        )
     }
 
     changeMessage(message: ReviewMessage | null) {
@@ -29,6 +60,10 @@ export class Review {
 
     changeRating(rating: Rating) {
         this._rating = rating
+    }
+
+    public get images(): ReviewImage[] {
+        return this._images
     }
 
     public get updatedAt(): Date {

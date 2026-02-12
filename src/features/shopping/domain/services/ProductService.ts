@@ -25,7 +25,7 @@ export class ProductService {
         const rating = null
         const deletedAt = null
         const now = new Date()
-        return Product.create(
+        return Product.rehydrate(
             input.id,
             input.sellerId,
             input.name,
@@ -39,15 +39,4 @@ export class ProductService {
             deletedAt,
         )
     }
-
-    deleteProductBySeller(input: DeleteBySellerInput) {
-        const product = input.product
-        const now = new Date()
-        product.deletedAt = now
-        return product
-    }
-
-    addPicture() {}
-
-    removePicture() {}
 }

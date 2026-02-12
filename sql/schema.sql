@@ -4,7 +4,11 @@ CREATE TABLE users (
 	password_hash VARCHAR(255) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL,
-	banned_at TIMESTAMPTZ 
+	banned_at TIMESTAMPTZ
+);
+
+CREATE TABLE admins (
+	id UUID PRIMARY KEY REFERENCES users(id)
 );
 
 CREATE TABLE sellers (
@@ -26,70 +30,136 @@ CREATE TABLE sellers (
 
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL
+);
 
+CREATE TABLE seller_moderation (
+	id UUID PRIMARY KEY,
+	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	admin_id UUID REFERENCES admins(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	action_type VARCHAR(20) NOT NULL,
+	reason TEXT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE buyers (
 	id UUID PRIMARY KEY REFERENCES users(id),
 	username VARCHAR(256) NOT NULL,
+
 	is_verified BOOLEAN NOT NULL DEFAULT FALSE,
-	total_orders BIGINT NOT NULL DEFAULT 0
+	is_active BOOLEAN NOT NULL DEFAULT TRUE,
+
+	total_orders BIGINT NOT NULL DEFAULT 0,
+
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
 );
 
+CREATE TABLE buyer_moderation (
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	admin_id UUID REFERENCES admins(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	action_type VARCHAR(20) NOT NULL,
+	reason TEXT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL
+);
 
 CREATE TABLE products (
 	id UUID PRIMARY KEY,
-	seller_id UUID REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	name VARCHAR(255) NOT NULL,
 	description TEXT,
-	stock NUMERIC(10,3) NOT NULL,
+	stock DECIMAL(10,3) NOT NULL,
 	unit_of_measure VARCHAR(5) NOT NULL,
 	unit_value NUMERIC(10,3) NOT NULL,
 	price_per_unit NUMERIC(12,2) NOT NULL,
-	rating REAL,
-	created_at TIMESTAMPTZ DEFAULT(now()),
-	updated_at TIMESTAMPTZ DEFAULT(now()),
-	deleted_at TIMESTAMPTZ DEFAULT(NULL)
+	rating REAL CHECK (rating BETWEEN 0 AND 5),
+	status VARCHAR(20) NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL,
+	deleted_at TIMESTAMPTZ
+);
+
+CREATE TABLE product_reviews (
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	rating NUMERIC(3,2) NOT NULL,
+	content TEXT,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE product_images (
+	id UUID PRIMARY KEY,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	url TEXT NOT NULL,
+	position SMALLINT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TYPE product_complaint_status AS ENUM (
+	'CONFIRMED',
+	'DISMISSED',
+	'PENDING'
+);
+
+CREATE TABLE product_complaint (
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	admin_id UUID REFERENCES admins(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	subject VARCHAR(100) NOT NULL,
+	details TEXT NOT NULL,
+	status product_complaint_status NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE product_moderation (
+	id UUID PRIMARY KEY,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	admin_id UUID REFERENCES admins(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	product_complaint_id UUID REFERENCES product_complaint(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	action_type VARCHAR(30) NOT NULL,
+	reason TEXT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE carts (
+	buyer_id UUID PRIMARY KEY REFERENCES buyers(id),
+	status VARCHAR(20) NOT NULL,
+
+	shipping_address_id UUID,
+
+	subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
+	discount_total DECIMAL(10,2) NOT NULL DEFAULT 0,
+	tax_total DECIMAL(10,2) NOT NULL DEFAULT 0,
+	grand_total DECIMAL(10,2) NOT NULL DEFAULT 0,
+
+	created_at TIMESTAMP NOT NULL DEFAULT now(),
+	updated_at TIMESTAMP NOT NULL DEFAULT now()
+);
+
+CREATE TABLE cart_items (
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id),
+	quantity DECIMAL NOT NULL
 );
 
 CREATE TABLE orders (
-	id UUID PRIMARY KEY
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id),
+	seller_id UUID NOT NULL REFERENCES sellers(id),
+	total_price BIGINT NOT NULL,
+	status VARCHAR(32) NOT NULL,
+	payment_method VARCHAR(32) NOT NULL
 );
 
 CREATE TABLE order_items (
-	id UUID PRIMARY KEY
-);
-
--- CREATE TABLE addresses (
--- 	id UUID PRIMARY KEY,
--- 	user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---
--- 	label VARCHAR(50),
--- 	recipient_name VARCHAR(255) NOT NULL,
---
--- 	line1 VARCHAR(255) NOT NULL,
--- 	line2 VARCHAR(255),
--- 	city VARCHAR(100) NOT NULL,
--- 	state VARCHAR(100),
--- 	postal_code VARCHAR(20) NOT NULL,
--- 	country_code CHAR(2) NOT NULL,
---
--- 	phone VARCHAR(32),
--- 	instructions TEXT,
---
--- 	is_pickup_location BOOLEAN NOT NULL DEFAULT FALSE,
---
--- 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
--- 	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
--- );
-
-CREATE TABLE reviews(
 	id UUID PRIMARY KEY,
-	buyer_id  UUID REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	product_id UUID REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	content TEXT,
+	order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id),
+	quantity DOUBLE PRECISION NOT NULL,
+	price_at_purchase INT NOT NULL
 );
-
--- CREATE TABLE payments(
--- 	id UUID PRIMARY KEY
--- );

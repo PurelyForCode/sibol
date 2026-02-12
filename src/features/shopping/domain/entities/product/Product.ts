@@ -5,13 +5,31 @@ import { ProductName } from './ProductName.js'
 import { Rating } from '../../../../shared/value_objects/Rating.js'
 import { ProductStock } from './ProductStock.js'
 import { UnitOfMeasurement } from './UnitOfMeasurement.js'
+import { AggregateRoot } from '../../../../../lib/AggregateRoot.js'
+import { ProductImage } from './ProductImage.js'
 
-export class Product {
+export class Product extends AggregateRoot {
+    private constructor(
+        private _id: EntityId,
+        private _sellerId: EntityId,
+        private _name: ProductName,
+        private _description: ProductDescription | null,
+        private _stock: ProductStock,
+        private _unit: UnitOfMeasurement,
+        private _pricePerUnit: Money,
+        private _rating: Rating | null,
+        private _images: ProductImage[],
+        private _createdAt: Date,
+        private _updatedAt: Date,
+        private _deletedAt: Date | null,
+    ) {
+        super()
+    }
+
     changeName(name: ProductName) {
         this._updatedAt = new Date()
         this._name = name
     }
-
     changeDescription(description: ProductDescription | null) {
         this._updatedAt = new Date()
         this._description = description
@@ -36,21 +54,33 @@ export class Product {
         this._deletedAt = new Date()
     }
 
-    private constructor(
-        private _id: EntityId,
-        private _sellerId: EntityId,
-        private _name: ProductName,
-        private _description: ProductDescription | null,
-        private _stock: ProductStock,
-        private _unit: UnitOfMeasurement,
-        private _pricePerUnit: Money,
-        private _rating: Rating | null,
-        private _createdAt: Date,
-        private _updatedAt: Date,
-        private _deletedAt: Date | null,
-    ) {}
+    static new(
+        id: EntityId,
+        sellerId: EntityId,
+        name: ProductName,
+        description: ProductDescription | null,
+        unit: UnitOfMeasurement,
+        pricePerUnit: Money,
+    ) {
+        const now = new Date()
 
-    static create(
+        return new Product(
+            id,
+            sellerId,
+            name,
+            description,
+            ProductStock.zero(),
+            unit,
+            pricePerUnit,
+            null,
+            [],
+            now,
+            now,
+            null,
+        )
+    }
+
+    static rehydrate(
         id: EntityId,
         sellerId: EntityId,
         name: ProductName,
@@ -59,6 +89,7 @@ export class Product {
         unit: UnitOfMeasurement,
         pricePerUnit: Money,
         rating: Rating | null,
+        images: ProductImage[],
         createdAt: Date,
         updatedAt: Date,
         deletedAt: Date | null,
@@ -72,12 +103,16 @@ export class Product {
             unit,
             pricePerUnit,
             rating,
+            images,
             createdAt,
             updatedAt,
             deletedAt,
         )
     }
 
+    public get images(): ProductImage[] {
+        return this._images
+    }
     public get deletedAt(): Date | null {
         return this._deletedAt
     }

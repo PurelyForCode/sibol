@@ -1,6 +1,6 @@
 import { EntityId } from '../../../../../lib/EntityId.js'
 import { TransactionManager } from '../../../../../lib/interfaces/TransactionManager.js'
-import { UserRepositoryFactory } from '../../../../account/domain/repositories/UserRepository.js'
+import { SellerRepositoryFactory } from '../../../../account/domain/repositories/SellerRepository.js'
 import { ProductRepositoryFactory } from '../../../domain/repositories/ProductRepository.js'
 import { ProductService } from '../../../domain/services/ProductService.js'
 
@@ -13,7 +13,7 @@ export class DeleteProductBySellerUsecase {
     constructor(
         private readonly tm: TransactionManager,
         private readonly prf: ProductRepositoryFactory,
-        private readonly arf: UserRepositoryFactory,
+        private readonly arf: SellerRepositoryFactory,
         private readonly ps: ProductService,
     ) {}
 
@@ -22,6 +22,7 @@ export class DeleteProductBySellerUsecase {
         return await this.tm.runInTransaction(async trx => {
             const ar = this.arf.create(trx)
             const pr = this.prf.create(trx)
+
             const sellerId = EntityId.create(input.sellerId)
             const seller = await ar.findById(sellerId)
             if (seller === null) {
@@ -39,11 +40,8 @@ export class DeleteProductBySellerUsecase {
             }
             // TODO:handle some side effects of deleting the product
 
-            const deletedProduct = this.ps.deleteProductBySeller({
-                product: product,
-            })
-
-            await pr.save(deletedProduct)
+            product.archive()
+            await pr.save(product)
         })
     }
 }

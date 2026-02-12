@@ -6,7 +6,7 @@ export class Rating extends SingleValueObject<number> {
     }
 
     static create(rating: number) {
-        if (rating > 5 && rating < 0) {
+        if (rating > 5 || rating < 0) {
             throw new Error('Rating can only be between 0-5')
         }
         return new Rating(rating)

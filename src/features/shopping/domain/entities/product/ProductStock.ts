@@ -1,22 +1,19 @@
-import { ValueObject } from '../../../../../lib/ValueObject.js'
+import { SingleValueObject } from '../../../../../lib/SingleValueObject.js'
+import { Result } from '../../../../../lib/utils/Result.js'
 
-export interface ProductStockProps {
-    stock: number
-}
-
-export class ProductStock extends ValueObject<ProductStockProps> {
-    private constructor(props: ProductStockProps) {
-        super(props)
+export class ProductStock extends SingleValueObject<number> {
+    private constructor(value: number) {
+        super(value)
     }
 
-    static create(stock: number) {
+    static create(stock: number): Result<ProductStock> {
         if (stock < 0) {
-            throw new Error('Product stock can not reach negative')
+            return Result.fail('Product stock can not reach negative')
         }
-        return new ProductStock({ stock })
+        return Result.ok(new ProductStock(stock))
     }
 
-    get value() {
-        return this.props.stock
+    static zero() {
+        return new ProductStock(0)
     }
 }

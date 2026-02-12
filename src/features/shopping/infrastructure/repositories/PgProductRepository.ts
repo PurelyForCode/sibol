@@ -107,7 +107,7 @@ export class PgProductRepository implements ProductRepository {
         const pricePerUnit = Money.create(row.price_per_unit)
         const rating = row.rating ? Rating.create(row.rating) : null
 
-        return Product.create(
+        return Product.rehydrate(
             id,
             sellerId,
             name,

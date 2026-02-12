@@ -15,7 +15,21 @@ export class Buyer {
         private _updatedAt: Date,
     ) {}
 
-    static create(
+    static create(id: EntityId, email: Email, username: Username) {
+        const now = new Date()
+        return new Buyer(
+            id,
+            email,
+            username,
+            false,
+            TotalOrders.zero(),
+            null,
+            now,
+            now,
+        )
+    }
+
+    static rehydrate(
         id: EntityId,
         email: Email,
         username: Username,

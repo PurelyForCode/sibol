@@ -6,6 +6,10 @@ export class TotalOrders extends SingleValueObject<number> {
         super(value)
     }
 
+    static zero() {
+        return new TotalOrders(0)
+    }
+
     static create(value: number) {
         if (!Number.isInteger(value)) {
             Result.fail('Total orders must be an integer')

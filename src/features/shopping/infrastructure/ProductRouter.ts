@@ -51,7 +51,6 @@ const createProductRequestSchema = z.object({
         name: z.string(),
         price: z.int(),
         description: z.string().nullable(),
-        stock: z.int(),
         unit: z.object({
             measurement: z.enum(
                 Object.values(UnitOfMeasure) as [string, ...string[]],
@@ -76,7 +75,6 @@ productRouter.post(
                 name: body.name,
                 pricePerUnit: body.price,
                 sellerId: sellerId,
-                stock: body.stock,
                 unit: {
                     measurement:
                         // basically saying that body.unit.measurement is a key of UnitOfMeasure enum
