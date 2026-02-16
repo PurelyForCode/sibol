@@ -1,7 +1,7 @@
-import { BuyerRepository } from '../../repositories/BuyerRepository.js'
-import { ProductRepository } from '../../repositories/ProductRepository.js'
-import { SellerRepository } from '../../repositories/SellerRepository.js'
-import { UserRepository } from '../../repositories/UserRepository.js'
+import { BuyerRepository } from '../../domain/repositories/BuyerRepository.js'
+import { ProductRepository } from '../../domain/repositories/ProductRepository.js'
+import { SellerRepository } from '../../domain/repositories/SellerRepository.js'
+import { UserRepository } from '../../domain/repositories/UserRepository.js'
 
 export interface UnitOfWork {
     getSellerRepo(): SellerRepository

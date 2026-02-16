@@ -1,0 +1,2 @@
+export const seededSellerId = '11111111-1111-1111-1111-111111111111'
+export const seededBuyerId = '22222222-2222-2222-2222-222222222222'
