@@ -1,5 +1,9 @@
+import { Id } from '../../../core/interfaces/IdGenerator.js'
+import { ProductImage } from './ProductImage.js'
+import { ProductUnit } from './ProductUnit.js'
 import { ProductStatus } from './ProductStatus.js'
 import { UnitOfMeasurement } from './UnitOfMeasurement.js'
+import { ProductUnitNotFoundException } from '../../../exceptions/products/ProductUnitNotFoundException.js'
 
 export class Product {
     private constructor(
@@ -14,7 +18,28 @@ export class Product {
         private _createdAt: Date,
         private _updatedAt: Date,
         private _deletedAt: Date | null,
+        private images: Map<Id, ProductImage>,
+        private units: Map<Id, ProductUnit>,
     ) {}
+
+    addImage(image: ProductImage) {}
+    removeImage(imageId: string) {}
+    changeImageIndex(imageId: string, idx: number) {}
+
+    addUnit(unit: ProductUnit) {
+        this.units.set(unit.id, unit)
+    }
+    removeUnit(unitId: string): boolean {
+        return this.units.delete(unitId)
+    }
+    changeUnit(unitId: string, sellUnit: UnitOfMeasurement) {
+        const unit = this.units.get(unitId)
+        if (!unit) {
+            throw new ProductUnitNotFoundException(this.id, unitId)
+        }
+        unit.sellUnit
+    }
+    changeUnitConversionFactor(unitId: string, conversionFactor: number) {}
 
     changeName(name: string) {
         this._name = name
@@ -52,6 +77,8 @@ export class Product {
             now,
             now,
             null,
+            new Map(),
+            new Map(),
         )
     }
 

@@ -1,4 +1,17 @@
 export class Buyer {
+    verify() {
+        this._isVerified = true
+        this._updatedAt = new Date()
+    }
+    deactivate() {
+        this._isActive = false
+        this._updatedAt = new Date()
+    }
+    activate() {
+        this._isActive = true
+        this._updatedAt = new Date()
+    }
+
     constructor(
         private _id: string,
         private _username: string,
@@ -7,17 +20,6 @@ export class Buyer {
         private _createdAt: Date,
         private _updatedAt: Date,
     ) {}
-
-    verify() {
-        this._isVerified = true
-    }
-    deactivate() {
-        this._isActive = false
-    }
-
-    activate() {
-        this._isActive = true
-    }
 
     static rehydrate(
         id: string,
