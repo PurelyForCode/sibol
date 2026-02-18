@@ -1,22 +1,32 @@
 export class Result<T> {
-    private constructor(
-        public readonly isSuccess: boolean,
-        public readonly error?: string,
-        private readonly _value?: T,
-    ) {}
+    private readonly value?: T
+    readonly message?: string
 
-    get value(): T {
-        if (!this.isSuccess) {
-            throw new Error('Cannot get value of a failed result')
+    private constructor(value?: T, message?: string) {
+        this.value = value
+        this.message = message
+    }
+
+    isError(): boolean {
+        return this.message !== undefined
+    }
+
+    isOk(): boolean {
+        return !this.isError()
+    }
+
+    getValue(): T {
+        if (this.isError()) {
+            throw new Error('Cannot get the value of a failed Result')
         }
-        return this._value as T
+        return this.value as T
     }
 
-    public static ok<T>(value: T): Result<T> {
-        return new Result(true, undefined, value)
+    static ok<T>(value: T): Result<T> {
+        return new Result(value)
     }
 
-    public static fail<T>(error: string): Result<T> {
-        return new Result<T>(false, error)
+    static fail<T>(message: string): Result<T> {
+        return new Result<T>(undefined, message)
     }
 }

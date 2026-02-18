@@ -1,6 +1,6 @@
 import express, { json, urlencoded } from 'express'
 import { productRouter } from './features/product/infrastructure/ProductRouter.js'
-import { sellerRouter } from './features/account/infrastructure/SellerRouter.js'
+import { sellerRouter } from './infra/http/routers/SellerRouter.js'
 
 export const apiRouter = express()
 

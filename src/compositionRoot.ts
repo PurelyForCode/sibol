@@ -1,4 +1,4 @@
-import { PgSellerRepositoryFactory } from './features/account/infrastructure/repositories/PgSellerRepository.js'
+import { PgSellerRepositoryFactory } from './infra/db/repositories/PgSellerRepository.js'
 import { ProductController } from './features/product/adapters/controllers/ProductController.js'
 import { CreateProductUsecase } from './features/product/application/product/usecases/CreateProductUsecase.js'
 import { DeleteProductBySellerUsecase } from './features/product/application/product/usecases/DeleteProductBySellerUsecase.js'
@@ -8,11 +8,11 @@ import { KnexTransactionManager } from './lib/implementations/KnexTransactionMan
 import { Uuidv7Generator } from './lib/implementations/Uuidv7Generator.js'
 import { knexInstance } from './config/KnexInstance.js'
 import { PgProductQueryRepository } from './features/product/infrastructure/repositories/PgProductQueryRepository.js'
-import { SellerService } from './features/account/domain/services/SellerService.js'
-import { RegisterSellerUsecase } from './features/account/application/RegisterSellerUsecase.js'
+import { SellerService } from './domain/seller/services/SellerService.js'
+import { RegisterSellerUsecase } from './features/account/register_seller/RegisterSellerUsecase.js'
 import { ArgonPasswordHasher } from './lib/implementations/ArgonPasswordHasher.js'
-import { SellerController } from './features/account/adapter/SellerController.js'
-import { PgSellerQueryRepository } from './features/account/infrastructure/repositories/PgSellerQueryRepository.js'
+import { SellerController } from './features/account/SellerController.js'
+import { PgSellerQueryRepository } from './infra/db/repositories/PgSellerQueryRepository.js'
 
 export const transactionManager = new KnexTransactionManager(knexInstance)
 export const passwordHasher = new ArgonPasswordHasher()
@@ -20,9 +20,7 @@ export const passwordHasher = new ArgonPasswordHasher()
 export const idGenerator = new Uuidv7Generator()
 
 // Repositories
-export const productRepositoryFactory = new PgProductRepositoryFactory()
 export const productQueryRepository = new PgProductQueryRepository(knexInstance)
-export const sellerRepositoryFactory = new PgSellerRepositoryFactory()
 export const sellerQueryRepository = new PgSellerQueryRepository(knexInstance)
 
 // Domain
@@ -33,14 +31,10 @@ export const sellerService = new SellerService()
 // Product
 export const deleteProductBySellerUsecase = new DeleteProductBySellerUsecase(
     transactionManager,
-    productRepositoryFactory,
-    sellerRepositoryFactory,
     productService,
 )
 export const createProductUsecase = new CreateProductUsecase(
     transactionManager,
-    productRepositoryFactory,
-    sellerRepositoryFactory,
     productService,
     idGenerator,
 )
@@ -48,7 +42,6 @@ export const createProductUsecase = new CreateProductUsecase(
 // Seller
 export const registerSellerUsecase = new RegisterSellerUsecase(
     transactionManager,
-    sellerRepositoryFactory,
     sellerService,
     idGenerator,
     passwordHasher,

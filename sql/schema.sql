@@ -1,26 +1,47 @@
-CREATE TABLE users (
+CREATE TABLE accounts (
 	id UUID PRIMARY KEY,
-	email VARCHAR(255) UNIQUE NOT NULL,
+	email VARCHAR(255) NOT NULL,
 	password_hash VARCHAR(255) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL,
 	banned_at TIMESTAMPTZ
 );
 
+CREATE TYPE verification_type AS ENUM (
+	'BUYER_VERIFY',
+	'SELLER_VERIFY',
+	'EMAIL_CHANGE',
+	'PASSWORD_RESET'
+);
+
+CREATE TABLE verification_codes (
+	id UUID PRIMARY KEY,
+	account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+	code VARCHAR(6) NOT NULL,
+	type verification_type NOT NULL,
+	expires_at TIMESTAMPTZ NOT NULL,
+	used_at TIMESTAMPTZ,
+	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+	UNIQUE (account_id, type)
+);
+
+-- Do some stuff here
 CREATE TABLE admins (
-	id UUID PRIMARY KEY REFERENCES users(id)
+	id UUID PRIMARY KEY REFERENCES accounts(id),
+	first_name VARCHAR(100) NOT NULL,
+	last_name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE sellers (
-	id UUID PRIMARY KEY REFERENCES users(id),
+	id UUID PRIMARY KEY REFERENCES accounts(id),
 
 	store_name VARCHAR(256) NOT NULL,
 	store_slug VARCHAR(256) UNIQUE NOT NULL,
 	description TEXT,
-	rating REAL CHECK (rating BETWEEN 0 AND 5),
+	rating NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
 
 	total_sales BIGINT NOT NULL DEFAULT 0,
-	total_orders BIGINT NOT NULL DEFAULT 0,
 
 	is_verified BOOLEAN NOT NULL DEFAULT FALSE,
 	is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -42,13 +63,11 @@ CREATE TABLE seller_moderation (
 );
 
 CREATE TABLE buyers (
-	id UUID PRIMARY KEY REFERENCES users(id),
+	id UUID PRIMARY KEY REFERENCES accounts(id),
 	username VARCHAR(256) NOT NULL,
 
 	is_verified BOOLEAN NOT NULL DEFAULT FALSE,
 	is_active BOOLEAN NOT NULL DEFAULT TRUE,
-
-	total_orders BIGINT NOT NULL DEFAULT 0,
 
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL
@@ -68,22 +87,29 @@ CREATE TABLE products (
 	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	name VARCHAR(255) NOT NULL,
 	description TEXT,
-	stock DECIMAL(10,3) NOT NULL,
-	unit_of_measure VARCHAR(5) NOT NULL,
-	unit_value NUMERIC(10,3) NOT NULL,
-	price_per_unit NUMERIC(12,2) NOT NULL,
-	rating REAL CHECK (rating BETWEEN 0 AND 5),
+	stock_quantity NUMERIC(10,3) NOT NULL CHECK(stock_quantity >= 0),
+	base_unit VARCHAR(10) NOT NULL,
+	rating NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
 	status VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL,
 	deleted_at TIMESTAMPTZ
 );
 
+CREATE TABLE product_pricings (
+	id UUID PRIMARY KEY,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	sell_unit VARCHAR(10) NOT NULL,
+	conversion_factor NUMERIC(10,3) NOT NULL CHECK (conversion_factor > 0),
+	pricing_per_unit NUMERIC(12,2) NOT NULL CHECK (pricing_per_unit > 0),
+	UNIQUE (product_id, sell_unit)
+);
+
 CREATE TABLE product_reviews (
 	id UUID PRIMARY KEY,
 	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	rating NUMERIC(3,2) NOT NULL,
+	rating NUMERIC(2,1) NOT NULL CHECK (rating BETWEEN 0 AND 5),
 	content TEXT,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL
@@ -126,40 +152,45 @@ CREATE TABLE product_moderation (
 );
 
 CREATE TABLE carts (
-	buyer_id UUID PRIMARY KEY REFERENCES buyers(id),
+	id UUID PRIMARY KEY REFERENCES buyers(id),
 	status VARCHAR(20) NOT NULL,
 
 	shipping_address_id UUID,
 
-	subtotal DECIMAL(10,2) NOT NULL DEFAULT 0,
-	discount_total DECIMAL(10,2) NOT NULL DEFAULT 0,
-	tax_total DECIMAL(10,2) NOT NULL DEFAULT 0,
-	grand_total DECIMAL(10,2) NOT NULL DEFAULT 0,
+	subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
+	discount_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+	tax_total NUMERIC(10,2) NOT NULL DEFAULT 0,
+	grand_total NUMERIC(10,2) NOT NULL DEFAULT 0,
 
-	created_at TIMESTAMP NOT NULL DEFAULT now(),
-	updated_at TIMESTAMP NOT NULL DEFAULT now()
+	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE cart_items (
 	id UUID PRIMARY KEY,
-	buyer_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE,
+	cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id),
-	quantity DECIMAL NOT NULL
+	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
+	sell_unit VARCHAR(10) NOT NULL
 );
 
 CREATE TABLE orders (
 	id UUID PRIMARY KEY,
-	buyer_id UUID NOT NULL REFERENCES buyers(id),
-	seller_id UUID NOT NULL REFERENCES sellers(id),
-	total_price BIGINT NOT NULL,
+	buyer_id UUID NOT NULL REFERENCES buyers(id)  ON DELETE CASCADE,
+	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	total_price NUMERIC(12,2) NOT NULL,
 	status VARCHAR(32) NOT NULL,
-	payment_method VARCHAR(32) NOT NULL
+	payment_method VARCHAR(32) NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL,
+	cancelled_at TIMESTAMPTZ
 );
 
 CREATE TABLE order_items (
 	id UUID PRIMARY KEY,
 	order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-	product_id UUID NOT NULL REFERENCES products(id),
-	quantity DOUBLE PRECISION NOT NULL,
-	price_at_purchase INT NOT NULL
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
+	price_at_purchase NUMERIC(12,2) NOT NULL,
+	sell_unit VARCHAR(10) NOT NULL
 );
