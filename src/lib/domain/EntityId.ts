@@ -1,3 +1,5 @@
+import { Result } from '../utils/Result.js'
+
 export type Id = string
 export class EntityId {
     private readonly id: string

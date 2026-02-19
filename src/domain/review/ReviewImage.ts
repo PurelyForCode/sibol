@@ -1,6 +1,6 @@
-import { EntityId } from '../../../../../lib/EntityId.js'
-import { ImagePath } from '../../../../shared/value_objects/ImagePath.js'
-import { ImagePosition } from '../../../../shared/value_objects/ImagePosition.js'
+import { EntityId } from '../../lib/domain/EntityId.js'
+import { ImagePath } from '../shared/value_objects/ImagePath.js'
+import { ImagePosition } from '../shared/value_objects/ImagePosition.js'
 
 export class ReviewImage {
     private constructor(

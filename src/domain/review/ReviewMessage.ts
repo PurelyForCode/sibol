@@ -1,5 +1,5 @@
-import { SingleValueObject } from '../../../../../lib/SingleValueObject.js'
-import { Result } from '../../../../../lib/utils/Result.js'
+import { SingleValueObject } from '../../lib/domain/SingleValueObject.js'
+import { Result } from '../../lib/utils/Result.js'
 
 export class ReviewMessage extends SingleValueObject<string> {
     private constructor(value: string) {

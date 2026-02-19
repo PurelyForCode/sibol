@@ -4,65 +4,83 @@ import { TransactionManager } from '../../../domain/shared/interfaces/Transactio
 import { Email } from '../../../domain/shared/value_objects/Email.js'
 import { RawPassword } from '../../../domain/shared/value_objects/RawPassword.js'
 import { StoreName } from '../../../domain/seller/value_objects/StoreName.js'
-import { TotalSales } from '../../../domain/seller/value_objects/TotalSales.js'
-import { SellerRepositoryFactory } from '../../../domain/seller/repositories/SellerRepository.js'
-import { SellerService } from '../../../domain/seller/services/SellerService.js'
+import { SellerEmailAlreadyExistsException } from '../../../exceptions/seller/SellerEmailAlreadyExistsException.js'
+import { Seller } from '../../../domain/seller/aggregates/Seller.js'
+import { StoreSlug } from '../../../domain/seller/value_objects/StoreSlug.js'
+import { SellerDescription } from '../../../domain/seller/value_objects/SellerDescription.js'
+import { MobilePhoneNumber } from '../../../domain/shared/value_objects/MobilePhoneNumber.js'
+import { Account } from '../../../domain/account/aggregates/Account.js'
+import { StoreNameAlreadyExistsException } from '../../../exceptions/seller/StoreNameAlreadyExistsException.js'
+import { StoreSlugAlreadyExistsException } from '../../../exceptions/seller/StoreSlugAlreadyExistsException.js'
 
 export type RegisterSellerCmd = {
     email: string
     password: string
     storeName: string
+    storeSlug: string
+    description: string | null
+    supportEmail: string | null
+    supportPhone: string | null
 }
 
 export class RegisterSellerUsecase {
     constructor(
         private readonly tm: TransactionManager,
-        private readonly srf: SellerRepositoryFactory,
-        private readonly ss: SellerService,
         private readonly idGen: IdGenerator,
         private readonly passwordHasher: PasswordUtil,
     ) {}
     async execute(cmd: RegisterSellerCmd) {
-        await this.tm.runInTransaction(async trx => {
-            const sr = this.srf.create(trx)
-
-            const email = Email.create(cmd.email)
-
-            if (!email.isSuccess) {
-                throw new Error()
+        await this.tm.transaction(async uow => {
+            const sr = uow.getSellerRepo()
+            const ar = uow.getAccountRepo()
+            const email = Email.create(cmd.email).unwrapOrThrow('email')
+            if (await sr.existsByEmail(email)) {
+                throw new SellerEmailAlreadyExistsException(cmd.email)
             }
-            if (await sr.existsByEmail(email.value)) {
-                throw new Error()
+            const storeName = StoreName.create(cmd.storeName).unwrapOrThrow(
+                'storeName',
+            )
+            if (await sr.existsByStoreName(storeName)) {
+                throw new StoreNameAlreadyExistsException(cmd.storeName)
             }
-
-            const rawPassword = RawPassword.create(cmd.password)
-
-            if (!rawPassword.isSuccess) {
-                throw new Error(rawPassword.error)
+            const storeSlug = StoreSlug.create(cmd.storeSlug).unwrapOrThrow(
+                'storeName',
+            )
+            if (await sr.existsByStoreSlug(storeSlug)) {
+                throw new StoreSlugAlreadyExistsException(cmd.storeSlug)
             }
-
-            const hash = await this.passwordHasher.hash(rawPassword.value)
-
+            const rawPassword = RawPassword.create(cmd.password).unwrapOrThrow(
+                'password',
+            )
+            const hash = await this.passwordHasher.hash(rawPassword)
+            const description = cmd.description
+                ? SellerDescription.create(cmd.description).unwrapOrThrow(
+                      'description',
+                  )
+                : null
+            const supportEmail = cmd.supportEmail
+                ? Email.create(cmd.supportEmail).unwrapOrThrow('supportEmail')
+                : null
+            const supportPhone = cmd.supportPhone
+                ? MobilePhoneNumber.create(cmd.supportPhone).unwrapOrThrow(
+                      'supportPhone',
+                  )
+                : null
             const id = this.idGen.generate()
 
-            const storeName = StoreName.create(cmd.storeName)
-            if (!storeName.isSuccess) {
-                throw new Error()
-            }
+            const account = Account.new(id, email, hash)
+            const seller = Seller.new(
+                id,
+                storeName,
+                storeSlug,
+                description,
+                supportEmail,
+                supportPhone,
+            )
 
-            // Validation not needed
-            const totalSales = TotalSales.create(0)
-
-            const seller = this.ss.create({
-                email: email.value,
-                id: id,
-                // new seller, no rating
-                rating: null,
-                storeName: storeName.value,
-                totalSales: totalSales.value,
-            })
-
-            await sr.register({ passwordHash: hash, seller: seller })
+            await ar.save(account)
+            await sr.save(seller)
+            await uow.publishEvents()
         })
     }
 }

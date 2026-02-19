@@ -1,3 +1,11 @@
+CREATE TABLE outbox (
+	id UUID PRIMARY KEY,
+	type TEXT NOT NULL,
+	payload JSONB NOT NULL,
+	occurred_at TIMESTAMPTZ NOT NULL,
+	processed_at TIMESTAMPTZ
+);
+
 CREATE TABLE accounts (
 	id UUID PRIMARY KEY,
 	email VARCHAR(255) NOT NULL,
@@ -153,15 +161,8 @@ CREATE TABLE product_moderation (
 
 CREATE TABLE carts (
 	id UUID PRIMARY KEY REFERENCES buyers(id),
-	status VARCHAR(20) NOT NULL,
-
 	shipping_address_id UUID,
-
-	subtotal NUMERIC(10,2) NOT NULL DEFAULT 0,
-	discount_total NUMERIC(10,2) NOT NULL DEFAULT 0,
-	tax_total NUMERIC(10,2) NOT NULL DEFAULT 0,
-	grand_total NUMERIC(10,2) NOT NULL DEFAULT 0,
-
+	status VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );

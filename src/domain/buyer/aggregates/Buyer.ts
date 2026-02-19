@@ -1,8 +1,9 @@
+import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
-import { Email } from '../../shared/value_objects/Email.js'
 import { Username } from '../../shared/value_objects/Username.js'
+import { BuyerRegisteredDomainEvent } from '../events/BuyerRegisteredDomainEvent.js'
 
-export class Buyer {
+export class Buyer extends AggregateRoot {
     private constructor(
         private _id: EntityId,
         private _username: Username,
@@ -10,11 +11,15 @@ export class Buyer {
         private _isActive: boolean,
         private _createdAt: Date,
         private _updatedAt: Date,
-    ) {}
+    ) {
+        super()
+    }
 
     static new(id: EntityId, username: Username) {
         const now = new Date()
-        return new Buyer(id, username, false, false, now, now)
+        const buyer = new Buyer(id, username, false, false, now, now)
+        buyer.addEvent(new BuyerRegisteredDomainEvent(buyer.id.value))
+        return buyer
     }
 
     static rehydrate(

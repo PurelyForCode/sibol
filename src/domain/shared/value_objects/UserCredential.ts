@@ -1,4 +1,4 @@
-import { EntityId } from '../../lib/EntityId.js'
+import { EntityId } from '../../../lib/domain/EntityId.js'
 import { Email } from './Email.js'
 import { HashedPassword } from './HashedPassword.js'
 

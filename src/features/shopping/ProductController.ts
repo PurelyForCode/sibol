@@ -6,7 +6,6 @@ import {
     DeleteProductBySellerCmd,
     DeleteProductBySellerUsecase,
 } from './delete_product/DeleteProductBySellerUsecase.js'
-import { UpdateProductCmd } from './update_product/UpdateProductUsecase.js'
 
 export class ProductController {
     constructor(
@@ -22,5 +21,5 @@ export class ProductController {
         return await this.deleteUsecase.execute(cmd)
     }
 
-    async updateProduct(cmd: UpdateProductCmd) {}
+    // async updateProduct(cmd: UpdateProductCmd) {}
 }

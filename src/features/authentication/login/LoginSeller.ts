@@ -1,5 +1,6 @@
 import { PasswordUtil } from '../../../domain/shared/interfaces/PasswordUtil.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
+import { Email } from '../../../domain/shared/value_objects/Email.js'
 import { HashedPassword } from '../../../domain/shared/value_objects/HashedPassword.js'
 import { RawPassword } from '../../../domain/shared/value_objects/RawPassword.js'
 import { SellerNotFoundByEmailException } from '../../../exceptions/seller/SellerNotFoundByEmailException.js'
@@ -23,8 +24,9 @@ export class LoginSellerUsecase {
         await this.tm.transaction(async uow => {
             const sellerRepo = uow.getSellerRepo()
             const accountRepo = uow.getAccountRepo()
+            const email = Email.create(cmd.email).unwrapOrThrow('email')
 
-            const seller = await sellerRepo.findByEmail(cmd.email)
+            const seller = await sellerRepo.findByEmail(email)
             if (!seller) {
                 throw new SellerNotFoundByEmailException(cmd.email)
             }

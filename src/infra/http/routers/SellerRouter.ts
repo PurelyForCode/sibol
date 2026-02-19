@@ -1,57 +1,58 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import z from 'zod'
-import { validateInput } from '../../../lib/middleware/InputValidationMiddleware.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
-import {
-    sellerController,
-    sellerQueryRepository,
-} from '../../../compositionRoot.js'
+import { sellerController } from '../../../compositionRoot.js'
+import { validateInput } from '../middleware/InputValidationMiddleware.js'
+import { phoneNumberSchema } from '../validation/phoneNumberSchema.js'
 
 export const sellerRouter = Router({
     mergeParams: true,
 })
-
-sellerRouter.get(
-    '/',
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-        } catch (e: unknown) {
-            next(e)
-        }
-    },
-)
-
-const getSellerBySellerIdSchema = z.object({
-    params: z.object({ sellerId: z.uuidv7() }),
-})
-
-sellerRouter.get(
-    '/:sellerId',
-    validateInput(getSellerBySellerIdSchema),
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const validated = req.validated as z.infer<
-                typeof getSellerBySellerIdSchema
-            >
-            const sellerId = EntityId.create(validated.params.sellerId)
-            const seller = await sellerQueryRepository.findById(sellerId)
-            if (!seller) {
-                res.status(404).json({ message: 'Seller could not be found' })
-                return
-            }
-
-            res.status(200).json({ data: seller })
-        } catch (e: unknown) {
-            next(e)
-        }
-    },
-)
+//
+// sellerRouter.get(
+//     '/',
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         try {
+//         } catch (e: unknown) {
+//             next(e)
+//         }
+//     },
+// )
+//
+// const getSellerBySellerIdSchema = z.object({
+//     params: z.object({ sellerId: z.uuidv7() }),
+// })
+//
+// sellerRouter.get(
+//     '/:sellerId',
+//     validateInput(getSellerBySellerIdSchema),
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         try {
+//             const validated = req.validated as z.infer<
+//                 typeof getSellerBySellerIdSchema
+//             >
+//             const sellerId = EntityId.create(validated.params.sellerId)
+//             const seller = await sellerQueryRepository.findById(sellerId)
+//             if (!seller) {
+//                 res.status(404).json({ message: 'Seller could not be found' })
+//                 return
+//             }
+//
+//             res.status(200).json({ data: seller })
+//         } catch (e: unknown) {
+//             next(e)
+//         }
+//     },
+// )
 
 const createSellerRequestSchema = z.object({
     body: z.object({
-        email: z.string().email(),
+        email: z.email(),
         password: z.string().min(8),
         storeName: z.string().min(3),
+        storeSlug: z.string().min(3),
+        description: z.string().nullable(),
+        supportEmail: z.email().nullable(),
+        supportPhone: phoneNumberSchema.nullable(),
     }),
 })
 
@@ -63,10 +64,17 @@ sellerRouter.post(
             const validated = req.validated as z.infer<
                 typeof createSellerRequestSchema
             >
+
+            const body = validated.body
+
             await sellerController.register({
-                email: validated.body.email,
-                password: validated.body.password,
-                storeName: validated.body.storeName,
+                email: body.email,
+                storeSlug: body.storeSlug,
+                password: body.password,
+                storeName: body.storeName,
+                description: body.description,
+                supportEmail: body.supportEmail,
+                supportPhone: body.supportPhone,
             })
 
             res.status(201).json({

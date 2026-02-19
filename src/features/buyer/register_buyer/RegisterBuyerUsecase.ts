@@ -3,11 +3,11 @@ import { Buyer } from '../../../domain/buyer/aggregates/Buyer.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { PasswordUtil } from '../../../domain/shared/interfaces/PasswordUtil.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { VerificationService } from '../../../domain/shared/services/VerificationService.js'
+import { Email } from '../../../domain/shared/value_objects/Email.js'
 import { RawPassword } from '../../../domain/shared/value_objects/RawPassword.js'
+import { Username } from '../../../domain/shared/value_objects/Username.js'
 import { BuyerEmailAlreadyTakenException } from '../../../exceptions/buyer/BuyerEmailAlreadyTakenException.js'
 import { BuyerUsernameAlreadyExistsException } from '../../../exceptions/buyer/BuyerUsernameAlreadyExistsException.js'
-import { ValidationException } from '../../../exceptions/ValidationException.js'
 
 export type RegisterBuyerCmd = {
     username: string
@@ -20,38 +20,40 @@ export class RegisterBuyerUsecase {
         private readonly tm: TransactionManager,
         private readonly idGen: IdGenerator,
         private readonly passwordHasher: PasswordUtil,
-        private readonly verificationService: VerificationService,
     ) {}
 
     async execute(cmd: RegisterBuyerCmd) {
         await this.tm.transaction(async uow => {
             const br = uow.getBuyerRepo()
-            const ur = uow.getAccountRepo()
+            const ar = uow.getAccountRepo()
 
-            const duplicateEmail = await br.existsByEmail(cmd.email)
+            const email = Email.create(cmd.email).unwrapOrThrow('email')
+            const duplicateEmail = await br.existsByEmail(email)
             if (duplicateEmail) {
                 throw new BuyerEmailAlreadyTakenException(cmd.email)
             }
 
-            const duplicateUsername = await br.existsByUsername(cmd.email)
+            const username = Username.create(cmd.username).unwrapOrThrow(
+                'username',
+            )
+
+            const duplicateUsername = await br.existsByUsername(username)
             if (duplicateUsername) {
                 throw new BuyerUsernameAlreadyExistsException(cmd.email)
             }
 
             const id = this.idGen.generate()
-            const raw = RawPassword.create(cmd.password)
-            if (raw.isError()) {
-                throw new ValidationException('password', raw.message!)
-            }
-            const hashedPassword = await this.passwordHasher.hash(
-                raw.getValue(),
+            const raw = RawPassword.create(cmd.password).unwrapOrThrow(
+                'password',
             )
+            const hashedPassword = await this.passwordHasher.hash(raw)
 
-            const buyer = Buyer.new(id, cmd.username)
-            const account = Account.new(id, cmd.email, hashedPassword)
+            const buyer = Buyer.new(id, username)
+            const account = Account.new(id, email, hashedPassword)
 
-            await ur.insert(user)
-            await br.insert(buyer)
+            await ar.save(account)
+            await br.save(buyer)
+            await uow.publishEvents()
         })
     }
 }

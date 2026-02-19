@@ -1,8 +1,5 @@
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { SellerRepositoryFactory } from '../../../domain/seller/repositories/SellerRepository.js'
-import { ProductRepositoryFactory } from '../../../../../infra/db/repositories/ProductRepository.js'
-import { ProductService } from '../../../domain/services/ProductService.js'
 
 export type DeleteProductBySellerCmd = {
     sellerId: string
@@ -10,18 +7,13 @@ export type DeleteProductBySellerCmd = {
 }
 
 export class DeleteProductBySellerUsecase {
-    constructor(
-        private readonly tm: TransactionManager,
-        private readonly prf: ProductRepositoryFactory,
-        private readonly arf: SellerRepositoryFactory,
-        private readonly ps: ProductService,
-    ) {}
+    constructor(private readonly tm: TransactionManager) {}
 
     async execute(input: DeleteProductBySellerCmd) {
         // check if seller exists
-        return await this.tm.runInTransaction(async trx => {
-            const ar = this.arf.create(trx)
-            const pr = this.prf.create(trx)
+        return await this.tm.transaction(async uow => {
+            const ar = uow.getAccountRepo()
+            const pr = uow.getProductRepo()
 
             const sellerId = EntityId.create(input.sellerId)
             const seller = await ar.findById(sellerId)

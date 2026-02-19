@@ -1,3 +1,11 @@
+export type OutboxRow = {
+    id: string
+    type: string
+    payload: unknown
+    occurred_at: Date
+    processed_at: Date | null
+}
+
 export type AccountRow = {
     id: string
     email: string
@@ -37,6 +45,7 @@ export type ProductRow = {
     description: string | null
     stock_quantity: number
     base_unit: string
+    price_per_unit: number
     rating: number | null
     status: string
     created_at: Date

@@ -3,7 +3,7 @@ import { DomainEvent } from './DomainEvent.js'
 export abstract class AggregateRoot {
     private _events: DomainEvent[] = []
 
-    protected addEvent(event: DomainEvent) {
+    addEvent(event: DomainEvent) {
         this._events.push(event)
     }
 

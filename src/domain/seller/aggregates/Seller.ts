@@ -1,13 +1,15 @@
+import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { Email } from '../../shared/value_objects/Email.js'
 import { MobilePhoneNumber } from '../../shared/value_objects/MobilePhoneNumber.js'
 import { Rating } from '../../shared/value_objects/Rating.js'
+import { SellerRegisteredDomainEvent } from '../events/SellerRegisteredDomainEvent.js'
 import { SellerDescription } from '../value_objects/SellerDescription.js'
 import { StoreName } from '../value_objects/StoreName.js'
 import { StoreSlug } from '../value_objects/StoreSlug.js'
 import { TotalSales } from '../value_objects/TotalSales.js'
 
-export class Seller {
+export class Seller extends AggregateRoot {
     private constructor(
         private _id: EntityId,
         private _storeName: StoreName,
@@ -21,7 +23,9 @@ export class Seller {
         private _supportPhone: MobilePhoneNumber | null,
         private _createdAt: Date,
         private _updatedAt: Date,
-    ) {}
+    ) {
+        super()
+    }
 
     verify() {
         this._isVerified = true
@@ -44,13 +48,13 @@ export class Seller {
         supportPhone: MobilePhoneNumber | null,
     ) {
         const now = new Date()
-        return new Seller(
+        const seller = new Seller(
             id,
             storeName,
             storeSlug,
             description,
             null,
-            0,
+            TotalSales.zero(),
             false,
             true,
             supportEmail,
@@ -58,6 +62,8 @@ export class Seller {
             now,
             now,
         )
+        seller.addEvent(new SellerRegisteredDomainEvent(seller.id.value))
+        return seller
     }
 
     static rehydrate(

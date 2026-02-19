@@ -1,4 +1,6 @@
 -- DROP TABLES
+DROP TABLE IF EXISTS outbox CASCADE;
+
 DROP TABLE IF EXISTS verification_codes CASCADE;
 DROP TABLE IF EXISTS product_pricings CASCADE;
 

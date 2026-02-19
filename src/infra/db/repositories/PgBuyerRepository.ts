@@ -2,42 +2,65 @@ import { Knex } from 'knex'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { Buyer } from '../../../domain/buyer/aggregates/Buyer.js'
 import { BuyerRepository } from '../../../domain/buyer/repositories/BuyerRepository.js'
-import { BuyerRow } from '../tables/TableDefinitions.js'
+import { AccountRow, BuyerRow } from '../tables/TableDefinitions.js'
 import { Username } from '../../../domain/shared/value_objects/Username.js'
 import { Email } from '../../../domain/shared/value_objects/Email.js'
+import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 
 export class PgBuyerRepository implements BuyerRepository {
-    constructor(private readonly k: Knex.Transaction) {}
+    constructor(
+        private readonly k: Knex.Transaction,
+        private readonly uow: UnitOfWork,
+    ) {}
 
     async findByEmail(email: Email): Promise<Buyer | null> {
-        const row = await this.k<BuyerRow>('buyers')
+        const row = await this.k<AccountRow>('accounts')
             .where('email', email.value)
             .first()
+
         if (!row) {
             return null
         }
-        return this.map(row)
+
+        const buyer = await this.k<BuyerRow>('buyers')
+            .where('id', row.id)
+            .first()
+
+        if (!buyer) {
+            return null
+        }
+        return this.map(buyer)
     }
     async findByUsername(username: Username): Promise<Buyer | null> {
         const row = await this.k<BuyerRow>('buyers')
             .where('username', username.value)
             .first()
+
         if (!row) {
             return null
         }
+
         return this.map(row)
     }
     async existsByUsername(username: Username): Promise<boolean> {
         const row = await this.k<BuyerRow>('buyers')
             .where('username', username.value)
             .first()
+
         return !!row
     }
+
     async existsByEmail(email: Email): Promise<boolean> {
-        const row = await this.k<BuyerRow>('buyers')
+        const row = await this.k<BuyerRow>('accounts')
             .where('email', email.value)
             .first()
-        return !!row
+        if (!row) {
+            return false
+        }
+        const buyer = await this.k<BuyerRow>('buyers')
+            .where('id', row.id)
+            .first()
+        return !!buyer
     }
 
     async findById(id: EntityId): Promise<Buyer | null> {
@@ -55,6 +78,7 @@ export class PgBuyerRepository implements BuyerRepository {
             .select(1)
             .where('id', id.value)
             .first()
+
         return !!exists
     }
 
@@ -70,6 +94,7 @@ export class PgBuyerRepository implements BuyerRepository {
             })
             .onConflict('id')
             .merge()
+        this.uow.registerAggregate(entity)
     }
 
     async delete(id: EntityId): Promise<void> {

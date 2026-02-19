@@ -1,3 +1,5 @@
+import { ValidationException } from '../../exceptions/ValidationException.js'
+
 export class Result<T> {
     private readonly value?: T
     readonly message?: string
@@ -28,5 +30,12 @@ export class Result<T> {
 
     static fail<T>(message: string): Result<T> {
         return new Result<T>(undefined, message)
+    }
+
+    unwrapOrThrow<T>(field: string) {
+        if (this.isError()) {
+            throw new ValidationException(field, this.message!)
+        }
+        return this.getValue()
     }
 }

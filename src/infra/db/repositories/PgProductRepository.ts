@@ -9,11 +9,16 @@ import { ProductStock } from '../../../domain/product/value_objects/ProductStock
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { Rating } from '../../../domain/shared/value_objects/Rating.js'
 import { ProductStatus } from '../../../domain/product/value_objects/ProductStatus.js'
+import { Money } from '../../../domain/shared/value_objects/Money.js'
+import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 
 export class PgProductRepository implements ProductRepository {
-    constructor(private readonly k: Knex.Transaction) {}
+    constructor(
+        private readonly k: Knex.Transaction,
+        private readonly uow: UnitOfWork,
+    ) {}
 
-    async productExistsByNameAndSellerId(
+    async existsByNameAndSellerId(
         name: ProductName,
         sellerId: EntityId,
     ): Promise<boolean> {
@@ -63,6 +68,7 @@ export class PgProductRepository implements ProductRepository {
             })
             .onConflict('id')
             .merge()
+        this.uow.registerAggregate(product)
     }
 
     async delete(id: EntityId): Promise<void> {
@@ -78,6 +84,7 @@ export class PgProductRepository implements ProductRepository {
             : null
         const stock = ProductStock.create(row.stock_quantity).getValue()
         const baseUnit = UnitOfMeasurement.create(row.base_unit).getValue()
+        const pricePerUnit = Money.create(row.price_per_unit).getValue()
         const rating = row.rating ? Rating.create(row.rating) : null
         const status = ProductStatus.create(row.status).getValue()
 
@@ -88,6 +95,7 @@ export class PgProductRepository implements ProductRepository {
             description,
             stock,
             baseUnit,
+            pricePerUnit,
             status,
             rating,
             [],

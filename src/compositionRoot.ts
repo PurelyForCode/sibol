@@ -1,56 +1,62 @@
-import { PgSellerRepositoryFactory } from './infra/db/repositories/PgSellerRepository.js'
-import { ProductController } from './features/product/adapters/controllers/ProductController.js'
-import { CreateProductUsecase } from './features/product/application/product/usecases/CreateProductUsecase.js'
-import { DeleteProductBySellerUsecase } from './features/product/application/product/usecases/DeleteProductBySellerUsecase.js'
-import { ProductService } from './features/product/domain/services/ProductService.js'
-import { PgProductRepositoryFactory } from './features/product/infrastructure/repositories/PgProductRepository.js'
-import { KnexTransactionManager } from './lib/implementations/KnexTransactionManager.js'
-import { Uuidv7Generator } from './lib/implementations/Uuidv7Generator.js'
-import { knexInstance } from './config/KnexInstance.js'
-import { PgProductQueryRepository } from './features/product/infrastructure/repositories/PgProductQueryRepository.js'
-import { SellerService } from './domain/seller/services/SellerService.js'
-import { RegisterSellerUsecase } from './features/account/register_seller/RegisterSellerUsecase.js'
-import { ArgonPasswordHasher } from './lib/implementations/ArgonPasswordHasher.js'
-import { SellerController } from './features/account/SellerController.js'
-import { PgSellerQueryRepository } from './infra/db/repositories/PgSellerQueryRepository.js'
+import { id } from 'zod/locales'
+import { BuyerController } from './features/buyer/BuyerController.js'
+import { RegisterBuyerUsecase } from './features/buyer/register_buyer/RegisterBuyerUsecase.js'
+import { knexInstance } from './infra/config/KnexInstance.js'
+import { KnexTransactionManager } from './infra/implementations/KnexTransactionManager.js'
+import { Uuidv7Generator } from './infra/implementations/Uuidv7Generator.js'
+import { ArgonPasswordUtil } from './infra/implementations/ArgonPasswordUtil.js'
+import { SellerController } from './features/seller/SellerController.js'
+import { RegisterSellerUsecase } from './features/seller/register_seller/RegisterSellerUsecase.js'
+import { AuthenticationController } from './features/authentication/AuthenticationController.js'
+import { LoginSellerUsecase } from './features/authentication/login/LoginSeller.js'
+import { LoginBuyerUsecase } from './features/authentication/login/LoginBuyer.js'
+import { ProductController } from './features/shopping/ProductController.js'
+import { CreateProductUsecase } from './features/shopping/create_product/CreateProductUsecase.js'
+import { DeleteProductBySellerUsecase } from './features/shopping/delete_product/DeleteProductBySellerUsecase.js'
 
-export const transactionManager = new KnexTransactionManager(knexInstance)
-export const passwordHasher = new ArgonPasswordHasher()
-// Interfaces
 export const idGenerator = new Uuidv7Generator()
+export const passwordUtility = new ArgonPasswordUtil()
 
-// Repositories
-export const productQueryRepository = new PgProductQueryRepository(knexInstance)
-export const sellerQueryRepository = new PgSellerQueryRepository(knexInstance)
-
-// Domain
-export const productService = new ProductService()
-export const sellerService = new SellerService()
-
-// Application
-// Product
-export const deleteProductBySellerUsecase = new DeleteProductBySellerUsecase(
+export const transactionManager = new KnexTransactionManager(
+    knexInstance,
+    idGenerator,
+)
+export const registerBuyerUsecase = new RegisterBuyerUsecase(
     transactionManager,
-    productService,
+    idGenerator,
+    passwordUtility,
+)
+
+export const registerSellerUsecase = new RegisterSellerUsecase(
+    transactionManager,
+    idGenerator,
+    passwordUtility,
+)
+export const loginSellerUsecase = new LoginSellerUsecase(
+    transactionManager,
+    passwordUtility,
+)
+export const loginBuyerUsecase = new LoginBuyerUsecase(
+    transactionManager,
+    passwordUtility,
 )
 export const createProductUsecase = new CreateProductUsecase(
     transactionManager,
-    productService,
     idGenerator,
 )
-
-// Seller
-export const registerSellerUsecase = new RegisterSellerUsecase(
+export const deleteProductBySellerUsecase = new DeleteProductBySellerUsecase(
     transactionManager,
-    sellerService,
-    idGenerator,
-    passwordHasher,
 )
 
-// Adapters
+export const buyerController = new BuyerController(registerBuyerUsecase)
+export const sellerController = new SellerController(registerSellerUsecase)
+
 export const productController = new ProductController(
     createProductUsecase,
     deleteProductBySellerUsecase,
 )
-
-export const sellerController = new SellerController(registerSellerUsecase)
+export const authenticationController = new AuthenticationController(
+    loginSellerUsecase,
+    loginBuyerUsecase,
+    null,
+)

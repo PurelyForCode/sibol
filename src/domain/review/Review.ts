@@ -1,9 +1,10 @@
-import { EntityId } from '../../../../../lib/EntityId.js'
-import { Rating } from '../../../../shared/value_objects/Rating.js'
+import { AggregateRoot } from '../../lib/domain/AggregateRoot.js'
+import { EntityId } from '../../lib/domain/EntityId.js'
+import { Rating } from '../shared/value_objects/Rating.js'
 import { ReviewImage } from './ReviewImage.js'
 import { ReviewMessage } from './ReviewMessage.js'
 
-export class Review {
+export class Review extends AggregateRoot {
     private constructor(
         private _id: EntityId,
         private _buyerId: EntityId,
@@ -12,7 +13,9 @@ export class Review {
         private _images: ReviewImage[],
         private _createdAt: Date,
         private _updatedAt: Date,
-    ) {}
+    ) {
+        super()
+    }
 
     static rehydrate(
         id: EntityId,

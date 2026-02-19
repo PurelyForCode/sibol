@@ -1,3 +1,6 @@
-export interface DomainEvent {
-    readonly occurredAt: Date
+export abstract class DomainEvent {
+    constructor(
+        public readonly occurredAt: Date,
+        public readonly eventType: string,
+    ) {}
 }

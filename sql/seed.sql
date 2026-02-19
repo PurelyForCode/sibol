@@ -1,4 +1,4 @@
-INSERT INTO users (
+INSERT INTO accounts (
     id,
     email,
     password_hash,
@@ -12,7 +12,7 @@ INSERT INTO users (
     now()
 );
 
-INSERT INTO users (
+INSERT INTO accounts(
     id,
     email,
     password_hash,

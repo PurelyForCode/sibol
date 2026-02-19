@@ -8,10 +8,13 @@ import { StoreName } from '../value_objects/StoreName.js'
 import { StoreSlug } from '../value_objects/StoreSlug.js'
 
 export interface SellerRepository extends Repository<Seller, EntityId> {
-    existsByEmail(email: Email): Promise<boolean>
     findByEmail(email: Email): Promise<Seller | null>
     findByStoreName(storeName: StoreName): Promise<Seller | null>
     findByStoreSlug(slug: StoreSlug): Promise<Seller | null>
+
+    existsByEmail(email: Email): Promise<boolean>
+    existsByStoreName(storeName: StoreName): Promise<boolean>
+    existsByStoreSlug(slug: StoreSlug): Promise<boolean>
 }
 
 export interface SellerQueryRepository extends QueryRepository<

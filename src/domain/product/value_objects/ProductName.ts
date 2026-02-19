@@ -1,24 +1,17 @@
-import { ValueObject } from "../../../../../lib/ValueObject.js"
+import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
+import { Result } from '../../../lib/utils/Result.js'
 
-interface ProductNameProps {
-    name: string
-}
-
-export class ProductName extends ValueObject<ProductNameProps> {
-    private constructor(props: ProductNameProps) {
-        super(props);
+export class ProductName extends SingleValueObject<string> {
+    private constructor(value: string) {
+        super(value)
     }
 
-    get value(): string {
-        return this.props.name;
-    }
-
-    public static create(name: string): ProductName {
-        if (name.length === 100) {
-            throw new Error(`Invalid product name length, must be between 3-100 characters`);
-        } else if (name.length < 3) {
-            throw new Error(`Invalid product name length, must be between 3-100 characters`);
+    static create(name: string): Result<ProductName> {
+        if (name.length === 100 || name.length < 3) {
+            Result.fail(
+                `Invalid product name length, must be between 3-100 characters`,
+            )
         }
-        return new ProductName({ name: name.toLowerCase() });
+        return Result.ok(new ProductName(name))
     }
 }

@@ -17,6 +17,7 @@ export class Product extends AggregateRoot {
         private _description: ProductDescription | null,
         private _stockQuantity: ProductStock,
         private _baseUnit: UnitOfMeasurement,
+        private _pricePerUnit: Money,
         private _status: ProductStatus,
         private _rating: Rating | null,
         private _images: ProductImage[],
@@ -28,10 +29,21 @@ export class Product extends AggregateRoot {
         super()
     }
 
+    changePricePerUnit(price: Money) {
+        this._pricePerUnit = price
+        this._updatedAt = new Date()
+    }
+
+    changeBaseUnit(unit: UnitOfMeasurement) {
+        this._baseUnit = unit
+        this._updatedAt = new Date()
+    }
+
     changeName(name: ProductName) {
         this._updatedAt = new Date()
         this._name = name
     }
+
     changeDescription(description: ProductDescription | null) {
         this._updatedAt = new Date()
         this._description = description
@@ -63,6 +75,7 @@ export class Product extends AggregateRoot {
             description,
             ProductStock.zero(),
             unit,
+            pricePerUnit,
             ProductStatus.active(),
             null,
             [],
@@ -80,6 +93,7 @@ export class Product extends AggregateRoot {
         description: ProductDescription | null,
         stock: ProductStock,
         unit: UnitOfMeasurement,
+        pricePerUnit: Money,
         status: ProductStatus,
         rating: Rating | null,
         images: ProductImage[],
@@ -95,6 +109,7 @@ export class Product extends AggregateRoot {
             description,
             stock,
             unit,
+            pricePerUnit,
             status,
             rating,
             images,
@@ -138,8 +153,10 @@ export class Product extends AggregateRoot {
     public get baseUnit(): UnitOfMeasurement {
         return this._baseUnit
     }
-
     public get status(): ProductStatus {
         return this._status
+    }
+    public get pricePerUnit(): Money {
+        return this._pricePerUnit
     }
 }

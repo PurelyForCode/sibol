@@ -10,9 +10,26 @@ import { AccountRow, SellerRow } from '../tables/TableDefinitions.js'
 import { MobilePhoneNumber } from '../../../domain/shared/value_objects/MobilePhoneNumber.js'
 import { StoreSlug } from '../../../domain/seller/value_objects/StoreSlug.js'
 import { SellerDescription } from '../../../domain/seller/value_objects/SellerDescription.js'
+import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 
 export class PgSellerRepository implements SellerRepository {
-    constructor(private readonly k: Knex.Transaction) {}
+    constructor(
+        private readonly k: Knex.Transaction,
+        private readonly uow: UnitOfWork,
+    ) {}
+
+    async existsByStoreName(storeName: StoreName): Promise<boolean> {
+        const row = await this.k<SellerRow>('sellers')
+            .where('store_name', storeName.value)
+            .first()
+        return !!row
+    }
+    async existsByStoreSlug(slug: StoreSlug): Promise<boolean> {
+        const row = await this.k<SellerRow>('sellers')
+            .where('store_slug', slug.value)
+            .first()
+        return !!row
+    }
 
     async findByEmail(email: Email): Promise<Seller | null> {
         const row = await this.k<SellerRow>('sellers')
@@ -99,6 +116,7 @@ export class PgSellerRepository implements SellerRepository {
 
             .onConflict('id')
             .merge()
+        this.uow.registerAggregate(entity)
     }
 
     async delete(id: EntityId): Promise<void> {

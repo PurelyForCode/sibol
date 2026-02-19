@@ -4,7 +4,7 @@ import { Product } from '../aggregates/Product.js'
 import { ProductName } from '../value_objects/ProductName.js'
 
 export interface ProductRepository extends Repository<Product, EntityId> {
-    productExistsByNameAndSellerId(
+    existsByNameAndSellerId(
         name: ProductName,
         sellerId: EntityId,
     ): Promise<boolean>

@@ -1,67 +1,61 @@
-import { EntityId } from '../../../../../lib/EntityId.js'
-import { IdGenerator } from '../../../../../lib/interfaces/IdGenerator.js'
-import { TransactionManager } from '../../../../../lib/interfaces/TransactionManager.js'
-import { SellerRepositoryFactory } from '../../../../../domain/buyer/repositories/SellerRepository.js'
-import { Money } from '../../../domain/entities/product/Money.js'
-import { Product } from '../../../domain/entities/product/Product.js'
-import { ProductDescription } from '../../../domain/entities/product/ProductDescription.js'
-import { ProductName } from '../../../domain/entities/product/ProductName.js'
-import {
-    UnitOfMeasure,
-    UnitOfMeasurement,
-} from '../../../domain/entities/product/UnitOfMeasurement.js'
-import { ProductRepositoryFactory } from '../../../../../infra/db/repositories/ProductRepository.js'
+import { Product } from '../../../domain/product/aggregates/Product.js'
+import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
+import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
+import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
+import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
+import { Money } from '../../../domain/shared/value_objects/Money.js'
+import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { DuplicateProductNameException } from '../../../exceptions/product/DuplicateProductNameException.js'
+import { EntityId } from '../../../lib/domain/EntityId.js'
 
 export type CreateProductCmd = {
     description: string | null
     name: string
-    pricePerUnit: number
     sellerId: string
-    unit: {
-        measurement: UnitOfMeasure
-        value: number
-    }
+    unitOfMeasurement: string
+    pricePerUnit: number
 }
 
 export class CreateProductUsecase {
     constructor(
         private readonly tm: TransactionManager,
-        private readonly prf: ProductRepositoryFactory,
-        private readonly srf: SellerRepositoryFactory,
         private readonly idGen: IdGenerator,
     ) {}
 
-    async execute(input: CreateProductCmd) {
-        return await this.tm.runInTransaction(async trx => {
-            const pr = this.prf.create(trx)
-            const ar = this.srf.create(trx)
-
+    async execute(cmd: CreateProductCmd) {
+        return await this.tm.transaction(async uow => {
+            const sr = uow.getSellerRepo()
+            const pr = uow.getProductRepo()
             // check if seller exists
-            const sellerId = EntityId.create(input.sellerId)
-            if (!(await ar.existsById(sellerId))) {
+            const sellerId = EntityId.create(cmd.sellerId)
+            if (!(await sr.existsById(sellerId))) {
                 throw new Error('Seller account does not exist')
             }
 
             // check if name of product is duplicated
-            const pName = ProductName.create(input.name)
+            const pName = ProductName.create(cmd.name).unwrapOrThrow(
+                'productName',
+            )
             const duplicatedName = await pr.existsByNameAndSellerId(
                 pName,
                 sellerId,
             )
 
             if (duplicatedName) {
-                throw new Error()
+                throw new DuplicateProductNameException(cmd.name)
             }
 
-            const pDescription = input.description
-                ? ProductDescription.create(input.description)
+            const pDescription = cmd.description
+                ? ProductDescription.create(cmd.description).unwrapOrThrow(
+                      'description',
+                  )
                 : null
-            const pPrice = Money.create(input.pricePerUnit)
-            if (input.unit.measurement === UnitOfMeasure.CM) {
-            }
+
             const unit = UnitOfMeasurement.create(
-                input.unit.measurement,
-                input.unit.value,
+                cmd.unitOfMeasurement,
+            ).unwrapOrThrow('unitOfMeasurement')
+            const price = Money.create(cmd.pricePerUnit).unwrapOrThrow(
+                'pricePerUnit',
             )
 
             const id = this.idGen.generate()
@@ -71,7 +65,7 @@ export class CreateProductUsecase {
                 pName,
                 pDescription,
                 unit,
-                pPrice,
+                price,
             )
 
             await pr.save(product)

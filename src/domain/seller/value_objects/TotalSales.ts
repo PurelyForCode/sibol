@@ -12,4 +12,7 @@ export class TotalSales extends SingleValueObject<number> {
         }
         return Result.ok(new TotalSales(totalSales))
     }
+    static zero() {
+        return new TotalSales(0)
+    }
 }

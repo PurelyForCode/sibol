@@ -1,23 +1,16 @@
-import { ValueObject } from "../../../../../lib/ValueObject.js";
+import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
+import { Result } from '../../../lib/utils/Result.js'
 
-interface MoneyProps {
-    amount: number
-}
-
-export class Money extends ValueObject<MoneyProps> {
-    private constructor(props: MoneyProps) {
-        super(props)
+export class Money extends SingleValueObject<number> {
+    private constructor(value: number) {
+        super(value)
     }
 
-    get amount() {
-        return this.props.amount
-    }
-
-    static create(amount: number) {
-        if (amount < 0) {
-            throw new Error("Money amount can not be a negative value")
+    static create(value: number): Result<Money> {
+        if (value < 0) {
+            return Result.fail('Money amount can not be a negative value')
         }
-        return new Money({ amount: amount })
-    }
 
+        return Result.ok(new Money(value))
+    }
 }

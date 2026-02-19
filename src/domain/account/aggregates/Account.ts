@@ -30,6 +30,7 @@ export class Account extends AggregateRoot {
     ) {
         return new Account(id, email, password, createdAt, updatedAt, bannedAt)
     }
+
     unban() {
         this._bannedAt = null
         this._updatedAt = new Date()
@@ -41,13 +42,13 @@ export class Account extends AggregateRoot {
         this._updatedAt = now
     }
 
-    changePassword(password: HashedPassword) {
-        this._password = password
+    changeEmail(email: Email) {
+        this._email = email
         this._updatedAt = new Date()
     }
 
-    changeEmail(email: Email) {
-        this._email = email
+    changePassword(password: HashedPassword) {
+        this._password = password
         this._updatedAt = new Date()
     }
 
@@ -60,13 +61,13 @@ export class Account extends AggregateRoot {
     public get createdAt(): Date {
         return this._createdAt
     }
-    public get password(): HashedPassword {
-        return this._password
-    }
     public get email(): Email {
         return this._email
     }
     public get id(): EntityId {
         return this._id
+    }
+    public get password(): HashedPassword {
+        return this._password
     }
 }
