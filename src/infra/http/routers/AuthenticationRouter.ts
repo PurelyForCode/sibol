@@ -17,10 +17,10 @@ authenticationRouter.post(
     validateInput(loginSellerSchema),
     async (req, res, next) => {
         try {
-            const validated = req.validated as z.infer<typeof loginSellerSchema>
+            const { body } = req.validated as z.infer<typeof loginSellerSchema>
             const token = await authenticationController.loginSeller({
-                email: validated.body.email,
-                password: validated.body.password,
+                email: body.email,
+                password: body.password,
             })
             res.status(200).json({ data: token })
         } catch (e) {
@@ -41,10 +41,10 @@ authenticationRouter.post(
     validateInput(loginBuyerSchema),
     async (req, res, next) => {
         try {
-            const validated = req.validated as z.infer<typeof loginBuyerSchema>
+            const { body } = req.validated as z.infer<typeof loginBuyerSchema>
             const token = await authenticationController.loginBuyer({
-                email: validated.body.email,
-                password: validated.body.password,
+                email: body.email,
+                password: body.password,
             })
             res.status(200).json({ data: token })
         } catch (e) {

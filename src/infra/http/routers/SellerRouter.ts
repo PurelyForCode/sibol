@@ -61,11 +61,9 @@ sellerRouter.post(
     validateInput(createSellerRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const validated = req.validated as z.infer<
+            const { body } = req.validated as z.infer<
                 typeof createSellerRequestSchema
             >
-
-            const body = validated.body
 
             await sellerController.register({
                 email: body.email,

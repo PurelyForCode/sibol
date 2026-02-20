@@ -1,4 +1,4 @@
-import { LoginBuyerCmd, LoginBuyerUsecase } from './login/LoginAdmin.js'
+import { LoginBuyerCmd, LoginBuyerUsecase } from './login/LoginBuyer.js'
 import { LoginSellerCmd, LoginSellerUsecase } from './login/LoginSeller.js'
 
 export class AuthenticationController {

@@ -3,20 +3,31 @@ import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductRepository } from '../../../domain/product/repositories/ProductRepository.js'
 import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
 import { Product } from '../../../domain/product/aggregates/Product.js'
-import { ProductRow } from '../tables/TableDefinitions.js'
+import {
+    ProductImageRow,
+    ProductRow,
+    ProductSellUnitRow,
+} from '../tables/TableDefinitions.js'
 import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
 import { ProductStock } from '../../../domain/product/value_objects/ProductStock.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import {
+    UnitOfMeasurement,
+    UnitOfMeasurementValues,
+} from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { Rating } from '../../../domain/shared/value_objects/Rating.js'
 import { ProductStatus } from '../../../domain/product/value_objects/ProductStatus.js'
 import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
+import { ProductSellUnit } from '../../../domain/product/entities/ProductSellUnit.js'
+import { ConversionFactor } from '../../../domain/shared/value_objects/ConversionFactor.js'
 
 export class PgProductRepository implements ProductRepository {
     constructor(
         private readonly k: Knex.Transaction,
         private readonly uow: UnitOfWork,
     ) {}
+
+    snapshot() {}
 
     async existsByNameAndSellerId(
         name: ProductName,
@@ -31,14 +42,24 @@ export class PgProductRepository implements ProductRepository {
     }
 
     async findById(id: EntityId): Promise<Product | null> {
-        const row = await this.k<ProductRow>('products')
+        const productRow = await this.k<ProductRow>('products')
             .select('*')
             .where('id', id.value)
             .first()
-        if (!row) {
+        if (!productRow) {
             return null
         }
-        return this.map(row)
+        const sellUnitRows = await this.k<ProductSellUnitRow>(
+            'product_sell_units',
+        )
+            .select('unit', 'conversion_factor', 'id')
+            .where('product_id', productRow.id)
+
+        const imageRows = await this.k<ProductImageRow>('product_images')
+            .select('url', 'position', 'id', 'created_at')
+            .where('product_id', productRow.id)
+
+        return this.map(productRow, sellUnitRows, imageRows)
     }
 
     async existsById(id: EntityId): Promise<boolean> {
@@ -68,6 +89,17 @@ export class PgProductRepository implements ProductRepository {
             })
             .onConflict('id')
             .merge()
+        for (const [_, sellUnit] of product.sellUnits) {
+            await this.k<ProductSellUnitRow>('product_sell_units')
+                .insert({
+                    conversion_factor: sellUnit.conversionFactor.value,
+                    id: sellUnit.id.value,
+                    product_id: sellUnit.productId.value,
+                    unit: sellUnit.unit.value,
+                })
+                .onConflict('id')
+                .merge()
+        }
         this.uow.registerAggregate(product)
     }
 
@@ -75,21 +107,46 @@ export class PgProductRepository implements ProductRepository {
         await this.k('products').delete().where('id', id.value)
     }
 
-    private map(row: ProductRow): Product {
-        const id = EntityId.create(row.id)
-        const sellerId = EntityId.create(row.seller_id)
-        const name = ProductName.create(row.name)
-        const description = row.description
-            ? ProductDescription.create(row.description).getValue()
+    private map(
+        productRow: ProductRow,
+        sellUnitRows: Omit<ProductSellUnitRow, 'product_id'>[],
+        imageRows: Omit<ProductImageRow, 'product_id'>[],
+    ): Product {
+        const productId = EntityId.create(productRow.id)
+        const sellerId = EntityId.create(productRow.seller_id)
+        const name = ProductName.create(productRow.name).getValue()
+        const description = productRow.description
+            ? ProductDescription.create(productRow.description).getValue()
             : null
-        const stock = ProductStock.create(row.stock_quantity).getValue()
-        const baseUnit = UnitOfMeasurement.create(row.base_unit).getValue()
-        const pricePerUnit = Money.create(row.price_per_unit).getValue()
-        const rating = row.rating ? Rating.create(row.rating) : null
-        const status = ProductStatus.create(row.status).getValue()
+        const stock = ProductStock.create(productRow.stock_quantity).getValue()
+        const baseUnit = UnitOfMeasurement.create(
+            productRow.base_unit as UnitOfMeasurementValues,
+        ).getValue()
+        const pricePerUnit = Money.create(productRow.price_per_unit).getValue()
+        const rating = productRow.rating
+            ? Rating.create(productRow.rating)
+            : null
+        const status = ProductStatus.create(productRow.status).getValue()
+
+        const sellUnits = new Map()
+        for (const row of sellUnitRows) {
+            const sellUnitId = EntityId.create(row.id)
+            const sellUnitUnit = UnitOfMeasurement.create(row.unit).getValue()
+            const conversionFactor = ConversionFactor.create(
+                row.conversion_factor,
+            ).getValue()
+
+            const sellUnit = ProductSellUnit.rehydrate(
+                sellUnitId,
+                productId,
+                sellUnitUnit,
+                conversionFactor,
+            )
+            sellUnits.set(sellUnit.id.value, sellUnit)
+        }
 
         return Product.rehydrate(
-            id,
+            productId,
             sellerId,
             name,
             description,
@@ -98,11 +155,11 @@ export class PgProductRepository implements ProductRepository {
             pricePerUnit,
             status,
             rating,
-            [],
-            [],
-            row.created_at,
-            row.updated_at,
-            row.deleted_at,
+            new Map(),
+            sellUnits,
+            productRow.created_at,
+            productRow.updated_at,
+            productRow.deleted_at,
         )
     }
 }

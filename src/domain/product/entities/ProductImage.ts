@@ -1,6 +1,6 @@
-import { EntityId } from '../../../../../lib/EntityId.js'
-import { ImagePath } from '../../../../shared/value_objects/ImagePath.js'
-import { ImagePosition } from '../../../../shared/value_objects/ImagePosition.js'
+import { EntityId } from '../../../lib/domain/EntityId.js'
+import { ImagePath } from '../../shared/value_objects/ImagePath.js'
+import { ImagePosition } from '../../shared/value_objects/ImagePosition.js'
 
 export class ProductImage {
     private constructor(
@@ -10,7 +10,15 @@ export class ProductImage {
         private _createdAt: Date,
     ) {}
 
-    static create(
+    changeUrl(url: ImagePath) {
+        this._url = url
+    }
+
+    moveTo(position: ImagePosition) {
+        this._position = position
+    }
+
+    static new(
         id: EntityId,
         url: ImagePath,
         position: ImagePosition,
@@ -26,14 +34,6 @@ export class ProductImage {
         createdAt: Date,
     ) {
         return new ProductImage(id, url, position, createdAt)
-    }
-
-    changeUrl(url: ImagePath) {
-        this._url = url
-    }
-
-    moveTo(position: ImagePosition) {
-        this._position = position
     }
 
     public get createdAt(): Date {

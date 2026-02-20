@@ -1,13 +1,20 @@
 import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId, Id } from '../../../lib/domain/EntityId.js'
 import { Rating } from '../../shared/value_objects/Rating.js'
-import { ProductImage } from '../ProductImage.js'
+import { ProductImage } from '../entities/ProductImage.js'
 import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 import { ProductDescription } from '../value_objects/ProductDescription.js'
 import { ProductName } from '../value_objects/ProductName.js'
 import { ProductStock } from '../value_objects/ProductStock.js'
 import { ProductStatus } from '../value_objects/ProductStatus.js'
 import { Money } from '../../shared/value_objects/Money.js'
+import { ConversionFactor } from '../../shared/value_objects/ConversionFactor.js'
+import { ImagePosition } from '../../shared/value_objects/ImagePosition.js'
+import { ProductSellUnit } from '../entities/ProductSellUnit.js'
+import { ProductSellUnitAlreadyDefinedException } from '../../../exceptions/product/ProductSellUnitAlreadyDefinedException.js'
+import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
+import { ProductSellUnitIsNotConvertibleException } from '../../../exceptions/product/ProductSellUnitIsNotConvertibleException.js'
+import { ProductArchivedDomainEvent } from '../events/ProductArchivedDomainEvent.js'
 
 export class Product extends AggregateRoot {
     private constructor(
@@ -20,14 +27,83 @@ export class Product extends AggregateRoot {
         private _pricePerUnit: Money,
         private _status: ProductStatus,
         private _rating: Rating | null,
-        private _images: ProductImage[],
-        private units: any[],
+        private _images: Map<Id, ProductImage>,
+        private _sellUnits: Map<Id, ProductSellUnit>,
         private _createdAt: Date,
         private _updatedAt: Date,
         private _deletedAt: Date | null,
     ) {
         super()
     }
+
+    addSellUnit(id: EntityId, unit: UnitOfMeasurement) {
+        for (const [_, value] of this._sellUnits) {
+            if (value.unit.value === unit.value) {
+                throw new ProductSellUnitAlreadyDefinedException(
+                    unit.value,
+                    this.id.value,
+                )
+            }
+        }
+
+        if (!unit.isConvertibleTo(this._baseUnit)) {
+            throw new ProductSellUnitIsNotConvertibleException(
+                unit.value,
+                this.id.value,
+            )
+        }
+        const conversionFactor = ConversionFactor.fromTo(
+            this._baseUnit,
+            unit,
+        ).getValue()
+
+        const sellUnit = ProductSellUnit.new(
+            id,
+            this.id,
+            unit,
+            conversionFactor,
+        )
+
+        this._sellUnits.set(sellUnit.id.value, sellUnit)
+    }
+
+    removeSellUnit(sellUnitId: EntityId) {
+        if (!this._sellUnits.delete(sellUnitId.value)) {
+            throw new ProductSellUnitNotFoundException(
+                sellUnitId.value,
+                this.id.value,
+            )
+        }
+    }
+
+    changeSellUnitUnit(sellUnitId: EntityId, unit: UnitOfMeasurement) {
+        const sellUnit = this._sellUnits.get(sellUnitId.value)
+        if (!sellUnit) {
+            throw new ProductSellUnitNotFoundException(
+                sellUnitId.value,
+                this.id.value,
+            )
+        }
+        sellUnit.changeUnit(unit)
+    }
+
+    changeSellUnitConversionFactor(
+        sellUnitId: EntityId,
+        conversionFactor: ConversionFactor,
+    ) {
+        const sellUnit = this._sellUnits.get(sellUnitId.value)
+        if (!sellUnit) {
+            throw new ProductSellUnitNotFoundException(
+                sellUnitId.value,
+                this.id.value,
+            )
+        }
+        sellUnit.changeConversionFactor(conversionFactor)
+    }
+
+    addImage(image: ProductImage) {}
+    removeImage(imageId: EntityId) {}
+    changeImagePosition(imageId: EntityId, position: ImagePosition) {}
 
     changePricePerUnit(price: Money) {
         this._pricePerUnit = price
@@ -55,6 +131,7 @@ export class Product extends AggregateRoot {
     }
 
     archive() {
+        this.addEvent(new ProductArchivedDomainEvent(this.id.value))
         this._deletedAt = new Date()
     }
 
@@ -78,8 +155,8 @@ export class Product extends AggregateRoot {
             pricePerUnit,
             ProductStatus.active(),
             null,
-            [],
-            [],
+            new Map(),
+            new Map(),
             now,
             now,
             null,
@@ -96,8 +173,8 @@ export class Product extends AggregateRoot {
         pricePerUnit: Money,
         status: ProductStatus,
         rating: Rating | null,
-        images: ProductImage[],
-        units: any[],
+        images: Map<Id, ProductImage>,
+        sellUnits: Map<Id, ProductSellUnit>,
         createdAt: Date,
         updatedAt: Date,
         deletedAt: Date | null,
@@ -113,16 +190,13 @@ export class Product extends AggregateRoot {
             status,
             rating,
             images,
-            units,
+            sellUnits,
             createdAt,
             updatedAt,
             deletedAt,
         )
     }
 
-    public get images(): ProductImage[] {
-        return this._images
-    }
     public get deletedAt(): Date | null {
         return this._deletedAt
     }
@@ -158,5 +232,8 @@ export class Product extends AggregateRoot {
     }
     public get pricePerUnit(): Money {
         return this._pricePerUnit
+    }
+    public get sellUnits(): Map<Id, ProductSellUnit> {
+        return this._sellUnits
     }
 }

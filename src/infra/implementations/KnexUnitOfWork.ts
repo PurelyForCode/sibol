@@ -9,7 +9,7 @@ import { AccountRepository } from '../../domain/account/repositories/AccountRepo
 import { AggregateRoot } from '../../lib/domain/AggregateRoot.js'
 import { DomainEvent } from '../../lib/domain/DomainEvent.js'
 import { PgAccountRepository } from '../db/repositories/PgAccountRepository.js'
-import { DomainEventPublisher } from '../../lib/domain/DomainEventPublisher.js'
+import { DomainEventPublisher } from '../../lib/interfaces/DomainEventPublisher.js'
 import { KnexDomainEventPublisher } from './KnexDomainEventPublisher.js'
 import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
 import { PgBuyerRepository } from '../db/repositories/PgBuyerRepository.js'

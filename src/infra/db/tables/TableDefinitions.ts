@@ -52,3 +52,18 @@ export type ProductRow = {
     updated_at: Date
     deleted_at: Date | null
 }
+
+export type ProductSellUnitRow = {
+    id: string
+    product_id: string
+    unit: string
+    conversion_factor: number
+}
+
+export type ProductImageRow = {
+    id: string
+    product_id: string
+    url: string
+    position: number
+    created_at: Date
+}

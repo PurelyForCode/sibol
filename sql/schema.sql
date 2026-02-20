@@ -104,13 +104,12 @@ CREATE TABLE products (
 	deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE product_pricings (
+CREATE TABLE product_sell_units (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	sell_unit VARCHAR(10) NOT NULL,
+	unit VARCHAR(10) NOT NULL,
 	conversion_factor NUMERIC(10,3) NOT NULL CHECK (conversion_factor > 0),
-	pricing_per_unit NUMERIC(12,2) NOT NULL CHECK (pricing_per_unit > 0),
-	UNIQUE (product_id, sell_unit)
+	UNIQUE (product_id, unit)
 );
 
 CREATE TABLE product_reviews (

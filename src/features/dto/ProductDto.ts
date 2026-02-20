@@ -3,11 +3,11 @@ export type ProductDto = {
     sellerId: string
     name: string
     description: string | null
-    stock: number
-    unitOfMeasure: string
-    unitValue: number
+    stockQuantity: number
+    baseUnit: string
     pricePerUnit: number
     rating: number | null
+    status: string
     createdAt: Date
     updatedAt: Date
     deletedAt: Date | null

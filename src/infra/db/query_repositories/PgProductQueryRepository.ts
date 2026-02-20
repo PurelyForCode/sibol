@@ -1,10 +1,9 @@
 import { Knex } from 'knex'
 import { EntityId } from '../../../lib/domain/EntityId.js'
-import { ProductQueryRepository } from '../../domain/repositories/ProductRepository.js'
-import { ProductDto } from '../../../features/shopping/adapters/dto/ProductDto.js'
-import { ProductRow } from '../../../../lib/database_tables/ProductRow.js'
+import { ProductDto } from '../../../features/dto/ProductDto.js'
+import { ProductRow } from '../tables/TableDefinitions.js'
 
-export class PgProductQueryRepository implements ProductQueryRepository {
+export class PgProductQueryRepository {
     constructor(private readonly k: Knex) {}
 
     async findById(id: EntityId): Promise<ProductDto | null> {
@@ -40,9 +39,9 @@ export class PgProductQueryRepository implements ProductQueryRepository {
             pricePerUnit: row.price_per_unit,
             rating: row.rating,
             sellerId: row.seller_id,
-            stock: row.stock,
-            unitOfMeasure: row.unit_of_measure,
-            unitValue: row.unit_value,
+            stockQuantity: row.stock_quantity,
+            baseUnit: row.base_unit,
+            status: row.status,
             updatedAt: row.updated_at,
         }
     }

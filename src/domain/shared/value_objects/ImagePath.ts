@@ -1,5 +1,4 @@
 import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
-import fs from 'fs'
 import path from 'path'
 
 export class ImagePath extends SingleValueObject<string> {
@@ -7,11 +6,6 @@ export class ImagePath extends SingleValueObject<string> {
         super(value)
     }
 
-    /**
-     * Create an ImagePath from a local file or an internet URL
-     * @param input string path or URL
-     * @param baseDir optional base directory for local files
-     */
     static create(input: string, baseDir?: string): ImagePath {
         if (input.startsWith('http://') || input.startsWith('https://')) {
             try {

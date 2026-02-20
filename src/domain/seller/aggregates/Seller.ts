@@ -1,5 +1,6 @@
 import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
+import { Product } from '../../product/aggregates/Product.js'
 import { Email } from '../../shared/value_objects/Email.js'
 import { MobilePhoneNumber } from '../../shared/value_objects/MobilePhoneNumber.js'
 import { Rating } from '../../shared/value_objects/Rating.js'
@@ -27,6 +28,16 @@ export class Seller extends AggregateRoot {
         super()
     }
 
+    canPerformActionOnProduct(product: Product) {
+        if (!this.isActive || !this.isVerified) {
+            return false
+        }
+        if (!product.sellerId.equals(this.id)) {
+            return false
+        }
+
+        return true
+    }
     verify() {
         this._isVerified = true
     }

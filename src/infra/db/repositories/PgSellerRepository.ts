@@ -86,7 +86,9 @@ export class PgSellerRepository implements SellerRepository {
         if (!row) {
             return null
         }
-        return this.map(row)
+
+        const seller = this.map(row)
+        return seller
     }
 
     async existsById(id: EntityId): Promise<boolean> {
@@ -98,24 +100,24 @@ export class PgSellerRepository implements SellerRepository {
     }
 
     async save(entity: Seller): Promise<void> {
-        await this.k<SellerRow>('sellers')
-            .insert({
-                id: entity.id.value,
-                rating: entity.rating ? entity.rating.value : undefined,
-                store_name: entity.storeName.value,
-                total_sales: entity.totalSales.value,
-                created_at: entity.createdAt,
-                description: entity.description?.value,
-                is_active: entity.isActive,
-                is_verified: entity.isVerified,
-                store_slug: entity.storeSlug.value,
-                support_email: entity.supportEmail?.value,
-                support_phone: entity.supportPhone?.value,
-                updated_at: entity.updatedAt,
-            })
-
-            .onConflict('id')
-            .merge()
+        if (this.hasChanged())
+            await this.k<SellerRow>('sellers')
+                .insert({
+                    id: entity.id.value,
+                    rating: entity.rating ? entity.rating.value : undefined,
+                    store_name: entity.storeName.value,
+                    total_sales: entity.totalSales.value,
+                    created_at: entity.createdAt,
+                    description: entity.description?.value,
+                    is_active: entity.isActive,
+                    is_verified: entity.isVerified,
+                    store_slug: entity.storeSlug.value,
+                    support_email: entity.supportEmail?.value,
+                    support_phone: entity.supportPhone?.value,
+                    updated_at: entity.updatedAt,
+                })
+                .onConflict('id')
+                .merge()
         this.uow.registerAggregate(entity)
     }
 

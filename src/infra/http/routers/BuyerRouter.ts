@@ -18,11 +18,9 @@ buyerRouter.post(
     validateInput(createBuyerRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const validated = req.validated as z.infer<
+            const { body } = req.validated as z.infer<
                 typeof createBuyerRequestSchema
             >
-
-            const body = validated.body
 
             await buyerController.register({
                 email: body.email,
