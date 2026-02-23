@@ -1,4 +1,5 @@
 import { Product } from '../../../domain/product/aggregates/Product.js'
+import { ProductNamingService } from '../../../domain/product/services/ProductNamingService.js'
 import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
 import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
@@ -6,6 +7,7 @@ import { TransactionManager } from '../../../domain/shared/interfaces/Transactio
 import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { DuplicateProductNameException } from '../../../exceptions/product/DuplicateProductNameException.js'
+import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 
 export type CreateProductCmd = {
@@ -26,24 +28,21 @@ export class CreateProductUsecase {
         return await this.tm.transaction(async uow => {
             const sr = uow.getSellerRepo()
             const pr = uow.getProductRepo()
+            const namingService = new ProductNamingService(pr)
+
             // check if seller exists
             const sellerId = EntityId.create(cmd.sellerId)
-            if (!(await sr.existsById(sellerId))) {
-                throw new Error('Seller account does not exist')
+            const seller = await sr.findById(sellerId)
+            if (!seller) {
+                throw new SellerNotFoundByIdException(cmd.sellerId)
             }
+            seller.assertIsUnbanned()
+            seller.assertIsVerified()
 
-            // check if name of product is duplicated
             const pName = ProductName.create(cmd.name).unwrapOrThrow(
                 'productName',
             )
-            const duplicatedName = await pr.existsByNameAndSellerId(
-                pName,
-                sellerId,
-            )
-
-            if (duplicatedName) {
-                throw new DuplicateProductNameException(cmd.name)
-            }
+            namingService.assertNameIsUniqueWithinSellerStore(pName, sellerId)
 
             const pDescription = cmd.description
                 ? ProductDescription.create(cmd.description).unwrapOrThrow(

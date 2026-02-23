@@ -18,13 +18,13 @@ export class PgSellerRepository implements SellerRepository {
         private readonly uow: UnitOfWork,
     ) {}
 
-    async existsByStoreName(storeName: StoreName): Promise<boolean> {
+    async isStoreNameUnique(storeName: StoreName): Promise<boolean> {
         const row = await this.k<SellerRow>('sellers')
             .where('store_name', storeName.value)
             .first()
         return !!row
     }
-    async existsByStoreSlug(slug: StoreSlug): Promise<boolean> {
+    async isStoreSlugUnique(slug: StoreSlug): Promise<boolean> {
         const row = await this.k<SellerRow>('sellers')
             .where('store_slug', slug.value)
             .first()
@@ -62,7 +62,7 @@ export class PgSellerRepository implements SellerRepository {
         return this.map(row)
     }
 
-    async existsByEmail(email: Email): Promise<boolean> {
+    async isEmailUniqueWithinSellers(email: Email): Promise<boolean> {
         const row = await this.k('users')
             .select('id')
             .where('email', email.value)
@@ -100,24 +100,23 @@ export class PgSellerRepository implements SellerRepository {
     }
 
     async save(entity: Seller): Promise<void> {
-        if (this.hasChanged())
-            await this.k<SellerRow>('sellers')
-                .insert({
-                    id: entity.id.value,
-                    rating: entity.rating ? entity.rating.value : undefined,
-                    store_name: entity.storeName.value,
-                    total_sales: entity.totalSales.value,
-                    created_at: entity.createdAt,
-                    description: entity.description?.value,
-                    is_active: entity.isActive,
-                    is_verified: entity.isVerified,
-                    store_slug: entity.storeSlug.value,
-                    support_email: entity.supportEmail?.value,
-                    support_phone: entity.supportPhone?.value,
-                    updated_at: entity.updatedAt,
-                })
-                .onConflict('id')
-                .merge()
+        await this.k<SellerRow>('sellers')
+            .insert({
+                id: entity.id.value,
+                rating: entity.rating ? entity.rating.value : undefined,
+                store_name: entity.storeName.value,
+                total_sales: entity.totalSales.value,
+                created_at: entity.createdAt,
+                description: entity.description?.value,
+                is_banned: entity.isBanned,
+                is_verified: entity.isVerified,
+                store_slug: entity.storeSlug.value,
+                support_email: entity.supportEmail?.value,
+                support_phone: entity.supportPhone?.value,
+                updated_at: entity.updatedAt,
+            })
+            .onConflict('id')
+            .merge()
         this.uow.registerAggregate(entity)
     }
 
@@ -127,6 +126,7 @@ export class PgSellerRepository implements SellerRepository {
 
     private map(row: SellerRow): Seller {
         const id = EntityId.create(row.id)
+        const addressId = EntityId.create(row.address_id)
         const supportEmail = row.support_email
             ? Email.create(row.support_email).getValue()
             : null
@@ -143,13 +143,14 @@ export class PgSellerRepository implements SellerRepository {
 
         return Seller.rehydrate(
             id,
+            addressId,
             storeName,
             storeSlug,
             description,
             rating,
             totalSales,
             row.is_verified,
-            row.is_active,
+            row.is_banned,
             supportEmail,
             supportPhone,
             row.created_at,

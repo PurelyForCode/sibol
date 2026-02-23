@@ -1,8 +1,4 @@
 import {
-    LoginSellerCmd,
-    LoginSellerUsecase,
-} from '../authentication/login/LoginSeller.js'
-import {
     RegisterSellerCmd,
     RegisterSellerUsecase,
 } from './register_seller/RegisterSellerUsecase.js'

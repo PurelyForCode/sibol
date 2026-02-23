@@ -1,3 +1,18 @@
+
+-- buyer address
+INSERT INTO addresses( 
+    id
+) VALUES (
+    '22222222-2222-2222-2222-222222222223'
+);
+
+-- seller address
+INSERT INTO addresses( 
+    id
+) VALUES (
+    '11111111-1111-1111-1111-111111111112'
+);
+
 INSERT INTO accounts (
     id,
     email,
@@ -28,6 +43,7 @@ INSERT INTO accounts(
 
 INSERT INTO sellers (
     id,
+    address_id,
     store_name,
     store_slug,
     description,
@@ -41,6 +57,7 @@ INSERT INTO sellers (
     updated_at
 ) VALUES (
     '11111111-1111-1111-1111-111111111111',
+    '11111111-1111-1111-1111-111111111112',
     'Demo Store',
     'demo-store',
     'Demo seller account for development',
@@ -56,6 +73,7 @@ INSERT INTO sellers (
 
 INSERT INTO buyers (
     id,
+    address_id,
     username,
     is_verified,
     is_active,
@@ -63,9 +81,25 @@ INSERT INTO buyers (
     updated_at
 ) VALUES (
     '22222222-2222-2222-2222-222222222222',
+    '22222222-2222-2222-2222-222222222223',
     'demo_buyer',
     TRUE,
     TRUE,
     now(),
     now()
 );
+INSERT INTO carts (
+    buyer_id, 
+    shipping_address_id, 
+    status, 
+    created_at, 
+    updated_at
+) VALUES (
+    '22222222-2222-2222-2222-222222222222',
+    '22222222-2222-2222-2222-222222222223',
+    'active',
+    now(),
+    now()
+);
+
+

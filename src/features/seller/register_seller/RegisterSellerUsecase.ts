@@ -12,6 +12,8 @@ import { MobilePhoneNumber } from '../../../domain/shared/value_objects/MobilePh
 import { Account } from '../../../domain/account/aggregates/Account.js'
 import { StoreNameAlreadyExistsException } from '../../../exceptions/seller/StoreNameAlreadyExistsException.js'
 import { StoreSlugAlreadyExistsException } from '../../../exceptions/seller/StoreSlugAlreadyExistsException.js'
+import { SellerUniquenessService } from '../../../domain/seller/services/StoreUniquenessService.js'
+import { EntityId } from '../../../lib/domain/EntityId.js'
 
 export type RegisterSellerCmd = {
     email: string
@@ -21,6 +23,7 @@ export type RegisterSellerCmd = {
     description: string | null
     supportEmail: string | null
     supportPhone: string | null
+    addressId: string
 }
 
 export class RegisterSellerUsecase {
@@ -33,22 +36,19 @@ export class RegisterSellerUsecase {
         await this.tm.transaction(async uow => {
             const sr = uow.getSellerRepo()
             const ar = uow.getAccountRepo()
+            const uniquenessService = new SellerUniquenessService(sr)
+
             const email = Email.create(cmd.email).unwrapOrThrow('email')
-            if (await sr.existsByEmail(email)) {
-                throw new SellerEmailAlreadyExistsException(cmd.email)
-            }
+            await uniquenessService.assertEmailIsUnique(email)
             const storeName = StoreName.create(cmd.storeName).unwrapOrThrow(
                 'storeName',
             )
-            if (await sr.existsByStoreName(storeName)) {
-                throw new StoreNameAlreadyExistsException(cmd.storeName)
-            }
+            await uniquenessService.assertStoreNameIsUnique(storeName)
             const storeSlug = StoreSlug.create(cmd.storeSlug).unwrapOrThrow(
-                'storeName',
+                'storeSlug',
             )
-            if (await sr.existsByStoreSlug(storeSlug)) {
-                throw new StoreSlugAlreadyExistsException(cmd.storeSlug)
-            }
+            await uniquenessService.assertStoreSlugIsUnique(storeSlug)
+
             const rawPassword = RawPassword.create(cmd.password).unwrapOrThrow(
                 'password',
             )
@@ -67,10 +67,11 @@ export class RegisterSellerUsecase {
                   )
                 : null
             const id = this.idGen.generate()
-
             const account = Account.new(id, email, hash)
+            const addressId = EntityId.create(cmd.addressId)
             const seller = Seller.new(
                 id,
+                addressId,
                 storeName,
                 storeSlug,
                 description,

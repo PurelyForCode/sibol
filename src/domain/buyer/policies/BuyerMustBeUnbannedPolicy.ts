@@ -1,7 +1,7 @@
 import { Buyer } from '../aggregates/Buyer.js'
 
-export class BuyerMustBeUnbannedToPerformActionPolicy {
+export class BuyerMustBeUnbannedPolicy {
     static enforce(buyer: Buyer): boolean {
-        return buyer.isActive
+        return buyer.isBanned
     }
 }

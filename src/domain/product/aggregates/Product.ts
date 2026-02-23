@@ -36,6 +36,14 @@ export class Product extends AggregateRoot {
         super()
     }
 
+    getSellUnitById(sellUnitId: EntityId) {
+        const sellUnit = this._sellUnits.get(sellUnitId.value)
+        if (!sellUnit) {
+            return null
+        }
+        return sellUnit
+    }
+
     addSellUnit(id: EntityId, unit: UnitOfMeasurement) {
         for (const [_, value] of this._sellUnits) {
             if (value.unit.value === unit.value) {

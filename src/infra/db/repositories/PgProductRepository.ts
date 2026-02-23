@@ -27,9 +27,7 @@ export class PgProductRepository implements ProductRepository {
         private readonly uow: UnitOfWork,
     ) {}
 
-    snapshot() {}
-
-    async existsByNameAndSellerId(
+    async isNameUniqueWithinSellerStore(
         name: ProductName,
         sellerId: EntityId,
     ): Promise<boolean> {
@@ -38,7 +36,11 @@ export class PgProductRepository implements ProductRepository {
             .where('name', name.value)
             .where('seller_id', sellerId.value)
             .first()
-        return !!row
+        if (row) {
+            return false
+        } else {
+            return true
+        }
     }
 
     async findById(id: EntityId): Promise<Product | null> {

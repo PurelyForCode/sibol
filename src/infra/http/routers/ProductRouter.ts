@@ -9,7 +9,6 @@ import {
 } from '../../../compositionRoot.js'
 import { unitOfMeasurementSchema } from '../validation/unitOfMeasurementSchema.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
-import { remove } from 'lodash'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
 
@@ -19,7 +18,7 @@ export const productRouter = Router({
 
 productRouter.get(
     '/',
-    async (req: Request, res: Response, next: NextFunction) => {
+    async (_: Request, res: Response, next: NextFunction) => {
         try {
             const products = await productQueryRepository.findAll()
             res.status(200).json({ data: products })
@@ -120,15 +119,19 @@ productRouter.get(
     '/:productId/sell-units',
     validateInput(getSellUnitsRequestSchema),
     async (req, res, next) => {
-        const { params } = req.validated as z.infer<
-            typeof getSellUnitsRequestSchema
-        >
+        try {
+            const { params } = req.validated as z.infer<
+                typeof getSellUnitsRequestSchema
+            >
 
-        const sellUnits =
-            await productSellUnitQueryRepository.findAllByProductId(
-                params.productId,
-            )
-        res.status(200).json({ data: sellUnits })
+            const sellUnits =
+                await productSellUnitQueryRepository.findAllByProductId(
+                    params.productId,
+                )
+            res.status(200).json({ data: sellUnits })
+        } catch (e) {
+            next(e)
+        }
     },
 )
 

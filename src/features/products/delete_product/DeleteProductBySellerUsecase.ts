@@ -2,7 +2,7 @@ import { EntityId } from '../../../lib/domain/EntityId.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
-import { OnlyOwningVerifiedActiveSellerMayManageProductPolicy } from '../../../domain/seller/services/OnlyOwningVerifiedActiveSellerMayManageProductPolicy.js'
+import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
 
 export type DeleteProductBySellerCmd = {
     sellerId: string
@@ -29,10 +29,10 @@ export class DeleteProductBySellerUsecase {
             if (!product) {
                 throw new ProductNotFoundException(cmd.productId)
             }
-            OnlyOwningVerifiedActiveSellerMayManageProductPolicy.enforce(
-                seller,
-                product,
-            )
+
+            seller.assertIsUnbanned()
+            seller.assertIsVerified()
+            ProductOwnershipService.assertSellerOwnsProduct(seller, product)
 
             // TODO:handle some side effects of deleting the product
             product.archive()

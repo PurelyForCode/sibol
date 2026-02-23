@@ -17,22 +17,24 @@ export type AccountRow = {
 
 export type BuyerRow = {
     id: string
+    address_id: string
     username: string
     is_verified: boolean
-    is_active: boolean
+    is_banned: boolean
     created_at: Date
     updated_at: Date
 }
 
 export type SellerRow = {
     id: string
+    address_id: string
     store_name: string
     store_slug: string
     description: string | null
     rating: number | null
     total_sales: number
     is_verified: boolean
-    is_active: boolean
+    is_banned: boolean
     support_email: string | null
     support_phone: string | null
     created_at: Date
@@ -66,4 +68,20 @@ export type ProductImageRow = {
     url: string
     position: number
     created_at: Date
+}
+
+export type CartRow = {
+    buyer_id: string
+    shipping_address_id: string
+    status: string
+    created_at: Date
+    updated_at: Date
+}
+
+export type CartItemRow = {
+    id: string
+    cart_id: string
+    product_id: string
+    quantity: number
+    sell_unit: string
 }

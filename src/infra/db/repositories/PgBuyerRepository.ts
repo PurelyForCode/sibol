@@ -6,6 +6,7 @@ import { AccountRow, BuyerRow } from '../tables/TableDefinitions.js'
 import { Username } from '../../../domain/shared/value_objects/Username.js'
 import { Email } from '../../../domain/shared/value_objects/Email.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
+import { add } from 'lodash'
 
 export class PgBuyerRepository implements BuyerRepository {
     constructor(
@@ -42,7 +43,7 @@ export class PgBuyerRepository implements BuyerRepository {
 
         return this.map(row)
     }
-    async existsByUsername(username: Username): Promise<boolean> {
+    async isUsernameUnique(username: Username): Promise<boolean> {
         const row = await this.k<BuyerRow>('buyers')
             .where('username', username.value)
             .first()
@@ -50,7 +51,7 @@ export class PgBuyerRepository implements BuyerRepository {
         return !!row
     }
 
-    async existsByEmail(email: Email): Promise<boolean> {
+    async isEmailUniqueWithinBuyers(email: Email): Promise<boolean> {
         const row = await this.k<BuyerRow>('accounts')
             .where('email', email.value)
             .first()
@@ -87,7 +88,7 @@ export class PgBuyerRepository implements BuyerRepository {
             .insert({
                 created_at: entity.createdAt,
                 id: entity.id.value,
-                is_active: entity.isActive,
+                is_banned: entity.isBanned,
                 is_verified: entity.isVerified,
                 updated_at: entity.updatedAt,
                 username: entity.username.value,
@@ -103,13 +104,16 @@ export class PgBuyerRepository implements BuyerRepository {
 
     private map(row: BuyerRow): Buyer {
         const id = EntityId.create(row.id)
+        const addressId = EntityId.create(row.address_id)
+
         const username = Username.create(row.username)
 
         return Buyer.rehydrate(
             id,
+            addressId,
             username.getValue(),
             row.is_verified,
-            row.is_active,
+            row.is_banned,
             row.created_at,
             row.updated_at,
         )

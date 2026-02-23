@@ -3,6 +3,7 @@ import z from 'zod'
 import { buyerController } from '../../../compositionRoot.js'
 import { validateInput } from '../middleware/InputValidationMiddleware.js'
 import { Request, Response, NextFunction } from 'express'
+import { fakeBuyerAddressId } from '../../../fakeData/fakeId.js'
 
 export const buyerRouter = Router({ mergeParams: true })
 const createBuyerRequestSchema = z.object({
@@ -26,6 +27,7 @@ buyerRouter.post(
                 email: body.email,
                 password: body.password,
                 username: body.username,
+                addressId: fakeBuyerAddressId,
             })
 
             res.status(201).json({

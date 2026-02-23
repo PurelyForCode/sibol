@@ -3,6 +3,7 @@ import z from 'zod'
 import { sellerController } from '../../../compositionRoot.js'
 import { validateInput } from '../middleware/InputValidationMiddleware.js'
 import { phoneNumberSchema } from '../validation/phoneNumberSchema.js'
+import { fakeSellerAddressId } from '../../../fakeData/fakeId.js'
 
 export const sellerRouter = Router({
     mergeParams: true,
@@ -73,6 +74,7 @@ sellerRouter.post(
                 description: body.description,
                 supportEmail: body.supportEmail,
                 supportPhone: body.supportPhone,
+                addressId: fakeSellerAddressId,
             })
 
             res.status(201).json({

@@ -13,6 +13,8 @@ import { DomainEventPublisher } from '../../lib/interfaces/DomainEventPublisher.
 import { KnexDomainEventPublisher } from './KnexDomainEventPublisher.js'
 import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
 import { PgBuyerRepository } from '../db/repositories/PgBuyerRepository.js'
+import { CartRepository } from '../../domain/cart/repositories/CartRepository.js'
+import { PgCartRepository } from '../db/repositories/PgCartRepository.js'
 
 export class KnexUnitOfWork implements UnitOfWork {
     private aggregates: AggregateRoot[] = []
@@ -30,16 +32,20 @@ export class KnexUnitOfWork implements UnitOfWork {
         }
     }
 
-    getOutboxRepo(): DomainEventPublisher {
-        return new KnexDomainEventPublisher(this.trx, this.idGenerator)
-    }
-
     registerAggregate(aggregate: AggregateRoot): void {
         this.aggregates.push(aggregate)
     }
 
+    getOutboxRepo(): DomainEventPublisher {
+        return new KnexDomainEventPublisher(this.trx, this.idGenerator)
+    }
+
     pullDomainEvents(): DomainEvent[] {
         return this.aggregates.flatMap(a => a.pullEvents())
+    }
+
+    getCartRepo(): CartRepository {
+        return new PgCartRepository(this.trx)
     }
 
     getAccountRepo(): AccountRepository {

@@ -1,4 +1,4 @@
-import { OnlyOwningVerifiedActiveSellerMayManageProductPolicy } from '../../../domain/seller/services/OnlyOwningVerifiedActiveSellerMayManageProductPolicy.js'
+import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import {
     UnitOfMeasurement,
@@ -28,19 +28,21 @@ export class RemoveSellUnitUsecase {
                 throw new SellerNotFoundByIdException(cmd.sellerId)
             }
 
+            seller.assertIsVerified()
+            seller.assertIsUnbanned()
+
             const productId = EntityId.create(cmd.productId)
             const product = await pr.findById(productId)
             if (!product) {
                 throw new ProductNotFoundException(cmd.productId)
             }
-            OnlyOwningVerifiedActiveSellerMayManageProductPolicy.enforce(
-                seller,
-                product,
-            )
+
+            ProductOwnershipService.assertSellerOwnsProduct(seller, product)
             const sellUnitId = EntityId.create(cmd.sellUnitId)
 
             product.removeSellUnit(sellUnitId)
-
+            // TODO: Must recheck all products that are inside carts to check if their sellUnits are correct
+            // TODO: Convert them to another viable sellUnit that is available
             await pr.save(product)
         })
     }

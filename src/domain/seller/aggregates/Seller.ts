@@ -1,3 +1,5 @@
+import { SellerIsBannedException } from '../../../exceptions/seller/SellerIsBannedException.js'
+import { SellerIsUnverifiedException } from '../../../exceptions/seller/SellerIsUnverifiedException.js'
 import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { Product } from '../../product/aggregates/Product.js'
@@ -13,13 +15,14 @@ import { TotalSales } from '../value_objects/TotalSales.js'
 export class Seller extends AggregateRoot {
     private constructor(
         private _id: EntityId,
+        private _addressId: EntityId,
         private _storeName: StoreName,
         private _storeSlug: StoreSlug,
         private _description: SellerDescription | null,
         private _rating: Rating | null,
         private _totalSales: TotalSales,
         private _isVerified: boolean,
-        private _isActive: boolean,
+        private _isBanned: boolean,
         private _supportEmail: Email | null,
         private _supportPhone: MobilePhoneNumber | null,
         private _createdAt: Date,
@@ -28,8 +31,20 @@ export class Seller extends AggregateRoot {
         super()
     }
 
+    assertIsVerified(): void {
+        if (!this.isVerified) {
+            throw new SellerIsUnverifiedException(this.id.value)
+        }
+    }
+
+    assertIsUnbanned(): void {
+        if (this.isBanned) {
+            throw new SellerIsBannedException(this.id.value)
+        }
+    }
+
     canPerformActionOnProduct(product: Product) {
-        if (!this.isActive || !this.isVerified) {
+        if (!this.isBanned || !this.isVerified) {
             return false
         }
         if (!product.sellerId.equals(this.id)) {
@@ -43,15 +58,16 @@ export class Seller extends AggregateRoot {
     }
 
     deactivate() {
-        this._isActive = false
+        this._isBanned = false
     }
 
     activate() {
-        this._isActive = true
+        this._isBanned = true
     }
 
     static new(
         id: EntityId,
+        addressId: EntityId,
         storeName: StoreName,
         storeSlug: StoreSlug,
         description: SellerDescription | null,
@@ -61,6 +77,7 @@ export class Seller extends AggregateRoot {
         const now = new Date()
         const seller = new Seller(
             id,
+            addressId,
             storeName,
             storeSlug,
             description,
@@ -79,13 +96,14 @@ export class Seller extends AggregateRoot {
 
     static rehydrate(
         id: EntityId,
+        addressId: EntityId,
         storeName: StoreName,
         storeSlug: StoreSlug,
         description: SellerDescription | null,
         rating: Rating | null,
         totalSales: TotalSales,
         isVerified: boolean,
-        isActive: boolean,
+        isBanned: boolean,
         supportEmail: Email | null,
         supportPhone: MobilePhoneNumber | null,
         createdAt: Date,
@@ -93,13 +111,14 @@ export class Seller extends AggregateRoot {
     ) {
         return new Seller(
             id,
+            addressId,
             storeName,
             storeSlug,
             description,
             rating,
             totalSales,
             isVerified,
-            isActive,
+            isBanned,
             supportEmail,
             supportPhone,
             createdAt,
@@ -128,8 +147,8 @@ export class Seller extends AggregateRoot {
     public get isVerified(): boolean {
         return this._isVerified
     }
-    public get isActive(): boolean {
-        return this._isActive
+    public get isBanned(): boolean {
+        return this._isBanned
     }
     public get supportEmail(): Email | null {
         return this._supportEmail
@@ -142,5 +161,9 @@ export class Seller extends AggregateRoot {
     }
     public get updatedAt(): Date {
         return this._updatedAt
+    }
+
+    public get addressId(): EntityId {
+        return this._addressId
     }
 }

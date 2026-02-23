@@ -16,6 +16,9 @@ import { PgProductQueryRepository } from './infra/db/query_repositories/PgProduc
 import { AddSellUnitUsecase } from './features/products/add_sell_unit/AddSellUnitUsecase.js'
 import { RemoveSellUnitUsecase } from './features/products/remove_sell_unit/RemoveSellUnitUsecase.js'
 import { PgProductSellUnitQueryRepository } from './infra/db/query_repositories/PgProductSellUnitQueryRepository.js'
+import { CartController } from './features/shopping/CartController.js'
+import { AddToCartUsecase } from './features/shopping/add_to_cart/AddToCartUsecase.js'
+import { RemoveFromCartUsecase } from './features/shopping/remove_from_cart/RemoveFromCartUsecase.js'
 
 export const idGenerator = new Uuidv7Generator()
 export const passwordUtility = new ArgonPasswordUtil()
@@ -23,6 +26,13 @@ export const passwordUtility = new ArgonPasswordUtil()
 export const transactionManager = new KnexTransactionManager(
     knexInstance,
     idGenerator,
+)
+export const addToCartUsecase = new AddToCartUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const removeFromCartUsecase = new RemoveFromCartUsecase(
+    transactionManager,
 )
 export const registerBuyerUsecase = new RegisterBuyerUsecase(
     transactionManager,
@@ -73,6 +83,10 @@ export const authenticationController = new AuthenticationController(
     loginSellerUsecase,
     loginBuyerUsecase,
     null,
+)
+export const cartController = new CartController(
+    addToCartUsecase,
+    removeFromCartUsecase,
 )
 
 export const productQueryRepository = new PgProductQueryRepository(knexInstance)

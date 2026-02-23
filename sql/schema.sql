@@ -34,6 +34,11 @@ CREATE TABLE verification_codes (
 	UNIQUE (account_id, type)
 );
 
+
+CREATE TABLE addresses (
+    id UUID PRIMARY KEY
+);
+
 -- Do some stuff here
 CREATE TABLE admins (
 	id UUID PRIMARY KEY REFERENCES accounts(id),
@@ -43,6 +48,7 @@ CREATE TABLE admins (
 
 CREATE TABLE sellers (
 	id UUID PRIMARY KEY REFERENCES accounts(id),
+	address_id UUID NOT NULL REFERENCES addresses(id),
 
 	store_name VARCHAR(256) NOT NULL,
 	store_slug VARCHAR(256) UNIQUE NOT NULL,
@@ -72,6 +78,7 @@ CREATE TABLE seller_moderation (
 
 CREATE TABLE buyers (
 	id UUID PRIMARY KEY REFERENCES accounts(id),
+	address_id UUID NOT NULL REFERENCES addresses(id),
 	username VARCHAR(256) NOT NULL,
 
 	is_verified BOOLEAN NOT NULL DEFAULT FALSE,
@@ -159,7 +166,7 @@ CREATE TABLE product_moderation (
 );
 
 CREATE TABLE carts (
-	id UUID PRIMARY KEY REFERENCES buyers(id),
+	buyer_id UUID PRIMARY KEY REFERENCES buyers(id),
 	shipping_address_id UUID,
 	status VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -168,7 +175,7 @@ CREATE TABLE carts (
 
 CREATE TABLE cart_items (
 	id UUID PRIMARY KEY,
-	cart_id UUID NOT NULL REFERENCES carts(id) ON DELETE CASCADE,
+	cart_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id),
 	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
 	sell_unit VARCHAR(10) NOT NULL

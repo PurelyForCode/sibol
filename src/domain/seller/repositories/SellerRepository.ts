@@ -6,15 +6,13 @@ import { Email } from '../../shared/value_objects/Email.js'
 import { Seller } from '../aggregates/Seller.js'
 import { StoreName } from '../value_objects/StoreName.js'
 import { StoreSlug } from '../value_objects/StoreSlug.js'
+import { SellerUniquenessChecker } from '../interfaces/StoreUniquenessChecker.js'
 
-export interface SellerRepository extends Repository<Seller, EntityId> {
+export interface SellerRepository
+    extends SellerUniquenessChecker, Repository<Seller, EntityId> {
     findByEmail(email: Email): Promise<Seller | null>
     findByStoreName(storeName: StoreName): Promise<Seller | null>
     findByStoreSlug(slug: StoreSlug): Promise<Seller | null>
-
-    existsByEmail(email: Email): Promise<boolean>
-    existsByStoreName(storeName: StoreName): Promise<boolean>
-    existsByStoreSlug(slug: StoreSlug): Promise<boolean>
 }
 
 export interface SellerQueryRepository extends QueryRepository<

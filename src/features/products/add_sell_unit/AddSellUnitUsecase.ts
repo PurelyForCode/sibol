@@ -1,4 +1,4 @@
-import { OnlyOwningVerifiedActiveSellerMayManageProductPolicy } from '../../../domain/seller/policies/OnlyOwningVerifiedActiveSellerMayManageProductPolicy.js'
+import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
@@ -35,10 +35,9 @@ export class AddSellUnitUsecase {
                 throw new ProductNotFoundException(cmd.productId)
             }
 
-            OnlyOwningVerifiedActiveSellerMayManageProductPolicy.enforce(
-                seller,
-                product,
-            )
+            seller.assertIsUnbanned()
+            seller.assertIsVerified()
+            ProductOwnershipService.assertSellerOwnsProduct(seller, product)
 
             const id = this.idGen.generate()
             const unit = UnitOfMeasurement.create(cmd.unit).unwrapOrThrow(
