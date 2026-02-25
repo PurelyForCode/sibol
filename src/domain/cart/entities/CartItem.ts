@@ -1,16 +1,12 @@
-import { InvalidQuantityForPiecesUnit } from '../../../exceptions/cart/InvalidQuantityForPiecesUnit.js'
-import { AddSellUnitCmd } from '../../../features/products/add_sell_unit/AddSellUnitUsecase.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
-import { ProductSellUnit } from '../../product/entities/ProductSellUnit.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
-import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 
 export class CartItem {
     private constructor(
         private _id: EntityId,
         private _cartId: EntityId,
         private _productId: EntityId,
-        private _sellUnit: UnitOfMeasurement,
+        private _sellUnitId: EntityId,
         private _quantity: Quantity,
     ) {}
 
@@ -22,27 +18,27 @@ export class CartItem {
         id: EntityId,
         cartId: EntityId,
         productId: EntityId,
-        sellUnit: UnitOfMeasurement,
+        sellUnitId: EntityId,
         quantity: Quantity,
     ) {
-        return new CartItem(id, cartId, productId, sellUnit, quantity)
+        return new CartItem(id, cartId, productId, sellUnitId, quantity)
     }
 
     static rehydrate(
         id: EntityId,
         cartId: EntityId,
         productId: EntityId,
-        sellUnit: UnitOfMeasurement,
+        sellUnitId: EntityId,
         quantity: Quantity,
     ) {
-        return new CartItem(id, cartId, productId, sellUnit, quantity)
+        return new CartItem(id, cartId, productId, sellUnitId, quantity)
     }
 
     public get quantity(): Quantity {
         return this._quantity
     }
-    public get sellUnit(): UnitOfMeasurement {
-        return this._sellUnit
+    public get sellUnitId(): EntityId {
+        return this._sellUnitId
     }
     public get productId(): EntityId {
         return this._productId

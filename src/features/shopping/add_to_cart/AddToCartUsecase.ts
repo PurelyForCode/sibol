@@ -75,7 +75,6 @@ export class AddToCartUsecase {
                     'Cart is not initialized for a buyer',
                 )
             }
-            console.log('passed')
 
             const id = this.idGen.generate()
             const sellUnitId = EntityId.create(cmd.sellUnitId)

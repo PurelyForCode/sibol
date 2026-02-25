@@ -41,14 +41,14 @@ CREATE TABLE addresses (
 
 -- Do some stuff here
 CREATE TABLE admins (
-	id UUID PRIMARY KEY REFERENCES accounts(id),
+	id UUID PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	first_name VARCHAR(100) NOT NULL,
 	last_name VARCHAR(100) NOT NULL
 );
 
 CREATE TABLE sellers (
-	id UUID PRIMARY KEY REFERENCES accounts(id),
-	address_id UUID NOT NULL REFERENCES addresses(id),
+	id UUID PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	address_id UUID REFERENCES addresses(id) ON DELETE SET NULL ON UPDATE CASCADE,
 
 	store_name VARCHAR(256) NOT NULL,
 	store_slug VARCHAR(256) UNIQUE NOT NULL,
@@ -77,8 +77,8 @@ CREATE TABLE seller_moderation (
 );
 
 CREATE TABLE buyers (
-	id UUID PRIMARY KEY REFERENCES accounts(id),
-	address_id UUID NOT NULL REFERENCES addresses(id),
+	id UUID PRIMARY KEY REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	address_id UUID REFERENCES addresses(id) ON DELETE SET NULL ON UPDATE CASCADE,
 	username VARCHAR(256) NOT NULL,
 
 	is_verified BOOLEAN NOT NULL DEFAULT FALSE,
@@ -102,8 +102,7 @@ CREATE TABLE products (
 	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	name VARCHAR(255) NOT NULL,
 	description TEXT,
-	stock_quantity NUMERIC(10,3) NOT NULL CHECK(stock_quantity >= 0),
-	base_unit VARCHAR(10) NOT NULL,
+	inventory_unit_symbol VARCHAR(10) NOT NULL,
 	rating NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
 	status VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
@@ -111,13 +110,31 @@ CREATE TABLE products (
 	deleted_at TIMESTAMPTZ
 );
 
-CREATE TABLE product_sell_units (
+CREATE TABLE sell_units (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	unit VARCHAR(10) NOT NULL,
-	conversion_factor NUMERIC(10,3) NOT NULL CHECK (conversion_factor > 0),
-	UNIQUE (product_id, unit)
+	conversion_factor BIGINT NOT NULL CHECK(conversion_factor > 0),
+	unit_symbol VARCHAR(10) NOT NULL,
+	price_per_unit BIGINT NOT NULL CHECK(price_per_unit > 0),
+	display_name VARCHAR(20) NOT NULL,
+	discontinued_at TIMESTAMPTZ,
+	UNIQUE (product_id, unit_value, unit_symbol)
 );
+
+CREATE TABLE inventory_movement (
+	id UUID PRIMARY KEY,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	delta_quantity BIGINT NOT NULL,
+	reason VARCHAR(20) NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE product_inventory(
+	product_id UUID PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	quantity BIGINT NOT NULL CHECK(quantity >= 0),
+	updated_at TIMESTAMPTZ NOT NULL
+);
+
 
 CREATE TABLE product_reviews (
 	id UUID PRIMARY KEY,
@@ -159,15 +176,15 @@ CREATE TABLE product_moderation (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	admin_id UUID REFERENCES admins(id) ON DELETE SET NULL ON UPDATE CASCADE,
-	product_complaint_id UUID REFERENCES product_complaint(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	product_complaint_id UUID REFERENCES product_complaint(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	action_type VARCHAR(30) NOT NULL,
 	reason TEXT NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE carts (
-	buyer_id UUID PRIMARY KEY REFERENCES buyers(id),
-	shipping_address_id UUID,
+	buyer_id UUID PRIMARY KEY REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	shipping_address_id UUID REFERENCES addresses(id) ON DELETE SET NULL ON UPDATE CASCADE,
 	status VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 	updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -175,16 +192,16 @@ CREATE TABLE carts (
 
 CREATE TABLE cart_items (
 	id UUID PRIMARY KEY,
-	cart_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE,
-	product_id UUID NOT NULL REFERENCES products(id),
+	cart_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE ON UPDATE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	product_sell_unit_id UUID NOT NULL REFERENCES product_sell_units(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
-	sell_unit VARCHAR(10) NOT NULL
 );
 
 CREATE TABLE orders (
 	id UUID PRIMARY KEY,
-	buyer_id UUID NOT NULL REFERENCES buyers(id)  ON DELETE CASCADE,
-	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	buyer_id UUID NOT NULL REFERENCES buyers(id)  ON DELETE CASCADE ON UPDATE CASCADE,
+	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	total_price NUMERIC(12,2) NOT NULL,
 	status VARCHAR(32) NOT NULL,
 	payment_method VARCHAR(32) NOT NULL,
@@ -195,9 +212,23 @@ CREATE TABLE orders (
 
 CREATE TABLE order_items (
 	id UUID PRIMARY KEY,
-	order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+	order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
 	price_at_purchase NUMERIC(12,2) NOT NULL,
 	sell_unit VARCHAR(10) NOT NULL
 );
+
+CREATE TABLE reservations(
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	sell_unit VARCHAR(10) NOT NULL,
+	quantity NUMERIC(10,3) NOT NULL CHECK (quantity > 0),
+	pickup_date TIMESTAMPTZ NOT NULL,
+	status VARCHAR(20) NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
+);
+
+

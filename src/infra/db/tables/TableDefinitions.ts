@@ -40,14 +40,13 @@ export type SellerRow = {
     created_at: Date
     updated_at: Date
 }
+
 export type ProductRow = {
     id: string
     seller_id: string
     name: string
     description: string | null
-    stock_quantity: number
-    base_unit: string
-    price_per_unit: number
+    inventory_unit_symbol: string
     rating: number | null
     status: string
     created_at: Date
@@ -55,11 +54,27 @@ export type ProductRow = {
     deleted_at: Date | null
 }
 
-export type ProductSellUnitRow = {
+export type SellUnitRow = {
     id: string
     product_id: string
-    unit: string
-    conversion_factor: number
+    unit_symbol: string
+    unit_value: number
+    price_per_unit: number
+    display_name: string
+}
+
+export type InventoryMovementRow = {
+    id: string
+    product_id: string
+    delta_quantity: number
+    reason: string
+    created_at: Date
+}
+
+export type ProductInventoryRow = {
+    product_id: string
+    quantity: number
+    updated_at: Date
 }
 
 export type ProductImageRow = {
@@ -82,6 +97,17 @@ export type CartItemRow = {
     id: string
     cart_id: string
     product_id: string
+    product_sell_unit_id: string
     quantity: number
+}
+export type ReservationRow = {
+    id: string
+    buyer_id: string
+    product_id: string
     sell_unit: string
+    quantity: number
+    pickup_date: Date
+    status: string
+    created_at: Date
+    updated_at: Date
 }

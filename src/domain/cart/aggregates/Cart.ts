@@ -7,6 +7,7 @@ import { Quantity } from '../../shared/value_objects/Quantity.js'
 import { CartItem } from '../entities/CartItem.js'
 import { CartStatus } from '../value_objects/CartStatus.js'
 
+// TODO: What other behaviour needs to exist in the cart?
 export class Cart extends AggregateRoot {
     private constructor(
         private _buyerId: EntityId,
@@ -21,17 +22,18 @@ export class Cart extends AggregateRoot {
 
     addItem(id: EntityId, sellUnit: ProductSellUnit, quantity: Quantity) {
         if (
-            sellUnit.unit.value === 'pcs' &&
+            sellUnit.unitSymbol.value === 'pcs' &&
             !quantity.isValidQuantityForPiecesUnit()
         ) {
             throw new InvalidQuantityForPiecesUnit()
         }
+
         // TODO: Maybe add more validation to the quantity
         const item = CartItem.new(
             id,
             this.buyerId,
             sellUnit.productId,
-            sellUnit.unit,
+            sellUnit.id,
             quantity,
         )
 
@@ -75,6 +77,21 @@ export class Cart extends AggregateRoot {
             updatedAt,
             items,
         )
+    }
+
+    getItems(itemIds: EntityId[]): CartItem[] {
+        const items = []
+        for (const id of itemIds) {
+            const item = this._items.get(id.value)
+            if (!item) {
+                throw new CartItemNotFoundException(
+                    this.buyerId.value,
+                    id.value,
+                )
+            }
+            items.push(item)
+        }
+        return items
     }
 
     public get items(): Map<Id, CartItem> {

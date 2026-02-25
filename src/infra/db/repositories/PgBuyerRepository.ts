@@ -6,7 +6,6 @@ import { AccountRow, BuyerRow } from '../tables/TableDefinitions.js'
 import { Username } from '../../../domain/shared/value_objects/Username.js'
 import { Email } from '../../../domain/shared/value_objects/Email.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
-import { add } from 'lodash'
 
 export class PgBuyerRepository implements BuyerRepository {
     constructor(

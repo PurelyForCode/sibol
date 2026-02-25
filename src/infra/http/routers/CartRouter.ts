@@ -61,3 +61,32 @@ cartRouter.delete(
         }
     },
 )
+
+const reserveItemsForPickupRequestSchema = z.object({
+    body: z.object({
+        pickupDate: z.iso.datetime(),
+        items: z.array(z.uuidv7()),
+    }),
+})
+
+cartRouter.post(
+    '/items/reserve',
+    validateInput(reserveItemsForPickupRequestSchema),
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const buyerId = fakeBuyerId
+            const { body } = req.validated as z.infer<
+                typeof reserveItemsForPickupRequestSchema
+            >
+            const pickupDate = new Date(body.pickupDate)
+            await cartController.reserveItemsForPickup({
+                buyerId,
+                items: body.items,
+                pickupDate: pickupDate,
+            })
+            res.status(201).json({ message: 'Successfully reserved items' })
+        } catch (e) {
+            next(e)
+        }
+    },
+)

@@ -9,10 +9,13 @@ import {
 } from '../../../domain/cart/value_objects/CartStatus.js'
 import { CartItem } from '../../../domain/cart/entities/CartItem.js'
 import { Quantity } from '../../../domain/shared/value_objects/Quantity.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 
 export class PgCartRepository implements CartRepository {
-    constructor(private readonly knex: Knex.Transaction) {}
+    constructor(
+        private readonly knex: Knex.Transaction,
+        private readonly uow: UnitOfWork,
+    ) {}
 
     async findById(id: EntityId): Promise<Cart | null> {
         const cartRow = await this.knex<CartRow>('carts')
@@ -36,6 +39,7 @@ export class PgCartRepository implements CartRepository {
         return !!row
     }
     async save(entity: Cart): Promise<void> {
+        await this.delete(entity.buyerId)
         await this.knex<CartRow>('carts')
             .insert({
                 buyer_id: entity.buyerId.value,
@@ -54,11 +58,12 @@ export class PgCartRepository implements CartRepository {
                     id: value.id.value,
                     product_id: value.productId.value,
                     quantity: value.quantity.value,
-                    sell_unit: value.sellUnit.value,
+                    product_sell_unit_id: value.sellUnitId.value,
                 })
                 .onConflict('id')
                 .merge()
         }
+        this.uow.registerAggregate(entity)
     }
 
     async delete(id: EntityId): Promise<void> {
@@ -71,7 +76,7 @@ export class PgCartRepository implements CartRepository {
             const id = EntityId.create(row.id)
             const productId = EntityId.create(row.product_id)
             const cartId = EntityId.create(row.cart_id)
-            const sellUnit = UnitOfMeasurement.create(row.sell_unit).getValue()
+            const sellUnit = EntityId.create(row.product_sell_unit_id)
             const quantity = Quantity.create(row.quantity).getValue()
 
             const item = CartItem.rehydrate(

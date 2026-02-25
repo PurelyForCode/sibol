@@ -11,6 +11,7 @@ import { unitOfMeasurementSchema } from '../validation/unitOfMeasurementSchema.j
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
+import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 
 export const productRouter = Router({
     mergeParams: true,
@@ -54,7 +55,7 @@ const createProductRequestSchema = z.object({
         name: z.string(),
         price: z.int(),
         description: z.string().nullable(),
-        unitOfMeasurement: unitOfMeasurementSchema,
+        unitOfMeasurement: z.enum(SmallestUnitOfMeasurement.unitValues),
     }),
 })
 
@@ -103,14 +104,6 @@ productRouter.delete(
     },
 )
 
-const addSellUnitRequestSchema = z.object({
-    body: z.object({
-        unit: z.enum(UnitOfMeasurement.unitValues),
-    }),
-    params: z.object({
-        productId: z.uuidv7(),
-    }),
-})
 
 const getSellUnitsRequestSchema = z.object({
     params: z.object({ productId: z.uuidv7() }),
@@ -164,6 +157,18 @@ productRouter.get(
     },
 )
 
+
+const addSellUnitRequestSchema = z.object({
+    body: z.object({
+        unitSymbol: z.enum(UnitOfMeasurement.unitValues),
+        conversionFactor: z.int(),
+        displayName: z.string(),
+        pricePerUnit: z.int(),
+    }),
+    params: z.object({
+        productId: z.uuidv7(),
+    }),
+})
 productRouter.post(
     '/:productId/sell-units',
     validateInput(addSellUnitRequestSchema),
@@ -177,7 +182,10 @@ productRouter.post(
             await productController.addSellUnit({
                 productId: params.productId,
                 sellerId: sellerId,
-                unit: body.unit,
+                unitSymbol: body.unitSymbol,
+                conversionFactor: body.conversionFactor,
+                displayName: body.displayName,
+                pricePerUnit: body.pricePerUnit,
             })
             res.status(201).json({ message: 'Successfully added sell unit' })
         } catch (e) {
@@ -203,13 +211,38 @@ productRouter.delete(
             >
             const sellerId = fakeSellerId
 
-            await productController.removeSellUnit({
+            await productController.discontinueSellUnit({
                 productId: params.productId,
                 sellerId: sellerId,
                 sellUnitId: params.sellUnitId,
             })
             res.status(204)
         } catch (e) {
+            next(e)
+        }
+    },
+)
+
+const updateProductRequestSchema = z.object({
+    params: z.object({ productId: z.uuidv7() }),
+    body: z
+        .object({
+            name: z.string(),
+            description: z.string(),
+            stockQuantity: z.number(),
+            baseUnit: z.enum(UnitOfMeasurement.unitValues),
+            pricePerUnit: z.number(),
+        })
+        .partial(),
+})
+
+productRouter.patch(
+    '/:productId',
+    validateInput(updateProductRequestSchema),
+    (req: Request, res: Response, next: NextFunction) => {
+        try{
+            productController.
+        }catch(e){
             next(e)
         }
     },

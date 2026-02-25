@@ -5,6 +5,7 @@ import { AccountRepository } from '../../account/repositories/AccountRepository.
 import { BuyerRepository } from '../../buyer/repositories/BuyerRepository.js'
 import { CartRepository } from '../../cart/repositories/CartRepository.js'
 import { ProductRepository } from '../../product/repositories/ProductRepository.js'
+import { ReservationRepository } from '../../reservation/repositories/ReservationRepository.js'
 import { SellerRepository } from '../../seller/repositories/SellerRepository.js'
 
 export interface UnitOfWork {
@@ -17,4 +18,5 @@ export interface UnitOfWork {
     getAccountRepo(): AccountRepository
     getOutboxRepo(): DomainEventPublisher
     getCartRepo(): CartRepository
+    getReservationRepo(): ReservationRepository
 }

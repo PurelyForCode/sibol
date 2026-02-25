@@ -4,8 +4,7 @@ import { ProductDescription } from '../../../domain/product/value_objects/Produc
 import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { Money } from '../../../domain/shared/value_objects/Money.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 import { DuplicateProductNameException } from '../../../exceptions/product/DuplicateProductNameException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
@@ -50,25 +49,13 @@ export class CreateProductUsecase {
                   )
                 : null
 
-            const unit = UnitOfMeasurement.create(
+            const unit = SmallestUnitOfMeasurement.create(
                 cmd.unitOfMeasurement,
             ).unwrapOrThrow('unitOfMeasurement')
-            const price = Money.create(cmd.pricePerUnit).unwrapOrThrow(
-                'pricePerUnit',
-            )
 
             const id = this.idGen.generate()
-            const product = Product.new(
-                id,
-                sellerId,
-                pName,
-                pDescription,
-                unit,
-                price,
-            )
-
+            const product = Product.new(id, sellerId, pName, pDescription, unit)
             await pr.save(product)
-
             return {
                 id: product.id.value,
             }

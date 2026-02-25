@@ -6,7 +6,7 @@ import { Product } from '../../../domain/product/aggregates/Product.js'
 import {
     ProductImageRow,
     ProductRow,
-    ProductSellUnitRow,
+    SellUnitRow,
 } from '../tables/TableDefinitions.js'
 import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
 import { ProductStock } from '../../../domain/product/value_objects/ProductStock.js'
@@ -19,7 +19,7 @@ import { ProductStatus } from '../../../domain/product/value_objects/ProductStat
 import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 import { ProductSellUnit } from '../../../domain/product/entities/ProductSellUnit.js'
-import { ConversionFactor } from '../../../domain/shared/value_objects/ConversionFactor.js'
+import { ConversionFactor } from '../../../domain/shared/value_objects/UnitValue.js'
 
 export class PgProductRepository implements ProductRepository {
     constructor(
@@ -51,9 +51,7 @@ export class PgProductRepository implements ProductRepository {
         if (!productRow) {
             return null
         }
-        const sellUnitRows = await this.k<ProductSellUnitRow>(
-            'product_sell_units',
-        )
+        const sellUnitRows = await this.k<SellUnitRow>('product_sell_units')
             .select('unit', 'conversion_factor', 'id')
             .where('product_id', productRow.id)
 
@@ -73,35 +71,44 @@ export class PgProductRepository implements ProductRepository {
     }
 
     async save(product: Product): Promise<void> {
-        await this.k<ProductRow>('products')
-            .insert({
-                id: product.id.value,
-                name: product.name.value,
-                rating: product.rating ? product.rating.value : null,
-                base_unit: product.baseUnit.value,
-                seller_id: product.sellerId.value,
-                created_at: product.createdAt,
-                status: product.status.value,
-                stock_quantity: product.stock.value,
-                description: product.description
-                    ? product.description.value
-                    : null,
-                deleted_at: product.deletedAt ? product.deletedAt : null,
-                updated_at: product.updatedAt,
-            })
-            .onConflict('id')
-            .merge()
+        await this.delete(product.id)
+
+        await this.k<ProductRow>('products').insert({
+            id: product.id.value,
+            name: product.name.value,
+            rating: product.rating ? product.rating.value : null,
+            base_unit: product.inventoryUnitSymbol.value,
+            seller_id: product.sellerId.value,
+            created_at: product.createdAt,
+            status: product.status.value,
+            stock_quantity: product.stockQuantity.value,
+            description: product.description ? product.description.value : null,
+            deleted_at: product.deletedAt ? product.deletedAt : null,
+            updated_at: product.updatedAt,
+        })
+
         for (const [_, sellUnit] of product.sellUnits) {
-            await this.k<ProductSellUnitRow>('product_sell_units')
-                .insert({
-                    conversion_factor: sellUnit.conversionFactor.value,
-                    id: sellUnit.id.value,
-                    product_id: sellUnit.productId.value,
-                    unit: sellUnit.unit.value,
-                })
-                .onConflict('id')
-                .merge()
+            await this.k<SellUnitRow>('product_sell_units').insert({
+                conversion_factor: sellUnit.conversionFactor.value,
+                id: sellUnit.id.value,
+                product_id: sellUnit.productId.value,
+                unit_symbol: sellUnit.unitSymbol.value,
+            })
         }
+
+        // TODO: Implement change detection
+        // for (const [_, image] of product.images) {
+        //     await this.k<ProductImageRow>('product_images')
+        //         .insert({
+        //             id: image.id.value,
+        //             created_at: image.createdAt,
+        //             position: image.position.value,
+        //             product_id: image.productId.value,
+        //             url: image.url.value,
+        //         })
+        //         .onConflict('id')
+        //         .merge()
+        // }
         this.uow.registerAggregate(product)
     }
 
@@ -111,7 +118,7 @@ export class PgProductRepository implements ProductRepository {
 
     private map(
         productRow: ProductRow,
-        sellUnitRows: Omit<ProductSellUnitRow, 'product_id'>[],
+        sellUnitRows: Omit<SellUnitRow, 'product_id'>[],
         imageRows: Omit<ProductImageRow, 'product_id'>[],
     ): Product {
         const productId = EntityId.create(productRow.id)
@@ -133,7 +140,9 @@ export class PgProductRepository implements ProductRepository {
         const sellUnits = new Map()
         for (const row of sellUnitRows) {
             const sellUnitId = EntityId.create(row.id)
-            const sellUnitUnit = UnitOfMeasurement.create(row.unit).getValue()
+            const sellUnitUnit = UnitOfMeasurement.create(
+                row.unit_symbol,
+            ).getValue()
             const conversionFactor = ConversionFactor.create(
                 row.conversion_factor,
             ).getValue()

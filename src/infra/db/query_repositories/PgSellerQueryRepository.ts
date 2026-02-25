@@ -1,9 +1,8 @@
 import { Knex } from 'knex'
 import { EntityId } from '../../../lib/domain/EntityId.js'
-import { SellerQueryRepository } from '../../../domain/seller/repositories/SellerRepository.js'
 import { SellerDto } from '../../../features/dto/SellerDto.js'
 
-export class PgSellerQueryRepository implements SellerQueryRepository {
+export class PgSellerQueryRepository {
     constructor(private readonly k: Knex) {}
 
     findById(id: EntityId): Promise<SellerDto | null> {

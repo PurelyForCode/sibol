@@ -4,15 +4,15 @@ import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNo
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
 
-export type DeleteProductBySellerCmd = {
+export type ArchiveProductBySellerCmd = {
     sellerId: string
     productId: string
 }
 
-export class DeleteProductBySellerUsecase {
+export class ArchiveProductBySellerUsecase {
     constructor(private readonly tm: TransactionManager) {}
 
-    async execute(cmd: DeleteProductBySellerCmd) {
+    async execute(cmd: ArchiveProductBySellerCmd) {
         // check if seller exists
         return await this.tm.transaction(async uow => {
             const sr = uow.getSellerRepo()

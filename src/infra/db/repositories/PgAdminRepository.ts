@@ -8,12 +8,6 @@ import {
 import { Admin } from '../../../domain/admin/Admin.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 
-export class PgAdminRepositoryFactory implements AdminRepositoryFactory {
-    create(props: any): Repository<any, any> {
-        throw new Error('Method not implemented.')
-    }
-}
-
 export class PgAdminRepository implements AdminRepository {
     constructor(
         private readonly k: Knex.Transaction,

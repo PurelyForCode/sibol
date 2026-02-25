@@ -11,14 +11,15 @@ import { LoginSellerUsecase } from './features/authentication/login/LoginSeller.
 import { LoginBuyerUsecase } from './features/authentication/login/LoginBuyer.js'
 import { ProductController } from './features/products/ProductController.js'
 import { CreateProductUsecase } from './features/products/create_product/CreateProductUsecase.js'
-import { DeleteProductBySellerUsecase } from './features/products/delete_product/DeleteProductBySellerUsecase.js'
+import { ArchiveProductBySellerUsecase } from './features/products/archive_product/ArchiveProductBySellerUsecase.js'
 import { PgProductQueryRepository } from './infra/db/query_repositories/PgProductQueryRepository.js'
 import { AddSellUnitUsecase } from './features/products/add_sell_unit/AddSellUnitUsecase.js'
-import { RemoveSellUnitUsecase } from './features/products/remove_sell_unit/RemoveSellUnitUsecase.js'
+import { DiscontinueSellUnitUsecase } from './features/products/remove_sell_unit/DiscontinueSellUnitUsecase.js'
 import { PgProductSellUnitQueryRepository } from './infra/db/query_repositories/PgProductSellUnitQueryRepository.js'
 import { CartController } from './features/shopping/CartController.js'
 import { AddToCartUsecase } from './features/shopping/add_to_cart/AddToCartUsecase.js'
 import { RemoveFromCartUsecase } from './features/shopping/remove_from_cart/RemoveFromCartUsecase.js'
+import { ReserveItemsForPickupUsecase } from './features/shopping/reserve_items_for_pickup/ReserveItemsForPickupUsecase.js'
 
 export const idGenerator = new Uuidv7Generator()
 export const passwordUtility = new ArgonPasswordUtil()
@@ -57,7 +58,7 @@ export const createProductUsecase = new CreateProductUsecase(
     transactionManager,
     idGenerator,
 )
-export const deleteProductBySellerUsecase = new DeleteProductBySellerUsecase(
+export const archiveProductBySellerUsecase = new ArchiveProductBySellerUsecase(
     transactionManager,
 )
 export const addSellUnitUsecase = new AddSellUnitUsecase(
@@ -65,8 +66,12 @@ export const addSellUnitUsecase = new AddSellUnitUsecase(
     idGenerator,
 )
 
-export const removeSellUnitUsecase = new RemoveSellUnitUsecase(
+export const removeSellUnitUsecase = new DiscontinueSellUnitUsecase(
     transactionManager,
+)
+export const reserveItemsForPickupUsecase = new ReserveItemsForPickupUsecase(
+    transactionManager,
+    idGenerator,
 )
 
 export const buyerController = new BuyerController(registerBuyerUsecase)
@@ -74,7 +79,7 @@ export const sellerController = new SellerController(registerSellerUsecase)
 
 export const productController = new ProductController(
     createProductUsecase,
-    deleteProductBySellerUsecase,
+    archiveProductBySellerUsecase,
     addSellUnitUsecase,
     removeSellUnitUsecase,
 )
@@ -87,6 +92,7 @@ export const authenticationController = new AuthenticationController(
 export const cartController = new CartController(
     addToCartUsecase,
     removeFromCartUsecase,
+    reserveItemsForPickupUsecase,
 )
 
 export const productQueryRepository = new PgProductQueryRepository(knexInstance)

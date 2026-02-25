@@ -1,7 +1,10 @@
 import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
+import { SellUnitDisplayName } from '../../../domain/product/value_objects/SellUnitDisplayName.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
+import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { ConversionFactor } from '../../../domain/shared/value_objects/UnitValue.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
@@ -9,7 +12,10 @@ import { EntityId } from '../../../lib/domain/EntityId.js'
 export type AddSellUnitCmd = {
     sellerId: string
     productId: string
-    unit: string
+    unitSymbol: string
+    conversionFactor: number
+    pricePerUnit: number
+    displayName: string
 }
 
 export class AddSellUnitUsecase {
@@ -28,22 +34,37 @@ export class AddSellUnitUsecase {
             if (!seller) {
                 throw new SellerNotFoundByIdException(cmd.sellerId)
             }
+            seller.assertIsUnbanned()
+            seller.assertIsVerified()
 
             const productId = EntityId.create(cmd.productId)
             const product = await pr.findById(productId)
             if (!product) {
                 throw new ProductNotFoundException(cmd.productId)
             }
-
-            seller.assertIsUnbanned()
-            seller.assertIsVerified()
             ProductOwnershipService.assertSellerOwnsProduct(seller, product)
 
             const id = this.idGen.generate()
-            const unit = UnitOfMeasurement.create(cmd.unit).unwrapOrThrow(
-                'unitOfMeasurement',
+            const unitSymbol = UnitOfMeasurement.create(
+                cmd.unitSymbol,
+            ).unwrapOrThrow('unitOfMeasurement')
+            const conversionFactor = ConversionFactor.create(
+                cmd.conversionFactor,
+            ).unwrapOrThrow('conversionFactor')
+            const pricePerUnit = Money.create(cmd.pricePerUnit).unwrapOrThrow(
+                'pricePerUnit',
             )
-            product.addSellUnit(id, unit)
+            const displayName = SellUnitDisplayName.create(
+                cmd.displayName,
+            ).unwrapOrThrow('displayName')
+
+            product.addSellUnit(
+                id,
+                unitSymbol,
+                conversionFactor,
+                pricePerUnit,
+                displayName,
+            )
             await pr.save(product)
         })
     }

@@ -1,68 +1,25 @@
 import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
+import { ValueObject } from '../../../lib/domain/ValueObject.js'
 import { Result } from '../../../lib/utils/Result.js'
+
+export type MeasurementDimension = 'mass' | 'volume' | 'count' | 'distance'
 
 export type UnitOfMeasurementValues =
     | 'kg'
     | 'g'
-    | 'lbs'
     | 'l'
     | 'ml'
-    | 'pcs'
     | 'm'
     | 'cm'
-
-export type MeasurementDimension = 'mass' | 'volume' | 'count' | 'distance'
+    | 'pieces'
 
 export class UnitOfMeasurement extends SingleValueObject<UnitOfMeasurementValues> {
-    private constructor(value: UnitOfMeasurementValues) {
-        super(value)
-    }
-
-    static readonly unitValues: UnitOfMeasurementValues[] = [
-        'kg',
-        'g',
-        'lbs',
-        'l',
-        'ml',
-        'pcs',
-        'm',
-        'cm',
-    ]
-
-    static readonly dimensions: Record<
-        UnitOfMeasurementValues,
-        MeasurementDimension
-    > = {
-        kg: 'mass',
-        g: 'mass',
-        lbs: 'mass',
-
-        l: 'volume',
-        ml: 'volume',
-
-        pcs: 'count',
-
-        cm: 'distance',
-        m: 'distance',
-    }
-
-    private static readonly allowedValues: UnitOfMeasurementValues[] = [
-        'kg',
-        'g',
-        'lbs',
-        'l',
-        'ml',
-        'pcs',
-        'm',
-        'cm',
-    ]
-
     static create(value: string): Result<UnitOfMeasurement> {
         if (!value) {
             return Result.fail('Unit of measurement cannot be empty')
         }
 
-        if (!this.allowedValues.includes(value as UnitOfMeasurementValues)) {
+        if (!this.unitValues.includes(value as UnitOfMeasurementValues)) {
             return Result.fail(`Invalid unit of measurement: ${value}`)
         }
 
@@ -70,10 +27,35 @@ export class UnitOfMeasurement extends SingleValueObject<UnitOfMeasurementValues
             new UnitOfMeasurement(value as UnitOfMeasurementValues),
         )
     }
+    static readonly dimensions: Record<
+        UnitOfMeasurementValues,
+        MeasurementDimension
+    > = {
+        kg: 'mass',
+        g: 'mass',
+
+        l: 'volume',
+        ml: 'volume',
+
+        cm: 'distance',
+        m: 'distance',
+
+        pieces: 'count',
+    }
+    static readonly unitValues: UnitOfMeasurementValues[] = [
+        'kg',
+        'g',
+        'l',
+        'ml',
+        'pieces',
+        'm',
+        'cm',
+    ]
+    private constructor(value: UnitOfMeasurementValues) {
+        super(value)
+    }
 
     isConvertibleTo(other: UnitOfMeasurement): boolean {
-        if (this.value === other.value) return false
-
         return (
             UnitOfMeasurement.dimensions[this.value] ===
             UnitOfMeasurement.dimensions[other.value]

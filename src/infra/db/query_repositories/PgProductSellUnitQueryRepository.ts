@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductSellUnitDto } from '../../../features/dto/ProductSellUnitDto.js'
-import { ProductSellUnitRow } from '../tables/TableDefinitions.js'
+import { SellUnitRow } from '../tables/TableDefinitions.js'
 
 export class PgProductSellUnitQueryRepository {
     constructor(private readonly k: Knex) {}
@@ -10,7 +10,7 @@ export class PgProductSellUnitQueryRepository {
         id: string,
         productId: string,
     ): Promise<ProductSellUnitDto | null> {
-        const row = await this.k<ProductSellUnitRow>('product_sell_units')
+        const row = await this.k<SellUnitRow>('product_sell_units')
             .select('*')
             .where('id', id)
             .where('product_id', productId)
@@ -24,7 +24,7 @@ export class PgProductSellUnitQueryRepository {
     async findAllByProductId(
         productId: string,
     ): Promise<readonly ProductSellUnitDto[]> {
-        const sellUnits = await this.k<ProductSellUnitRow>('product_sell_units')
+        const sellUnits = await this.k<SellUnitRow>('product_sell_units')
             .select('*')
             .where('product_id', productId)
 
@@ -36,12 +36,12 @@ export class PgProductSellUnitQueryRepository {
         return results
     }
 
-    private map(row: ProductSellUnitRow): ProductSellUnitDto {
+    private map(row: SellUnitRow): ProductSellUnitDto {
         return {
             conversionFactor: row.conversion_factor,
             id: row.id,
             productId: row.product_id,
-            unit: row.unit,
+            unit: row.unit_symbol,
         }
     }
 }

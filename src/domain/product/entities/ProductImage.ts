@@ -5,6 +5,7 @@ import { ImagePosition } from '../../shared/value_objects/ImagePosition.js'
 export class ProductImage {
     private constructor(
         private _id: EntityId,
+        private _productId: EntityId,
         private _url: ImagePath,
         private _position: ImagePosition,
         private _createdAt: Date,
@@ -20,20 +21,22 @@ export class ProductImage {
 
     static new(
         id: EntityId,
+        productId: EntityId,
         url: ImagePath,
         position: ImagePosition,
         createdAt: Date,
     ) {
-        return new ProductImage(id, url, position, createdAt)
+        return new ProductImage(id, productId, url, position, createdAt)
     }
 
     static rehydrate(
         id: EntityId,
+        productId: EntityId,
         url: ImagePath,
         position: ImagePosition,
         createdAt: Date,
     ) {
-        return new ProductImage(id, url, position, createdAt)
+        return new ProductImage(id, productId, url, position, createdAt)
     }
 
     public get createdAt(): Date {
@@ -47,5 +50,8 @@ export class ProductImage {
     }
     public get id(): EntityId {
         return this._id
+    }
+    public get productId(): EntityId {
+        return this._productId
     }
 }

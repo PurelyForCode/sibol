@@ -15,6 +15,8 @@ import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
 import { PgBuyerRepository } from '../db/repositories/PgBuyerRepository.js'
 import { CartRepository } from '../../domain/cart/repositories/CartRepository.js'
 import { PgCartRepository } from '../db/repositories/PgCartRepository.js'
+import { ReservationRepository } from '../../domain/reservation/repositories/ReservationRepository.js'
+import { PgReservationRepository } from '../db/repositories/PgReservationRepository.js'
 
 export class KnexUnitOfWork implements UnitOfWork {
     private aggregates: AggregateRoot[] = []
@@ -45,7 +47,7 @@ export class KnexUnitOfWork implements UnitOfWork {
     }
 
     getCartRepo(): CartRepository {
-        return new PgCartRepository(this.trx)
+        return new PgCartRepository(this.trx, this)
     }
 
     getAccountRepo(): AccountRepository {
@@ -62,5 +64,9 @@ export class KnexUnitOfWork implements UnitOfWork {
 
     getBuyerRepo(): BuyerRepository {
         return new PgBuyerRepository(this.trx, this)
+    }
+
+    getReservationRepo(): ReservationRepository {
+        return new PgReservationRepository(this.trx, this)
     }
 }

@@ -10,6 +10,10 @@ export class Quantity extends SingleValueObject<number> {
         if (value < 0) {
             return Result.fail('Quantity can not be lower than 0')
         }
+        if (!Number.isInteger(value)) {
+            return Result.fail('Quantity must be an integer')
+        }
+
         return Result.ok(new Quantity(value))
     }
 

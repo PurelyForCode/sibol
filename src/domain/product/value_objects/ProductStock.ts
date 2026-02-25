@@ -10,6 +10,9 @@ export class ProductStock extends SingleValueObject<number> {
         if (stock < 0) {
             return Result.fail('Product stock can not reach negative')
         }
+        if (!Number.isInteger(stock)) {
+            return Result.fail('Product stock is not an integer')
+        }
         return Result.ok(new ProductStock(stock))
     }
 

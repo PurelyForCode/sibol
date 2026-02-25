@@ -8,16 +8,16 @@ import { ProductNotFoundException } from '../../../exceptions/product/ProductNot
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 
-export type RemoveSellUnitCmd = {
+export type DiscontinueSellUnitCmd = {
     productId: string
     sellerId: string
     sellUnitId: string
 }
 
-export class RemoveSellUnitUsecase {
+export class DiscontinueSellUnitUsecase {
     constructor(private readonly tm: TransactionManager) {}
 
-    async execute(cmd: RemoveSellUnitCmd) {
+    async execute(cmd: DiscontinueSellUnitCmd) {
         await this.tm.transaction(async uow => {
             const pr = uow.getProductRepo()
             const sr = uow.getSellerRepo()
@@ -27,7 +27,6 @@ export class RemoveSellUnitUsecase {
             if (!seller) {
                 throw new SellerNotFoundByIdException(cmd.sellerId)
             }
-
             seller.assertIsVerified()
             seller.assertIsUnbanned()
 
@@ -40,7 +39,7 @@ export class RemoveSellUnitUsecase {
             ProductOwnershipService.assertSellerOwnsProduct(seller, product)
             const sellUnitId = EntityId.create(cmd.sellUnitId)
 
-            product.removeSellUnit(sellUnitId)
+            product.discontinueSellUnit(sellUnitId)
             // TODO: Must recheck all products that are inside carts to check if their sellUnits are correct
             // TODO: Convert them to another viable sellUnit that is available
             await pr.save(product)
