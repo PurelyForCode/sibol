@@ -10,7 +10,7 @@ export class PgProductSellUnitQueryRepository {
         id: string,
         productId: string,
     ): Promise<ProductSellUnitDto | null> {
-        const row = await this.k<SellUnitRow>('product_sell_units')
+        const row = await this.k<SellUnitRow>('sell_units')
             .select('*')
             .where('id', id)
             .where('product_id', productId)
@@ -24,7 +24,7 @@ export class PgProductSellUnitQueryRepository {
     async findAllByProductId(
         productId: string,
     ): Promise<readonly ProductSellUnitDto[]> {
-        const sellUnits = await this.k<SellUnitRow>('product_sell_units')
+        const sellUnits = await this.k<SellUnitRow>('sell_units')
             .select('*')
             .where('product_id', productId)
 

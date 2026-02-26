@@ -6,7 +6,7 @@ import { ReviewMessage } from './ReviewMessage.js'
 
 export class Review extends AggregateRoot {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _buyerId: EntityId,
         private _message: ReviewMessage | null,
         private _rating: Rating,
@@ -14,7 +14,7 @@ export class Review extends AggregateRoot {
         private _createdAt: Date,
         private _updatedAt: Date,
     ) {
-        super()
+        super(id)
     }
 
     static rehydrate(
@@ -83,8 +83,5 @@ export class Review extends AggregateRoot {
     }
     public get buyerId(): EntityId {
         return this._buyerId
-    }
-    public get id(): EntityId {
-        return this._id
     }
 }

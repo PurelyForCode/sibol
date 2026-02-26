@@ -3,9 +3,9 @@ import { ProductOwnershipService } from '../../../domain/product/services/Produc
 import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
 import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
 import { ProductStock } from '../../../domain/product/value_objects/ProductStock.js'
+import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { Money } from '../../../domain/shared/value_objects/Money.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { InventoryMovementService } from '../../../domain/shared/services/InventoryMovementService.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
@@ -17,18 +17,20 @@ export type UpdateProductCmd = {
         name: string
         description: string
         stockQuantity: number
-        baseUnit: string
-        pricePerUnit: number
     }>
 }
 
 export class UpdateProductUsecase {
-    constructor(private readonly tm: TransactionManager) {}
+    constructor(
+        private readonly tm: TransactionManager,
+        private readonly idGen: IdGenerator,
+    ) {}
 
     async execute(cmd: UpdateProductCmd) {
         await this.tm.transaction(async uow => {
             const pr = uow.getProductRepo()
             const sr = uow.getSellerRepo()
+            const ir = uow.getInventoryMovementRepo()
 
             const sellerId = EntityId.create(cmd.sellerId)
             const seller = await sr.findById(sellerId)
@@ -46,19 +48,6 @@ export class UpdateProductUsecase {
             ProductOwnershipService.assertSellerOwnsProduct(seller, product)
 
             const fields = cmd.fields
-            if (fields.baseUnit) {
-                const baseUnit = UnitOfMeasurement.create(
-                    fields.baseUnit,
-                ).unwrapOrThrow('baseUnit')
-                product.changeBaseUnit(baseUnit)
-            }
-
-            if (fields.pricePerUnit) {
-                const pricePerUnit = Money.create(
-                    fields.pricePerUnit,
-                ).unwrapOrThrow('pricePerUnit')
-                product.changePricePerUnit(pricePerUnit)
-            }
 
             if (fields.name) {
                 const name = ProductName.create(fields.name).unwrapOrThrow(
@@ -80,12 +69,19 @@ export class UpdateProductUsecase {
             }
 
             if (fields.stockQuantity) {
-                const stockQuantity = ProductStock.create(
+                const inventoryMovementService = new InventoryMovementService(
+                    this.idGen,
+                )
+                const stock = ProductStock.create(
                     fields.stockQuantity,
-                ).unwrapOrThrow('stockQuantity')
-                product.changeStockQuantity(stockQuantity)
+                ).unwrapOrThrow('stock')
+                const movement = inventoryMovementService.createMovement(
+                    product,
+                    stock,
+                )
+                product.changeStock(stock)
+                await ir.save(movement)
             }
-
             await pr.save(product)
             await uow.publishEvents()
         })

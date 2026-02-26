@@ -4,6 +4,7 @@ import { DomainEventPublisher } from '../../../lib/interfaces/DomainEventPublish
 import { AccountRepository } from '../../account/repositories/AccountRepository.js'
 import { BuyerRepository } from '../../buyer/repositories/BuyerRepository.js'
 import { CartRepository } from '../../cart/repositories/CartRepository.js'
+import { InventoryMovementRepository } from '../../inventory/repositories/InventoryMovementRepository.js'
 import { ProductRepository } from '../../product/repositories/ProductRepository.js'
 import { ReservationRepository } from '../../reservation/repositories/ReservationRepository.js'
 import { SellerRepository } from '../../seller/repositories/SellerRepository.js'
@@ -19,4 +20,5 @@ export interface UnitOfWork {
     getOutboxRepo(): DomainEventPublisher
     getCartRepo(): CartRepository
     getReservationRepo(): ReservationRepository
+    getInventoryMovementRepo(): InventoryMovementRepository
 }

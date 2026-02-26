@@ -1,31 +1,43 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductRepository } from '../../../domain/product/repositories/ProductRepository.js'
 import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
 import { Product } from '../../../domain/product/aggregates/Product.js'
 import {
     ProductImageRow,
+    ProductInventoryRow,
     ProductRow,
     SellUnitRow,
 } from '../tables/TableDefinitions.js'
 import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
 import { ProductStock } from '../../../domain/product/value_objects/ProductStock.js'
-import {
-    UnitOfMeasurement,
-    UnitOfMeasurementValues,
-} from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { Rating } from '../../../domain/shared/value_objects/Rating.js'
 import { ProductStatus } from '../../../domain/product/value_objects/ProductStatus.js'
 import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 import { ProductSellUnit } from '../../../domain/product/entities/ProductSellUnit.js'
 import { ConversionFactor } from '../../../domain/shared/value_objects/UnitValue.js'
+import { SellUnitDisplayName } from '../../../domain/product/value_objects/SellUnitDisplayName.js'
+import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
+import { PgBaseRepository } from './PgBaseRepository.js'
+import { EntityId } from '../../../lib/domain/EntityId.js'
 
-export class PgProductRepository implements ProductRepository {
+type Change = {
+    type: 'update' | 'insert' | 'delete'
+    table: string
+    data: any
+}
+
+export class PgProductRepository
+    extends PgBaseRepository<Product>
+    implements ProductRepository
+{
     constructor(
         private readonly k: Knex.Transaction,
         private readonly uow: UnitOfWork,
-    ) {}
+    ) {
+        super()
+    }
 
     async isNameUniqueWithinSellerStore(
         name: ProductName,
@@ -44,22 +56,34 @@ export class PgProductRepository implements ProductRepository {
     }
 
     async findById(id: EntityId): Promise<Product | null> {
-        const productRow = await this.k<ProductRow>('products')
-            .select('*')
-            .where('id', id.value)
+        const productRow = await this.k<
+            ProductRow & Pick<ProductInventoryRow, 'quantity'>
+        >('products')
+            .select('products.*', 'product_inventory.quantity')
+            .leftJoin(
+                'product_inventory',
+                'products.id',
+                'product_inventory.product_id',
+            )
+            .where('products.id', id.value)
             .first()
         if (!productRow) {
             return null
         }
-        const sellUnitRows = await this.k<SellUnitRow>('product_sell_units')
-            .select('unit', 'conversion_factor', 'id')
-            .where('product_id', productRow.id)
 
-        const imageRows = await this.k<ProductImageRow>('product_images')
-            .select('url', 'position', 'id', 'created_at')
-            .where('product_id', productRow.id)
+        const sellUnitRows = await this.k<SellUnitRow>('sell_units').where(
+            'product_id',
+            productRow.id,
+        )
 
-        return this.map(productRow, sellUnitRows, imageRows)
+        const imageRows = await this.k<ProductImageRow>('product_images').where(
+            'product_id',
+            productRow.id,
+        )
+
+        const product = this.map(productRow, sellUnitRows, imageRows)
+        this.snapshot(product)
+        return product
     }
 
     async existsById(id: EntityId): Promise<boolean> {
@@ -71,44 +95,57 @@ export class PgProductRepository implements ProductRepository {
     }
 
     async save(product: Product): Promise<void> {
-        await this.delete(product.id)
-
-        await this.k<ProductRow>('products').insert({
-            id: product.id.value,
-            name: product.name.value,
-            rating: product.rating ? product.rating.value : null,
-            base_unit: product.inventoryUnitSymbol.value,
-            seller_id: product.sellerId.value,
-            created_at: product.createdAt,
-            status: product.status.value,
-            stock_quantity: product.stockQuantity.value,
-            description: product.description ? product.description.value : null,
-            deleted_at: product.deletedAt ? product.deletedAt : null,
-            updated_at: product.updatedAt,
-        })
-
-        for (const [_, sellUnit] of product.sellUnits) {
-            await this.k<SellUnitRow>('product_sell_units').insert({
-                conversion_factor: sellUnit.conversionFactor.value,
-                id: sellUnit.id.value,
-                product_id: sellUnit.productId.value,
-                unit_symbol: sellUnit.unitSymbol.value,
-            })
+        const snapshot = this.getSnapshot(product.id)
+        if (snapshot) {
+            const deletedSellUnits = this.getDeletedIds(
+                snapshot.sellUnits,
+                product.sellUnits,
+            )
+            await this.k('sell_units').delete().whereIn('id', deletedSellUnits)
         }
 
-        // TODO: Implement change detection
-        // for (const [_, image] of product.images) {
-        //     await this.k<ProductImageRow>('product_images')
-        //         .insert({
-        //             id: image.id.value,
-        //             created_at: image.createdAt,
-        //             position: image.position.value,
-        //             product_id: image.productId.value,
-        //             url: image.url.value,
-        //         })
-        //         .onConflict('id')
-        //         .merge()
-        // }
+        await this.k<ProductRow>('products')
+            .insert({
+                id: product.id.value,
+                name: product.name.value,
+                rating: product.rating ? product.rating.value : null,
+                seller_id: product.sellerId.value,
+                created_at: product.createdAt,
+                status: product.status.value,
+                description: product.description
+                    ? product.description.value
+                    : null,
+                deleted_at: product.deletedAt ? product.deletedAt : null,
+                updated_at: product.updatedAt,
+                inventory_unit_symbol: product.inventoryUnitSymbol.value,
+            })
+            .onConflict('id')
+            .merge()
+
+        for (const [_, sellUnit] of product.sellUnits) {
+            await this.k<SellUnitRow>('sell_units')
+                .insert({
+                    conversion_factor: sellUnit.conversionFactor.value,
+                    id: sellUnit.id.value,
+                    product_id: sellUnit.productId.value,
+                    unit_symbol: sellUnit.unitSymbol.value,
+                    display_name: sellUnit.displayName.value,
+                    price_per_unit: sellUnit.pricePerUnit.value,
+                    discontinued_at: sellUnit.discontinuedAt,
+                })
+                .onConflict('id')
+                .merge()
+        }
+
+        await this.k<ProductInventoryRow>('product_inventory')
+            .insert({
+                product_id: product.id.value,
+                updated_at: new Date(),
+                quantity: product.stock.value,
+            })
+            .onConflict('product_id')
+            .merge()
+
         this.uow.registerAggregate(product)
     }
 
@@ -117,60 +154,73 @@ export class PgProductRepository implements ProductRepository {
     }
 
     private map(
-        productRow: ProductRow,
+        productRow: ProductRow & Pick<ProductInventoryRow, 'quantity'>,
         sellUnitRows: Omit<SellUnitRow, 'product_id'>[],
         imageRows: Omit<ProductImageRow, 'product_id'>[],
     ): Product {
-        const productId = EntityId.create(productRow.id)
-        const sellerId = EntityId.create(productRow.seller_id)
-        const name = ProductName.create(productRow.name).getValue()
-        const description = productRow.description
-            ? ProductDescription.create(productRow.description).getValue()
-            : null
-        const stock = ProductStock.create(productRow.stock_quantity).getValue()
-        const baseUnit = UnitOfMeasurement.create(
-            productRow.base_unit as UnitOfMeasurementValues,
-        ).getValue()
-        const pricePerUnit = Money.create(productRow.price_per_unit).getValue()
-        const rating = productRow.rating
-            ? Rating.create(productRow.rating)
-            : null
-        const status = ProductStatus.create(productRow.status).getValue()
+        try {
+            console.log(productRow.quantity)
+            const productId = EntityId.create(productRow.id)
 
-        const sellUnits = new Map()
-        for (const row of sellUnitRows) {
-            const sellUnitId = EntityId.create(row.id)
-            const sellUnitUnit = UnitOfMeasurement.create(
-                row.unit_symbol,
-            ).getValue()
-            const conversionFactor = ConversionFactor.create(
-                row.conversion_factor,
+            const sellUnits = new Map()
+            for (const row of sellUnitRows) {
+                const sellUnitId = EntityId.create(row.id)
+                const conversionFactor = ConversionFactor.create(
+                    row.conversion_factor,
+                ).getValue()
+                const unitSymbol = UnitOfMeasurement.create(
+                    row.unit_symbol,
+                ).getValue()
+                const pricePerUnit = Money.create(row.price_per_unit).getValue()
+                const displayName = SellUnitDisplayName.create(
+                    row.display_name,
+                ).getValue()
+
+                const sellUnit = ProductSellUnit.rehydrate(
+                    sellUnitId,
+                    productId,
+                    unitSymbol,
+                    conversionFactor,
+                    pricePerUnit,
+                    displayName,
+                    row.discontinued_at,
+                )
+                sellUnits.set(sellUnit.id.value, sellUnit)
+            }
+
+            const sellerId = EntityId.create(productRow.seller_id)
+            const name = ProductName.create(productRow.name).getValue()
+            const description = productRow.description
+                ? ProductDescription.create(productRow.description).getValue()
+                : null
+            const rating = productRow.rating
+                ? Rating.create(productRow.rating)
+                : null
+            const status = ProductStatus.create(productRow.status).getValue()
+            const stock = ProductStock.create(productRow.quantity).getValue()
+
+            const smallestUnitOfMeasurement = SmallestUnitOfMeasurement.create(
+                productRow.inventory_unit_symbol,
             ).getValue()
 
-            const sellUnit = ProductSellUnit.rehydrate(
-                sellUnitId,
+            return Product.rehydrate(
                 productId,
-                sellUnitUnit,
-                conversionFactor,
+                sellerId,
+                name,
+                description,
+                smallestUnitOfMeasurement,
+                status,
+                rating,
+                new Map(),
+                sellUnits,
+                stock,
+                productRow.created_at,
+                productRow.updated_at,
+                productRow.deleted_at,
             )
-            sellUnits.set(sellUnit.id.value, sellUnit)
+        } catch (e) {
+            console.log(e)
+            throw new Error('ok')
         }
-
-        return Product.rehydrate(
-            productId,
-            sellerId,
-            name,
-            description,
-            stock,
-            baseUnit,
-            pricePerUnit,
-            status,
-            rating,
-            new Map(),
-            sellUnits,
-            productRow.created_at,
-            productRow.updated_at,
-            productRow.deleted_at,
-        )
     }
 }

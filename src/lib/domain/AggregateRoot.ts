@@ -1,8 +1,14 @@
 import { DomainEvent } from './DomainEvent.js'
+import { Entity } from './Entity.js'
+import { EntityId } from './EntityId.js'
 
-export abstract class AggregateRoot {
+export type StateChange = {
+    type: 'modified' | 'deleted' | 'new'
+    entity: Entity
+}
+
+export abstract class AggregateRoot extends Entity {
     private _events: DomainEvent[] = []
-
     addEvent(event: DomainEvent) {
         this._events.push(event)
     }

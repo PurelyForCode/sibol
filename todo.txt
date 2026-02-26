@@ -1,5 +1,5 @@
-When a product's sell unit is changed, make sure to remove all of that product's cart items in the db
-to prevent inconsistent state
+* Reservation logic
+* Order Completion Logic
 
 
-When a product is saved, make sure you dont delete stuff, do diffing
+Figure out what to do when the stock goes down and the cart item's quantity is too high for the new stock

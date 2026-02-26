@@ -14,7 +14,7 @@ import { TotalSales } from '../value_objects/TotalSales.js'
 
 export class Seller extends AggregateRoot {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _addressId: EntityId,
         private _storeName: StoreName,
         private _storeSlug: StoreSlug,
@@ -28,7 +28,7 @@ export class Seller extends AggregateRoot {
         private _createdAt: Date,
         private _updatedAt: Date,
     ) {
-        super()
+        super(id)
     }
 
     assertIsVerified(): void {
@@ -126,9 +126,6 @@ export class Seller extends AggregateRoot {
         )
     }
 
-    public get id(): EntityId {
-        return this._id
-    }
     public get storeName(): StoreName {
         return this._storeName
     }
@@ -162,7 +159,6 @@ export class Seller extends AggregateRoot {
     public get updatedAt(): Date {
         return this._updatedAt
     }
-
     public get addressId(): EntityId {
         return this._addressId
     }

@@ -88,6 +88,8 @@ export class AddToCartUsecase {
             const quantity = Quantity.create(cmd.quantity).unwrapOrThrow(
                 'quantity',
             )
+            const convertedQuantity = sellUnit.convertToBase(quantity)
+            product.assertHasSufficientStockForReservation(convertedQuantity)
             cart.addItem(id, sellUnit, quantity)
             await cr.save(cart)
             await uow.publishEvents()

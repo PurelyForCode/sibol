@@ -16,12 +16,15 @@ export class MovementReason extends SingleValueObject<MovementReasonValues> {
         super(value)
     }
 
-    static create(value: string) {
+    static create(value: string): Result<MovementReason> {
         const normalized = value.trim().toLowerCase() as MovementReasonValues
         if (!MovementReason.validValues.includes(normalized)) {
             return Result.fail('Inventory movement is invalid')
         }
 
         return Result.ok(new MovementReason(normalized))
+    }
+    static manualChange() {
+        return new MovementReason(MovementReasonValues.Manual_Change)
     }
 }

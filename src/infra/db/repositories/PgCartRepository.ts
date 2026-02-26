@@ -10,12 +10,18 @@ import {
 import { CartItem } from '../../../domain/cart/entities/CartItem.js'
 import { Quantity } from '../../../domain/shared/value_objects/Quantity.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
+import { PgBaseRepository } from './PgBaseRepository.js'
 
-export class PgCartRepository implements CartRepository {
+export class PgCartRepository
+    extends PgBaseRepository<Cart>
+    implements CartRepository
+{
     constructor(
         private readonly knex: Knex.Transaction,
         private readonly uow: UnitOfWork,
-    ) {}
+    ) {
+        super()
+    }
 
     async findById(id: EntityId): Promise<Cart | null> {
         const cartRow = await this.knex<CartRow>('carts')
@@ -30,7 +36,10 @@ export class PgCartRepository implements CartRepository {
             'cart_id',
             cartRow.buyer_id,
         )
-        return this.map(cartRow, itemRows)
+
+        const cart = this.map(cartRow, itemRows)
+        this.snapshot(cart)
+        return cart
     }
     async existsById(id: EntityId): Promise<boolean> {
         const row = await this.knex<CartRow>('carts')
@@ -38,8 +47,15 @@ export class PgCartRepository implements CartRepository {
             .first()
         return !!row
     }
+
     async save(entity: Cart): Promise<void> {
-        await this.delete(entity.buyerId)
+        const snapshot = this.getSnapshot(entity.id)
+        if (snapshot) {
+            const ids = this.getDeletedIds(snapshot.items, entity.items)
+            await this.knex<CartItemRow>('cart_items')
+                .delete()
+                .whereIn('id', ids)
+        }
         await this.knex<CartRow>('carts')
             .insert({
                 buyer_id: entity.buyerId.value,
@@ -58,7 +74,7 @@ export class PgCartRepository implements CartRepository {
                     id: value.id.value,
                     product_id: value.productId.value,
                     quantity: value.quantity.value,
-                    product_sell_unit_id: value.sellUnitId.value,
+                    sell_unit_id: value.sellUnitId.value,
                 })
                 .onConflict('id')
                 .merge()
@@ -76,7 +92,7 @@ export class PgCartRepository implements CartRepository {
             const id = EntityId.create(row.id)
             const productId = EntityId.create(row.product_id)
             const cartId = EntityId.create(row.cart_id)
-            const sellUnit = EntityId.create(row.product_sell_unit_id)
+            const sellUnit = EntityId.create(row.sell_unit_id)
             const quantity = Quantity.create(row.quantity).getValue()
 
             const item = CartItem.rehydrate(

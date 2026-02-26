@@ -23,11 +23,6 @@ export class ReserveItemsForPickupUsecase {
             const pr = uow.getProductRepo()
             const rr = uow.getReservationRepo()
 
-            // validate date
-            const now = new Date()
-            if (now < cmd.pickupDate) {
-            }
-
             const buyerId = EntityId.create(cmd.buyerId)
             const buyer = await br.findById(buyerId)
             if (!buyer) {
@@ -52,20 +47,21 @@ export class ReserveItemsForPickupUsecase {
                         'Product inside cart does not exist',
                     )
                 }
-                product.assertHasSufficientStock(item.quantity)
-
-                const id = this.idGen.generate()
                 const sellUnit = product.getSellUnitById(item.sellUnitId)
                 if (!sellUnit) {
                     throw new InternalServerError(
                         "Cart item's sell unit does not exist in product",
                     )
                 }
+                const stockToReserve = sellUnit.convertToBase(item.quantity)
+                product.assertHasSufficientStockForReservation(stockToReserve)
+
+                const id = this.idGen.generate()
                 const reservation = Reservation.new(
                     id,
                     buyer.id,
                     product.id,
-                    sellUnit.unitSymbol,
+                    sellUnit.id,
                     item.quantity,
                     cmd.pickupDate,
                 )
@@ -74,7 +70,7 @@ export class ReserveItemsForPickupUsecase {
             for (const item of cartItems) {
                 cart.removeItem(item.id)
             }
-            cr.save(cart)
+            await cr.save(cart)
             for (const reservation of reservations) {
                 await rr.save(reservation)
             }

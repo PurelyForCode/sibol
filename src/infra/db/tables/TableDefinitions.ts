@@ -58,9 +58,10 @@ export type SellUnitRow = {
     id: string
     product_id: string
     unit_symbol: string
-    unit_value: number
+    conversion_factor: number
     price_per_unit: number
     display_name: string
+    discontinued_at: Date | null
 }
 
 export type InventoryMovementRow = {
@@ -97,14 +98,14 @@ export type CartItemRow = {
     id: string
     cart_id: string
     product_id: string
-    product_sell_unit_id: string
+    sell_unit_id: string
     quantity: number
 }
 export type ReservationRow = {
     id: string
     buyer_id: string
     product_id: string
-    sell_unit: string
+    sell_unit_id: string
     quantity: number
     pickup_date: Date
     status: string

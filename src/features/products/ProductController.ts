@@ -10,7 +10,10 @@ import {
     ArchiveProductBySellerCmd,
     ArchiveProductBySellerUsecase,
 } from './archive_product/ArchiveProductBySellerUsecase.js'
-import { UpdateProductCmd } from './update_product/UpdateProductUsecase.js'
+import {
+    UpdateProductCmd,
+    UpdateProductUsecase,
+} from './update_product/UpdateProductUsecase.js'
 import {
     DiscontinueSellUnitCmd,
     DiscontinueSellUnitUsecase,
@@ -22,6 +25,7 @@ export class ProductController {
         private readonly deleteUsecase: ArchiveProductBySellerUsecase,
         private readonly addSellUnitUsecase: AddSellUnitUsecase,
         private readonly discontinueSellUnitUsecase: DiscontinueSellUnitUsecase,
+        private readonly updateProductUsecase: UpdateProductUsecase,
     ) {}
 
     async createProduct(cmd: CreateProductCmd) {
@@ -40,5 +44,7 @@ export class ProductController {
         await this.discontinueSellUnitUsecase.execute(cmd)
     }
 
-    async updateProduct(cmd: UpdateProductCmd) {}
+    async updateProduct(cmd: UpdateProductCmd) {
+        await this.updateProductUsecase.execute(cmd)
+    }
 }

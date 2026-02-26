@@ -14,7 +14,6 @@ export type CreateProductCmd = {
     name: string
     sellerId: string
     unitOfMeasurement: string
-    pricePerUnit: number
 }
 
 export class CreateProductUsecase {

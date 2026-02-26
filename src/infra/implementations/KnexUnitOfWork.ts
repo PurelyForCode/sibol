@@ -17,6 +17,8 @@ import { CartRepository } from '../../domain/cart/repositories/CartRepository.js
 import { PgCartRepository } from '../db/repositories/PgCartRepository.js'
 import { ReservationRepository } from '../../domain/reservation/repositories/ReservationRepository.js'
 import { PgReservationRepository } from '../db/repositories/PgReservationRepository.js'
+import { InventoryMovementRepository } from '../../domain/inventory/repositories/InventoryMovementRepository.js'
+import { PgInventoryMovementRepository } from '../db/repositories/PgInventoryMovementRepository.js'
 
 export class KnexUnitOfWork implements UnitOfWork {
     private aggregates: AggregateRoot[] = []
@@ -68,5 +70,9 @@ export class KnexUnitOfWork implements UnitOfWork {
 
     getReservationRepo(): ReservationRepository {
         return new PgReservationRepository(this.trx, this)
+    }
+
+    getInventoryMovementRepo(): InventoryMovementRepository {
+        return new PgInventoryMovementRepository(this.trx, this)
     }
 }

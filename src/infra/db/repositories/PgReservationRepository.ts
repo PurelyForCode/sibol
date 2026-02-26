@@ -38,7 +38,7 @@ export class PgReservationRepository implements ReservationRepository {
                 pickup_date: entity.pickupDate,
                 product_id: entity.productId.value,
                 quantity: entity.quantity.value,
-                sell_unit: entity.sellUnit.value,
+                sell_unit_id: entity.sellUnitId.value,
                 status: entity.status.value,
                 updated_at: entity.updatedAt,
             })
@@ -46,6 +46,7 @@ export class PgReservationRepository implements ReservationRepository {
             .merge()
         this.uow.registerAggregate(entity)
     }
+
     async delete(id: EntityId): Promise<void> {
         await this.k('reservations').delete().where('id', id.value)
     }
@@ -54,7 +55,7 @@ export class PgReservationRepository implements ReservationRepository {
         const id = EntityId.create(row.id)
         const buyerId = EntityId.create(row.buyer_id)
         const productId = EntityId.create(row.product_id)
-        const sellUnit = UnitOfMeasurement.create(row.sell_unit).getValue()
+        const sellUnit = UnitOfMeasurement.create(row.sell_unit_id).getValue()
         const quantity = Quantity.create(row.quantity).getValue()
         return Reservation.rehydrate(
             id,

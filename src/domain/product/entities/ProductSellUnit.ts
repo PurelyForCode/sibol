@@ -3,17 +3,28 @@ import { ConversionFactor } from '../../shared/value_objects/UnitValue.js'
 import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 import { Money } from '../../shared/value_objects/Money.js'
 import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
+import { Entity } from '../../../lib/domain/Entity.js'
+import { Quantity } from '../../shared/value_objects/Quantity.js'
+import { ProductStock } from '../value_objects/ProductStock.js'
 
-export class ProductSellUnit {
+export class ProductSellUnit extends Entity {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _productId: EntityId,
         private _unitSymbol: UnitOfMeasurement,
         private _conversionFactor: ConversionFactor,
         private _pricePerUnit: Money,
         private _displayName: SellUnitDisplayName,
         private _discontinuedAt: Date | null,
-    ) {}
+    ) {
+        super(id)
+    }
+
+    convertToBase(quantity: Quantity): ProductStock {
+        return ProductStock.create(
+            this._conversionFactor.value * quantity.value,
+        ).getValue()
+    }
 
     changeDisplayName(displayName: SellUnitDisplayName) {
         this._displayName = displayName
@@ -71,9 +82,6 @@ export class ProductSellUnit {
     }
     public get productId(): EntityId {
         return this._productId
-    }
-    public get id(): EntityId {
-        return this._id
     }
     public get conversionFactor(): ConversionFactor {
         return this._conversionFactor

@@ -27,6 +27,7 @@ export class UnitOfMeasurement extends SingleValueObject<UnitOfMeasurementValues
             new UnitOfMeasurement(value as UnitOfMeasurementValues),
         )
     }
+
     static readonly dimensions: Record<
         UnitOfMeasurementValues,
         MeasurementDimension

@@ -7,7 +7,6 @@ import {
     productQueryRepository,
     productSellUnitQueryRepository,
 } from '../../../compositionRoot.js'
-import { unitOfMeasurementSchema } from '../validation/unitOfMeasurementSchema.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
@@ -53,7 +52,6 @@ productRouter.get(
 const createProductRequestSchema = z.object({
     body: z.object({
         name: z.string(),
-        price: z.int(),
         description: z.string().nullable(),
         unitOfMeasurement: z.enum(SmallestUnitOfMeasurement.unitValues),
     }),
@@ -71,7 +69,6 @@ productRouter.post(
             const { id } = await productController.createProduct({
                 description: body.description,
                 name: body.name,
-                pricePerUnit: body.price,
                 sellerId: sellerId,
                 unitOfMeasurement: body.unitOfMeasurement,
             })
@@ -103,7 +100,6 @@ productRouter.delete(
         }
     },
 )
-
 
 const getSellUnitsRequestSchema = z.object({
     params: z.object({ productId: z.uuidv7() }),
@@ -157,7 +153,6 @@ productRouter.get(
     },
 )
 
-
 const addSellUnitRequestSchema = z.object({
     body: z.object({
         unitSymbol: z.enum(UnitOfMeasurement.unitValues),
@@ -203,7 +198,7 @@ const removeSellUnitRequestSchema = z.object({
 
 productRouter.delete(
     '/:productId/sell-units/:sellUnitId',
-    validateInput(addSellUnitRequestSchema),
+    validateInput(removeSellUnitRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             const { params } = req.validated as z.infer<
@@ -216,7 +211,7 @@ productRouter.delete(
                 sellerId: sellerId,
                 sellUnitId: params.sellUnitId,
             })
-            res.status(204)
+            res.status(204).end()
         } catch (e) {
             next(e)
         }
@@ -230,8 +225,6 @@ const updateProductRequestSchema = z.object({
             name: z.string(),
             description: z.string(),
             stockQuantity: z.number(),
-            baseUnit: z.enum(UnitOfMeasurement.unitValues),
-            pricePerUnit: z.number(),
         })
         .partial(),
 })
@@ -239,10 +232,24 @@ const updateProductRequestSchema = z.object({
 productRouter.patch(
     '/:productId',
     validateInput(updateProductRequestSchema),
-    (req: Request, res: Response, next: NextFunction) => {
-        try{
-            productController.
-        }catch(e){
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { params, body } = req.validated as z.infer<
+                typeof updateProductRequestSchema
+            >
+            await productController.updateProduct({
+                fields: {
+                    description: body.description,
+                    name: body.name,
+                    stockQuantity: body.stockQuantity,
+                },
+                productId: params.productId,
+                sellerId: fakeSellerId,
+            })
+            res.status(200).json({
+                message: 'Successfully updated product',
+            })
+        } catch (e) {
             next(e)
         }
     },

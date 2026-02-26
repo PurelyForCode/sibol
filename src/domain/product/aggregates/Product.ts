@@ -17,10 +17,11 @@ import { ConversionFactor } from '../../shared/value_objects/UnitValue.js'
 import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
 import { ProductSellUnitAlreadyDefinedException } from '../../../exceptions/product/ProductSellUnitAlreadyDefinedException.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
+import { ProductHasInsufficientStockException } from '../../../exceptions/product/ProductHasInsufficientStockException.js'
 
 export class Product extends AggregateRoot {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _sellerId: EntityId,
         private _name: ProductName,
         private _description: ProductDescription | null,
@@ -34,7 +35,13 @@ export class Product extends AggregateRoot {
         private _updatedAt: Date,
         private _deletedAt: Date | null,
     ) {
-        super()
+        super(id)
+    }
+
+    assertHasSufficientStockForReservation(stock: ProductStock) {
+        if (this.stock.value < stock.value) {
+            throw new ProductHasInsufficientStockException(this.id.value)
+        }
     }
 
     getSellUnitById(sellUnitId: EntityId) {
@@ -98,6 +105,11 @@ export class Product extends AggregateRoot {
     changeDescription(description: ProductDescription | null) {
         this._updatedAt = new Date()
         this._description = description
+    }
+
+    changeStock(stock: ProductStock) {
+        this._updatedAt = new Date()
+        this._stock = stock
     }
 
     archive() {
@@ -183,9 +195,6 @@ export class Product extends AggregateRoot {
     }
     public get sellerId(): EntityId {
         return this._sellerId
-    }
-    public get id(): EntityId {
-        return this._id
     }
     public get inventoryUnitSymbol(): SmallestUnitOfMeasurement {
         return this._inventoryUnitSymbol

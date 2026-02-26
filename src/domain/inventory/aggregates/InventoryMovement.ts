@@ -1,19 +1,17 @@
 import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
-import { Quantity } from '../../shared/value_objects/Quantity.js'
-import { ConversionFactor } from '../../shared/value_objects/UnitValue.js'
 import { MovementQuantity } from '../value_objects/MovementQuantity.js'
 import { MovementReason } from '../value_objects/MovementReason.js'
 
 export class InventoryMovement extends AggregateRoot {
     private constructor(
-        private id: EntityId,
-        private productId: EntityId,
-        private deltaQuantity: MovementQuantity,
-        private reason: MovementReason,
-        private createdAt: Date,
+        id: EntityId,
+        private _productId: EntityId,
+        private _deltaQuantity: MovementQuantity,
+        private _reason: MovementReason,
+        private _createdAt: Date,
     ) {
-        super()
+        super(id)
     }
 
     static new(
@@ -40,5 +38,18 @@ export class InventoryMovement extends AggregateRoot {
             reason,
             createdAt,
         )
+    }
+
+    public get createdAt(): Date {
+        return this._createdAt
+    }
+    public get reason(): MovementReason {
+        return this._reason
+    }
+    public get deltaQuantity(): MovementQuantity {
+        return this._deltaQuantity
+    }
+    public get productId(): EntityId {
+        return this._productId
     }
 }

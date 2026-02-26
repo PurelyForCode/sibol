@@ -14,12 +14,13 @@ import { CreateProductUsecase } from './features/products/create_product/CreateP
 import { ArchiveProductBySellerUsecase } from './features/products/archive_product/ArchiveProductBySellerUsecase.js'
 import { PgProductQueryRepository } from './infra/db/query_repositories/PgProductQueryRepository.js'
 import { AddSellUnitUsecase } from './features/products/add_sell_unit/AddSellUnitUsecase.js'
-import { DiscontinueSellUnitUsecase } from './features/products/remove_sell_unit/DiscontinueSellUnitUsecase.js'
+import { DiscontinueSellUnitUsecase } from './features/products/discontinue_sell_unit/DiscontinueSellUnitUsecase.js'
 import { PgProductSellUnitQueryRepository } from './infra/db/query_repositories/PgProductSellUnitQueryRepository.js'
 import { CartController } from './features/shopping/CartController.js'
 import { AddToCartUsecase } from './features/shopping/add_to_cart/AddToCartUsecase.js'
 import { RemoveFromCartUsecase } from './features/shopping/remove_from_cart/RemoveFromCartUsecase.js'
 import { ReserveItemsForPickupUsecase } from './features/shopping/reserve_items_for_pickup/ReserveItemsForPickupUsecase.js'
+import { UpdateProductUsecase } from './features/products/update_product/UpdateProductUsecase.js'
 
 export const idGenerator = new Uuidv7Generator()
 export const passwordUtility = new ArgonPasswordUtil()
@@ -66,8 +67,12 @@ export const addSellUnitUsecase = new AddSellUnitUsecase(
     idGenerator,
 )
 
-export const removeSellUnitUsecase = new DiscontinueSellUnitUsecase(
+export const discontinueSellUnitUsecase = new DiscontinueSellUnitUsecase(
     transactionManager,
+)
+export const updateProductUsecase = new UpdateProductUsecase(
+    transactionManager,
+    idGenerator,
 )
 export const reserveItemsForPickupUsecase = new ReserveItemsForPickupUsecase(
     transactionManager,
@@ -81,7 +86,8 @@ export const productController = new ProductController(
     createProductUsecase,
     archiveProductBySellerUsecase,
     addSellUnitUsecase,
-    removeSellUnitUsecase,
+    discontinueSellUnitUsecase,
+    updateProductUsecase,
 )
 
 export const authenticationController = new AuthenticationController(

@@ -1,14 +1,17 @@
+import { Entity } from '../../../lib/domain/Entity.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
 
-export class CartItem {
+export class CartItem extends Entity {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _cartId: EntityId,
         private _productId: EntityId,
         private _sellUnitId: EntityId,
         private _quantity: Quantity,
-    ) {}
+    ) {
+        super(id)
+    }
 
     changeQuantity(quantity: Quantity) {
         this._quantity = quantity
@@ -45,8 +48,5 @@ export class CartItem {
     }
     public get cartId(): EntityId {
         return this._cartId
-    }
-    public get id(): EntityId {
-        return this._id
     }
 }

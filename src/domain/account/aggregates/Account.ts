@@ -5,14 +5,14 @@ import { HashedPassword } from '../../shared/value_objects/HashedPassword.js'
 
 export class Account extends AggregateRoot {
     constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _email: Email,
         private _password: HashedPassword,
         private _createdAt: Date,
         private _updatedAt: Date,
         private _bannedAt: Date | null,
     ) {
-        super()
+        super(id)
     }
 
     static new(id: EntityId, email: Email, password: HashedPassword) {
@@ -63,9 +63,6 @@ export class Account extends AggregateRoot {
     }
     public get email(): Email {
         return this._email
-    }
-    public get id(): EntityId {
-        return this._id
     }
     public get password(): HashedPassword {
         return this._password

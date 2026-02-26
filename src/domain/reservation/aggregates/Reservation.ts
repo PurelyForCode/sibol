@@ -1,3 +1,4 @@
+import { PickupDateIsInPastException } from '../../../exceptions/cart/PickupDateIsInPastException.js'
 import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId } from '../../../lib/domain/EntityId.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
@@ -6,33 +7,42 @@ import { ReservationStatus } from '../value_objects/ReservationStatus.js'
 
 export class Reservation extends AggregateRoot {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _buyerId: EntityId,
         private _productId: EntityId,
-        private _sellUnit: UnitOfMeasurement,
+        private _sellUnitId: EntityId,
         private _quantity: Quantity,
         private _pickupDate: Date,
         private _status: ReservationStatus,
         private _createdAt: Date,
         private _updatedAt: Date,
     ) {
-        super()
+        super(id)
+    }
+
+    assertPickupDateIsInFuture() {
+        if (this._pickupDate < new Date()) {
+            throw new PickupDateIsInPastException()
+        }
     }
 
     static new(
         id: EntityId,
         buyerId: EntityId,
         productId: EntityId,
-        sellUnit: UnitOfMeasurement,
+        sellUnitId: EntityId,
         quantity: Quantity,
         pickupDate: Date,
     ) {
         const now = new Date()
+        if (pickupDate < now) {
+            throw new PickupDateIsInPastException()
+        }
         return new Reservation(
             id,
             buyerId,
             productId,
-            sellUnit,
+            sellUnitId,
             quantity,
             pickupDate,
             ReservationStatus.reserved(),
@@ -45,7 +55,7 @@ export class Reservation extends AggregateRoot {
         id: EntityId,
         buyerId: EntityId,
         productId: EntityId,
-        sellUnit: UnitOfMeasurement,
+        sellUnitId: EntityId,
         quantity: Quantity,
         pickupDate: Date,
         status: ReservationStatus,
@@ -56,7 +66,7 @@ export class Reservation extends AggregateRoot {
             id,
             buyerId,
             productId,
-            sellUnit,
+            sellUnitId,
             quantity,
             pickupDate,
             status,
@@ -80,11 +90,8 @@ export class Reservation extends AggregateRoot {
     public get buyerId(): EntityId {
         return this._buyerId
     }
-    public get id(): EntityId {
-        return this._id
-    }
-    public get sellUnit(): UnitOfMeasurement {
-        return this._sellUnit
+    public get sellUnitId(): EntityId {
+        return this._sellUnitId
     }
     public get updatedAt(): Date {
         return this._updatedAt

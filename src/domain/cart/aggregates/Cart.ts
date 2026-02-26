@@ -1,4 +1,5 @@
 import { CartItemNotFoundException } from '../../../exceptions/cart/CartItemNotFoundException.js'
+import { DuplicateProductSellUnitInCartException } from '../../../exceptions/cart/DuplicateProductSellUnitInCartException.js'
 import { InvalidQuantityForPiecesUnit } from '../../../exceptions/cart/InvalidQuantityForPiecesUnit.js'
 import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
 import { EntityId, Id } from '../../../lib/domain/EntityId.js'
@@ -10,22 +11,31 @@ import { CartStatus } from '../value_objects/CartStatus.js'
 // TODO: What other behaviour needs to exist in the cart?
 export class Cart extends AggregateRoot {
     private constructor(
-        private _buyerId: EntityId,
+        buyerId: EntityId,
         private _status: CartStatus,
         private _shippingAddressId: EntityId,
         private _createdAt: Date,
         private _updatedAt: Date,
         private _items: Map<Id, CartItem>,
     ) {
-        super()
+        super(buyerId)
     }
 
     addItem(id: EntityId, sellUnit: ProductSellUnit, quantity: Quantity) {
         if (
-            sellUnit.unitSymbol.value === 'pcs' &&
+            sellUnit.unitSymbol.value === 'pieces' &&
             !quantity.isValidQuantityForPiecesUnit()
         ) {
             throw new InvalidQuantityForPiecesUnit()
+        }
+
+        for (const [_key, item] of this._items) {
+            if (item.sellUnitId.equals(sellUnit.id)) {
+                throw new DuplicateProductSellUnitInCartException(
+                    sellUnit.productId.value,
+                    sellUnit.id.value,
+                )
+            }
         }
 
         // TODO: Maybe add more validation to the quantity
@@ -42,10 +52,7 @@ export class Cart extends AggregateRoot {
 
     removeItem(itemId: EntityId) {
         if (!this._items.delete(itemId.value)) {
-            throw new CartItemNotFoundException(
-                this._buyerId.value,
-                itemId.value,
-            )
+            throw new CartItemNotFoundException(this.id.value, itemId.value)
         }
     }
 
@@ -110,6 +117,6 @@ export class Cart extends AggregateRoot {
         return this._status
     }
     public get buyerId(): EntityId {
-        return this._buyerId
+        return this.id
     }
 }

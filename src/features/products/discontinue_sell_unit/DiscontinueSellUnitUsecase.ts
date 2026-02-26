@@ -40,8 +40,6 @@ export class DiscontinueSellUnitUsecase {
             const sellUnitId = EntityId.create(cmd.sellUnitId)
 
             product.discontinueSellUnit(sellUnitId)
-            // TODO: Must recheck all products that are inside carts to check if their sellUnits are correct
-            // TODO: Convert them to another viable sellUnit that is available
             await pr.save(product)
         })
     }

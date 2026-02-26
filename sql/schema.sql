@@ -24,7 +24,7 @@ CREATE TYPE verification_type AS ENUM (
 
 CREATE TABLE verification_codes (
 	id UUID PRIMARY KEY,
-	account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE,
+	account_id UUID NOT NULL REFERENCES accounts(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	code VARCHAR(6) NOT NULL,
 	type verification_type NOT NULL,
 	expires_at TIMESTAMPTZ NOT NULL,
@@ -55,7 +55,7 @@ CREATE TABLE sellers (
 	description TEXT,
 	rating NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
 
-	total_sales BIGINT NOT NULL DEFAULT 0,
+	total_sales INTEGER NOT NULL DEFAULT 0,
 
 	is_verified BOOLEAN NOT NULL DEFAULT FALSE,
 	is_active BOOLEAN NOT NULL DEFAULT TRUE,
@@ -113,25 +113,25 @@ CREATE TABLE products (
 CREATE TABLE sell_units (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	conversion_factor BIGINT NOT NULL CHECK(conversion_factor > 0),
+	conversion_factor INTEGER NOT NULL CHECK(conversion_factor > 0),
 	unit_symbol VARCHAR(10) NOT NULL,
-	price_per_unit BIGINT NOT NULL CHECK(price_per_unit > 0),
+	price_per_unit INTEGER NOT NULL CHECK(price_per_unit > 0),
 	display_name VARCHAR(20) NOT NULL,
 	discontinued_at TIMESTAMPTZ,
-	UNIQUE (product_id, unit_value, unit_symbol)
+	UNIQUE (product_id, conversion_factor, unit_symbol)
 );
 
 CREATE TABLE inventory_movement (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	delta_quantity BIGINT NOT NULL,
+	delta_quantity INTEGER NOT NULL,
 	reason VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL
 );
 
 CREATE TABLE product_inventory(
 	product_id UUID PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	quantity BIGINT NOT NULL CHECK(quantity >= 0),
+	quantity INTEGER NOT NULL CHECK(quantity >= 0),
 	updated_at TIMESTAMPTZ NOT NULL
 );
 
@@ -194,15 +194,15 @@ CREATE TABLE cart_items (
 	id UUID PRIMARY KEY,
 	cart_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	product_sell_unit_id UUID NOT NULL REFERENCES product_sell_units(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
+	sell_unit_id UUID NOT NULL REFERENCES sell_units(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	quantity INTEGER NOT NULL CHECK(quantity > 0)
 );
 
 CREATE TABLE orders (
 	id UUID PRIMARY KEY,
 	buyer_id UUID NOT NULL REFERENCES buyers(id)  ON DELETE CASCADE ON UPDATE CASCADE,
 	seller_id UUID NOT NULL REFERENCES sellers(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	total_price NUMERIC(12,2) NOT NULL,
+	total_price INTEGER NOT NULL,
 	status VARCHAR(32) NOT NULL,
 	payment_method VARCHAR(32) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
@@ -214,17 +214,17 @@ CREATE TABLE order_items (
 	id UUID PRIMARY KEY,
 	order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	quantity NUMERIC(10,3) NOT NULL CHECK(quantity > 0),
-	price_at_purchase NUMERIC(12,2) NOT NULL,
-	sell_unit VARCHAR(10) NOT NULL
+	quantity INTEGER NOT NULL CHECK(quantity > 0),
+	price_at_purchase INTEGER NOT NULL,
+	sell_unit_id UUID NOT NULL REFERENCES sell_units(id)
 );
 
 CREATE TABLE reservations(
 	id UUID PRIMARY KEY,
 	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	sell_unit VARCHAR(10) NOT NULL,
-	quantity NUMERIC(10,3) NOT NULL CHECK (quantity > 0),
+	sell_unit_id UUID NOT NULL REFERENCES sell_units(id),
+	quantity INTEGER NOT NULL CHECK (quantity > 0),
 	pickup_date TIMESTAMPTZ NOT NULL,
 	status VARCHAR(20) NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,

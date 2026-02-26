@@ -19,7 +19,7 @@ export class Result<T> {
 
     getValue(): T {
         if (this.isError()) {
-            throw new Error('Cannot get the value of a failed Result')
+            throw new Error(this.message!)
         }
         return this.value as T
     }

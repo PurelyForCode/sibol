@@ -7,7 +7,7 @@ import { BuyerRegisteredDomainEvent } from '../events/BuyerRegisteredDomainEvent
 
 export class Buyer extends AggregateRoot {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _addressId: EntityId,
         private _username: Username,
         private _isVerified: boolean,
@@ -15,7 +15,7 @@ export class Buyer extends AggregateRoot {
         private _createdAt: Date,
         private _updatedAt: Date,
     ) {
-        super()
+        super(id)
     }
 
     assertIsVerified(): void {
@@ -57,9 +57,6 @@ export class Buyer extends AggregateRoot {
         )
     }
 
-    public get id(): EntityId {
-        return this._id
-    }
     public get username(): Username {
         return this._username
     }
