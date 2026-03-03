@@ -1,4 +1,4 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
+import { SingleValueObject } from '../SingleValueObject.js'
 import path from 'path'
 
 export class ImagePath extends SingleValueObject<string> {

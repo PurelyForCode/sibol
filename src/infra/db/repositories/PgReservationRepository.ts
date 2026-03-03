@@ -1,11 +1,14 @@
 import { Knex } from 'knex'
 import { Reservation } from '../../../domain/reservation/aggregates/Reservation.js'
 import { ReservationRepository } from '../../../domain/reservation/repositories/ReservationRepository.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { ReservationRow } from '../tables/TableDefinitions.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { Quantity } from '../../../domain/shared/value_objects/Quantity.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
+import {
+    ReservationStatus,
+    ReservationStatusValues,
+} from '../../../domain/reservation/value_objects/ReservationStatus.js'
 
 export class PgReservationRepository implements ReservationRepository {
     constructor(
@@ -30,6 +33,7 @@ export class PgReservationRepository implements ReservationRepository {
         return !!row
     }
     async save(entity: Reservation): Promise<void> {
+        console.log('saving')
         await this.k<ReservationRow>('reservations')
             .insert({
                 buyer_id: entity.buyerId.value,
@@ -55,16 +59,19 @@ export class PgReservationRepository implements ReservationRepository {
         const id = EntityId.create(row.id)
         const buyerId = EntityId.create(row.buyer_id)
         const productId = EntityId.create(row.product_id)
-        const sellUnit = UnitOfMeasurement.create(row.sell_unit_id).getValue()
+        const sellUnitId = EntityId.create(row.sell_unit_id)
         const quantity = Quantity.create(row.quantity).getValue()
+        const status = ReservationStatus.create(
+            row.status as ReservationStatusValues,
+        ).getValue()
         return Reservation.rehydrate(
             id,
             buyerId,
             productId,
-            sellUnit,
+            sellUnitId,
             quantity,
             row.pickup_date,
-            quantity,
+            status,
             row.created_at,
             row.updated_at,
         )

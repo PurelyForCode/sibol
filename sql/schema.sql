@@ -131,7 +131,8 @@ CREATE TABLE inventory_movement (
 
 CREATE TABLE product_inventory(
 	product_id UUID PRIMARY KEY REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	quantity INTEGER NOT NULL CHECK(quantity >= 0),
+	available_stock INTEGER NOT NULL CHECK(available_stock >= 0),
+	reserved_stock INTEGER NOT NULL CHECK(reserved_stock >= 0),
 	updated_at TIMESTAMPTZ NOT NULL
 );
 
@@ -195,7 +196,8 @@ CREATE TABLE cart_items (
 	cart_id UUID NOT NULL REFERENCES carts(buyer_id) ON DELETE CASCADE ON UPDATE CASCADE,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	sell_unit_id UUID NOT NULL REFERENCES sell_units(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	quantity INTEGER NOT NULL CHECK(quantity > 0)
+	quantity INTEGER NOT NULL CHECK(quantity > 0),
+	is_valid BOOLEAN NOT NULL
 );
 
 CREATE TABLE orders (

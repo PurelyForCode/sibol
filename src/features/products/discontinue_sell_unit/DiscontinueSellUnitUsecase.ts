@@ -6,7 +6,7 @@ import {
 } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type DiscontinueSellUnitCmd = {
     productId: string

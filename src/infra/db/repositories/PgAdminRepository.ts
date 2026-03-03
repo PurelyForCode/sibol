@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { Repository } from '../../../domain/shared/interfaces/Repository.js'
 import {
     AdminRepository,

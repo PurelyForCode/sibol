@@ -1,4 +1,4 @@
-import { Result } from '../lib/utils/Result.js'
+import { Result } from '../types/utils/Result.js'
 
 export class ValidationException extends Error {
     readonly field: string

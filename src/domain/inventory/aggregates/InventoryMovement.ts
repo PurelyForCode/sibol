@@ -1,5 +1,5 @@
-import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../../shared/AggregateRoot.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { MovementQuantity } from '../value_objects/MovementQuantity.js'
 import { MovementReason } from '../value_objects/MovementReason.js'
 

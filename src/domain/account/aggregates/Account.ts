@@ -1,5 +1,5 @@
-import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../../shared/AggregateRoot.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { Email } from '../../shared/value_objects/Email.js'
 import { HashedPassword } from '../../shared/value_objects/HashedPassword.js'
 

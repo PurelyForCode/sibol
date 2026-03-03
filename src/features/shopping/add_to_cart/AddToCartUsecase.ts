@@ -1,3 +1,5 @@
+import { CartItem } from '../../../domain/cart/entities/CartItem.js'
+import { CartValidityChecker } from '../../../domain/cart/services/CartItemValidityChecker.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { Quantity } from '../../../domain/shared/value_objects/Quantity.js'
@@ -8,7 +10,7 @@ import { ProductNotFoundException } from '../../../exceptions/product/ProductNot
 import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
 import { SellerDoesNotOwnProductException } from '../../../exceptions/product/SellerDoesNotOwnProductException.js'
 import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type AddToCartCmd = {
     productId: string
@@ -77,6 +79,9 @@ export class AddToCartUsecase {
             }
 
             const id = this.idGen.generate()
+            const quantity = Quantity.create(cmd.quantity).unwrapOrThrow(
+                'quantity',
+            )
             const sellUnitId = EntityId.create(cmd.sellUnitId)
             const sellUnit = product.getSellUnitById(sellUnitId)
             if (!sellUnit) {
@@ -85,12 +90,18 @@ export class AddToCartUsecase {
                     product.id.value,
                 )
             }
-            const quantity = Quantity.create(cmd.quantity).unwrapOrThrow(
-                'quantity',
+
+            const cartItem = CartItem.new(
+                id,
+                cart.id,
+                product.id,
+                sellUnit.id,
+                quantity,
             )
-            const convertedQuantity = sellUnit.convertToBase(quantity)
-            product.assertHasSufficientStockForReservation(convertedQuantity)
-            cart.addItem(id, sellUnit, quantity)
+
+            const cartChecker = new CartValidityChecker(pr)
+            cartChecker.assertCartItemToBeAddedIsValid(cartItem, product)
+            cart.addItem(cartItem, sellUnit)
             await cr.save(cart)
             await uow.publishEvents()
         })

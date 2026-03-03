@@ -1,9 +1,9 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
-import { ConversionFactor } from '../../shared/value_objects/UnitValue.js'
+import { EntityId } from '../../shared/EntityId.js'
+import { ConversionFactor } from '../../shared/value_objects/ConversionFactor.js'
 import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 import { Money } from '../../shared/value_objects/Money.js'
 import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
-import { Entity } from '../../../lib/domain/Entity.js'
+import { Entity } from '../../shared/Entity.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
 import { ProductStock } from '../value_objects/ProductStock.js'
 
@@ -20,7 +20,8 @@ export class ProductSellUnit extends Entity {
         super(id)
     }
 
-    convertToBase(quantity: Quantity): ProductStock {
+    // convert from the quantity to base product stock
+    convertQuantityToProductStock(quantity: Quantity): ProductStock {
         return ProductStock.create(
             this._conversionFactor.value * quantity.value,
         ).getValue()
@@ -45,7 +46,7 @@ export class ProductSellUnit extends Entity {
         conversionFactor: ConversionFactor,
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
-        discontinuedAt: Date,
+        discontinuedAt: Date | null,
     ) {
         return new ProductSellUnit(
             id,

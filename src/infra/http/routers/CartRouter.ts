@@ -1,10 +1,24 @@
 import { Request, Response, NextFunction, Router } from 'express'
 import { validateInput } from '../middleware/InputValidationMiddleware.js'
 import z from 'zod'
-import { cartController } from '../../../compositionRoot.js'
+import {
+    cartController,
+    cartQueryRepository,
+} from '../../../compositionRoot.js'
 import { fakeBuyerId } from '../../../fakeData/fakeId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export const cartRouter = Router({ mergeParams: true })
+
+cartRouter.get('/', async (req, res, next) => {
+    try {
+        const buyerId = EntityId.create(fakeBuyerId)
+        const data = await cartQueryRepository.findByBuyerId(buyerId)
+        res.json(data)
+    } catch (e) {
+        next(e)
+    }
+})
 
 const addToCartRequestSchema = z.object({
     body: z.object({

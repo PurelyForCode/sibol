@@ -1,6 +1,5 @@
 import { DomainEvent } from './DomainEvent.js'
 import { Entity } from './Entity.js'
-import { EntityId } from './EntityId.js'
 
 export type StateChange = {
     type: 'modified' | 'deleted' | 'new'

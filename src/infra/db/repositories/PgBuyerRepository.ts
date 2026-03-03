@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { Buyer } from '../../../domain/buyer/aggregates/Buyer.js'
 import { BuyerRepository } from '../../../domain/buyer/repositories/BuyerRepository.js'
 import { AccountRow, BuyerRow } from '../tables/TableDefinitions.js'

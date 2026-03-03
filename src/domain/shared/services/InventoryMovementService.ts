@@ -9,7 +9,7 @@ export class InventoryMovementService {
     constructor(private readonly idGen: IdGenerator) {}
 
     createMovement(product: Product, stock: ProductStock) {
-        const changeAmount = stock.value - product.stock.value
+        const changeAmount = stock.value - product.availableStock.value
         const inventoryMovementId = this.idGen.generate()
         const movementQuantity =
             MovementQuantity.create(changeAmount).unwrapOrThrow('stock')

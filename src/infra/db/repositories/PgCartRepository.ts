@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 import { Cart } from '../../../domain/cart/aggregates/Cart.js'
 import { CartRepository } from '../../../domain/cart/repositories/CartRepository.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { CartItemRow, CartRow } from '../tables/TableDefinitions.js'
 import {
     CartStatus,
@@ -75,6 +75,7 @@ export class PgCartRepository
                     product_id: value.productId.value,
                     quantity: value.quantity.value,
                     sell_unit_id: value.sellUnitId.value,
+                    is_valid: value.isValid,
                 })
                 .onConflict('id')
                 .merge()
@@ -101,6 +102,7 @@ export class PgCartRepository
                 productId,
                 sellUnit,
                 quantity,
+                row.is_valid,
             )
             cartItems.set(item.id.value, item)
         }

@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { SellerDto } from '../../../features/dto/SellerDto.js'
 
 export class PgSellerQueryRepository {

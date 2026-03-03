@@ -1,5 +1,4 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
 import { ProductSellUnitDto } from '../../../features/dto/ProductSellUnitDto.js'
 import { SellUnitRow } from '../tables/TableDefinitions.js'
 
@@ -38,10 +37,13 @@ export class PgProductSellUnitQueryRepository {
 
     private map(row: SellUnitRow): ProductSellUnitDto {
         return {
-            conversionFactor: row.conversion_factor,
             id: row.id,
             productId: row.product_id,
-            unit: row.unit_symbol,
+            unitSymbol: row.unit_symbol,
+            conversionFactor: row.conversion_factor,
+            displayName: row.display_name,
+            pricePerUnit: row.price_per_unit,
+            discontinuedAt: row.discontinued_at,
         }
     }
 }

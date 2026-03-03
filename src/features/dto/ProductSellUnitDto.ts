@@ -1,6 +1,9 @@
 export type ProductSellUnitDto = {
     id: string
     productId: string
-    unit: string
     conversionFactor: number
+    unitSymbol: string
+    pricePerUnit: number
+    displayName: string
+    discontinuedAt: Date | null
 }

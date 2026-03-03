@@ -3,7 +3,7 @@ import { InventoryMovement } from '../../../domain/inventory/aggregates/Inventor
 import { InventoryMovementRepository } from '../../../domain/inventory/repositories/InventoryMovementRepository.js'
 import { MovementQuantity } from '../../../domain/inventory/value_objects/MovementQuantity.js'
 import { MovementReason } from '../../../domain/inventory/value_objects/MovementReason.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { PgBaseRepository } from './PgBaseRepository.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 import { InventoryMovementRow } from '../tables/TableDefinitions.js'

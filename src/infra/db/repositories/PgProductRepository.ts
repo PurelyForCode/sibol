@@ -16,17 +16,11 @@ import { ProductStatus } from '../../../domain/product/value_objects/ProductStat
 import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 import { ProductSellUnit } from '../../../domain/product/entities/ProductSellUnit.js'
-import { ConversionFactor } from '../../../domain/shared/value_objects/UnitValue.js'
+import { ConversionFactor } from '../../../domain/shared/value_objects/ConversionFactor.js'
 import { SellUnitDisplayName } from '../../../domain/product/value_objects/SellUnitDisplayName.js'
 import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 import { PgBaseRepository } from './PgBaseRepository.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
-
-type Change = {
-    type: 'update' | 'insert' | 'delete'
-    table: string
-    data: any
-}
+import { EntityId, Id } from '../../../domain/shared/EntityId.js'
 
 export class PgProductRepository
     extends PgBaseRepository<Product>
@@ -37,6 +31,45 @@ export class PgProductRepository
         private readonly uow: UnitOfWork,
     ) {
         super()
+    }
+
+    async findProducts(ids: EntityId[]): Promise<Map<Id, Product>> {
+        const productRows = (await this.k<
+            ProductRow &
+                Pick<ProductInventoryRow, 'available_stock' | 'reserved_stock'>
+        >('products')
+            .select(
+                'products.*',
+                'product_inventory.available_stock',
+                'product_inventory.reserved_stock',
+            )
+            .leftJoin(
+                'product_inventory',
+                'products.id',
+                'product_inventory.product_id',
+            )
+            .whereIn(
+                'id',
+                ids.map(x => x.value),
+            )) as (ProductRow &
+            Pick<ProductInventoryRow, 'available_stock' | 'reserved_stock'>)[]
+
+        const products = new Map()
+        for (const row of productRows) {
+            const sellUnitRows = await this.k<SellUnitRow>('sell_units').where(
+                'product_id',
+                row.id,
+            )
+
+            const imageRows = await this.k<ProductImageRow>(
+                'product_images',
+            ).where('product_id', row.id)
+
+            const product = this.map(row, sellUnitRows, imageRows)
+            this.snapshot(product)
+            products.set(product.id.value, product)
+        }
+        return products
     }
 
     async isNameUniqueWithinSellerStore(
@@ -57,9 +90,14 @@ export class PgProductRepository
 
     async findById(id: EntityId): Promise<Product | null> {
         const productRow = await this.k<
-            ProductRow & Pick<ProductInventoryRow, 'quantity'>
+            ProductRow &
+                Pick<ProductInventoryRow, 'available_stock' | 'reserved_stock'>
         >('products')
-            .select('products.*', 'product_inventory.quantity')
+            .select(
+                'products.*',
+                'product_inventory.available_stock',
+                'product_inventory.reserved_stock',
+            )
             .leftJoin(
                 'product_inventory',
                 'products.id',
@@ -141,7 +179,8 @@ export class PgProductRepository
             .insert({
                 product_id: product.id.value,
                 updated_at: new Date(),
-                quantity: product.stock.value,
+                available_stock: product.availableStock.value,
+                reserved_stock: product.reservedStock.value,
             })
             .onConflict('product_id')
             .merge()
@@ -154,73 +193,74 @@ export class PgProductRepository
     }
 
     private map(
-        productRow: ProductRow & Pick<ProductInventoryRow, 'quantity'>,
+        productRow: ProductRow &
+            Pick<ProductInventoryRow, 'available_stock' | 'reserved_stock'>,
         sellUnitRows: Omit<SellUnitRow, 'product_id'>[],
-        imageRows: Omit<ProductImageRow, 'product_id'>[],
+        _imageRows: Omit<ProductImageRow, 'product_id'>[],
     ): Product {
-        try {
-            console.log(productRow.quantity)
-            const productId = EntityId.create(productRow.id)
+        const productId = EntityId.create(productRow.id)
 
-            const sellUnits = new Map()
-            for (const row of sellUnitRows) {
-                const sellUnitId = EntityId.create(row.id)
-                const conversionFactor = ConversionFactor.create(
-                    row.conversion_factor,
-                ).getValue()
-                const unitSymbol = UnitOfMeasurement.create(
-                    row.unit_symbol,
-                ).getValue()
-                const pricePerUnit = Money.create(row.price_per_unit).getValue()
-                const displayName = SellUnitDisplayName.create(
-                    row.display_name,
-                ).getValue()
-
-                const sellUnit = ProductSellUnit.rehydrate(
-                    sellUnitId,
-                    productId,
-                    unitSymbol,
-                    conversionFactor,
-                    pricePerUnit,
-                    displayName,
-                    row.discontinued_at,
-                )
-                sellUnits.set(sellUnit.id.value, sellUnit)
-            }
-
-            const sellerId = EntityId.create(productRow.seller_id)
-            const name = ProductName.create(productRow.name).getValue()
-            const description = productRow.description
-                ? ProductDescription.create(productRow.description).getValue()
-                : null
-            const rating = productRow.rating
-                ? Rating.create(productRow.rating)
-                : null
-            const status = ProductStatus.create(productRow.status).getValue()
-            const stock = ProductStock.create(productRow.quantity).getValue()
-
-            const smallestUnitOfMeasurement = SmallestUnitOfMeasurement.create(
-                productRow.inventory_unit_symbol,
+        const sellUnits = new Map()
+        for (const row of sellUnitRows) {
+            const sellUnitId = EntityId.create(row.id)
+            const conversionFactor = ConversionFactor.create(
+                row.conversion_factor,
+            ).getValue()
+            const unitSymbol = UnitOfMeasurement.create(
+                row.unit_symbol,
+            ).getValue()
+            const pricePerUnit = Money.create(row.price_per_unit).getValue()
+            const displayName = SellUnitDisplayName.create(
+                row.display_name,
             ).getValue()
 
-            return Product.rehydrate(
+            const sellUnit = ProductSellUnit.rehydrate(
+                sellUnitId,
                 productId,
-                sellerId,
-                name,
-                description,
-                smallestUnitOfMeasurement,
-                status,
-                rating,
-                new Map(),
-                sellUnits,
-                stock,
-                productRow.created_at,
-                productRow.updated_at,
-                productRow.deleted_at,
+                unitSymbol,
+                conversionFactor,
+                pricePerUnit,
+                displayName,
+                row.discontinued_at,
             )
-        } catch (e) {
-            console.log(e)
-            throw new Error('ok')
+            sellUnits.set(sellUnit.id.value, sellUnit)
         }
+
+        const sellerId = EntityId.create(productRow.seller_id)
+        const name = ProductName.create(productRow.name).getValue()
+        const description = productRow.description
+            ? ProductDescription.create(productRow.description).getValue()
+            : null
+        const rating = productRow.rating
+            ? Rating.create(productRow.rating)
+            : null
+        const status = ProductStatus.create(productRow.status).getValue()
+        const availableStock = ProductStock.create(
+            productRow.available_stock,
+        ).getValue()
+        const reservedStock = ProductStock.create(
+            productRow.reserved_stock,
+        ).getValue()
+
+        const smallestUnitOfMeasurement = SmallestUnitOfMeasurement.create(
+            productRow.inventory_unit_symbol,
+        ).getValue()
+
+        return Product.rehydrate(
+            productId,
+            sellerId,
+            name,
+            description,
+            smallestUnitOfMeasurement,
+            status,
+            rating,
+            new Map(),
+            sellUnits,
+            availableStock,
+            reservedStock,
+            productRow.created_at,
+            productRow.updated_at,
+            productRow.deleted_at,
+        )
     }
 }

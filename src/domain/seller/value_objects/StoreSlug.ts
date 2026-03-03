@@ -1,5 +1,5 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
-import { Result } from '../../../lib/utils/Result.js'
+import { SingleValueObject } from '../../shared/SingleValueObject.js'
+import { Result } from '../../../types/utils/Result.js'
 
 export class StoreSlug extends SingleValueObject<string> {
     private constructor(value: string) {

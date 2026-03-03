@@ -21,12 +21,63 @@ import { AddToCartUsecase } from './features/shopping/add_to_cart/AddToCartUseca
 import { RemoveFromCartUsecase } from './features/shopping/remove_from_cart/RemoveFromCartUsecase.js'
 import { ReserveItemsForPickupUsecase } from './features/shopping/reserve_items_for_pickup/ReserveItemsForPickupUsecase.js'
 import { UpdateProductUsecase } from './features/products/update_product/UpdateProductUsecase.js'
+import { PgCartQueryRepository } from './infra/db/query_repositories/PgCartQueryRepository.js'
+import { PgReservationQueryRepository } from './infra/db/query_repositories/PgReservationQueryRepository.js'
 
+// Singletons
 export const idGenerator = new Uuidv7Generator()
 export const passwordUtility = new ArgonPasswordUtil()
-
 export const transactionManager = new KnexTransactionManager(
     knexInstance,
+    idGenerator,
+)
+
+// Usecases
+
+// Registration
+export const registerBuyerUsecase = new RegisterBuyerUsecase(
+    transactionManager,
+    idGenerator,
+    passwordUtility,
+)
+export const registerSellerUsecase = new RegisterSellerUsecase(
+    transactionManager,
+    idGenerator,
+    passwordUtility,
+)
+
+// Login
+export const loginSellerUsecase = new LoginSellerUsecase(
+    transactionManager,
+    passwordUtility,
+)
+export const loginBuyerUsecase = new LoginBuyerUsecase(
+    transactionManager,
+    passwordUtility,
+)
+
+// Product
+export const createProductUsecase = new CreateProductUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const archiveProductBySellerUsecase = new ArchiveProductBySellerUsecase(
+    transactionManager,
+)
+export const updateProductUsecase = new UpdateProductUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const addSellUnitUsecase = new AddSellUnitUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const discontinueSellUnitUsecase = new DiscontinueSellUnitUsecase(
+    transactionManager,
+)
+// Cart
+export const reserveItemsForPickupUsecase = new ReserveItemsForPickupUsecase(
+    transactionManager,
     idGenerator,
 )
 export const addToCartUsecase = new AddToCartUsecase(
@@ -36,52 +87,10 @@ export const addToCartUsecase = new AddToCartUsecase(
 export const removeFromCartUsecase = new RemoveFromCartUsecase(
     transactionManager,
 )
-export const registerBuyerUsecase = new RegisterBuyerUsecase(
-    transactionManager,
-    idGenerator,
-    passwordUtility,
-)
 
-export const registerSellerUsecase = new RegisterSellerUsecase(
-    transactionManager,
-    idGenerator,
-    passwordUtility,
-)
-export const loginSellerUsecase = new LoginSellerUsecase(
-    transactionManager,
-    passwordUtility,
-)
-export const loginBuyerUsecase = new LoginBuyerUsecase(
-    transactionManager,
-    passwordUtility,
-)
-export const createProductUsecase = new CreateProductUsecase(
-    transactionManager,
-    idGenerator,
-)
-export const archiveProductBySellerUsecase = new ArchiveProductBySellerUsecase(
-    transactionManager,
-)
-export const addSellUnitUsecase = new AddSellUnitUsecase(
-    transactionManager,
-    idGenerator,
-)
-
-export const discontinueSellUnitUsecase = new DiscontinueSellUnitUsecase(
-    transactionManager,
-)
-export const updateProductUsecase = new UpdateProductUsecase(
-    transactionManager,
-    idGenerator,
-)
-export const reserveItemsForPickupUsecase = new ReserveItemsForPickupUsecase(
-    transactionManager,
-    idGenerator,
-)
-
+// Controllers
 export const buyerController = new BuyerController(registerBuyerUsecase)
 export const sellerController = new SellerController(registerSellerUsecase)
-
 export const productController = new ProductController(
     createProductUsecase,
     archiveProductBySellerUsecase,
@@ -89,7 +98,6 @@ export const productController = new ProductController(
     discontinueSellUnitUsecase,
     updateProductUsecase,
 )
-
 export const authenticationController = new AuthenticationController(
     loginSellerUsecase,
     loginBuyerUsecase,
@@ -101,6 +109,11 @@ export const cartController = new CartController(
     reserveItemsForPickupUsecase,
 )
 
+// Query Repositories
 export const productQueryRepository = new PgProductQueryRepository(knexInstance)
 export const productSellUnitQueryRepository =
     new PgProductSellUnitQueryRepository(knexInstance)
+export const cartQueryRepository = new PgCartQueryRepository(knexInstance)
+export const reservationQueryRepository = new PgReservationQueryRepository(
+    knexInstance,
+)

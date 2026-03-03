@@ -7,7 +7,7 @@ import { TransactionManager } from '../../../domain/shared/interfaces/Transactio
 import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 import { DuplicateProductNameException } from '../../../exceptions/product/DuplicateProductNameException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type CreateProductCmd = {
     description: string | null

@@ -1,4 +1,4 @@
-import { EntityId } from '../../lib/domain/EntityId.js'
+import { EntityId } from '../shared/EntityId.js'
 
 export class Admin {
     private constructor(

@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { QueryRepository } from '../../shared/interfaces/QueryRepository.js'
 import { Repository } from '../../shared/interfaces/Repository.js'
 import { SellerDto } from '../../../features/dto/SellerDto.js'

@@ -74,7 +74,8 @@ export type InventoryMovementRow = {
 
 export type ProductInventoryRow = {
     product_id: string
-    quantity: number
+    available_stock: number
+    reserved_stock: number
     updated_at: Date
 }
 
@@ -100,6 +101,7 @@ export type CartItemRow = {
     product_id: string
     sell_unit_id: string
     quantity: number
+    is_valid: boolean
 }
 export type ReservationRow = {
     id: string

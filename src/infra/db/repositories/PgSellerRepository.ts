@@ -1,5 +1,5 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { SellerRepository } from '../../../domain/seller/repositories/SellerRepository.js'
 import { Seller } from '../../../domain/seller/aggregates/Seller.js'
 import { Email } from '../../../domain/shared/value_objects/Email.js'

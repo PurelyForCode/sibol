@@ -1,5 +1,5 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
-import { Result } from '../../../lib/utils/Result.js'
+import { SingleValueObject } from '../SingleValueObject.js'
+import { Result } from '../../../types/utils/Result.js'
 
 export class MobilePhoneNumber extends SingleValueObject<string> {
     private static readonly E164_REGEX = /^\+[1-9]\d{1,14}$/

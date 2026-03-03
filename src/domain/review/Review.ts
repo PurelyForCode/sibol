@@ -1,5 +1,5 @@
-import { AggregateRoot } from '../../lib/domain/AggregateRoot.js'
-import { EntityId } from '../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../shared/AggregateRoot.js'
+import { EntityId } from '../shared/EntityId.js'
 import { Rating } from '../shared/value_objects/Rating.js'
 import { ReviewImage } from './ReviewImage.js'
 import { ReviewMessage } from './ReviewMessage.js'

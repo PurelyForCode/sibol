@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../shared/EntityId.js'
 
 // would a seller need to have its address in order to be consistent?
 export class SellerAddress {

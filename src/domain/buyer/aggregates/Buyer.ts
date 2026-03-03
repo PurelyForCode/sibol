@@ -1,7 +1,7 @@
 import { BuyerIsBannedException } from '../../../exceptions/buyer/BuyerIsBannedException.js'
 import { BuyerIsUnverifiedException } from '../../../exceptions/buyer/BuyerIsUnverifiedException.js'
-import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../../shared/AggregateRoot.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { Username } from '../../shared/value_objects/Username.js'
 import { BuyerRegisteredDomainEvent } from '../events/BuyerRegisteredDomainEvent.js'
 

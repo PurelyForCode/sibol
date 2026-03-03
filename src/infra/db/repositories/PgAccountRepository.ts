@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
 import { Account } from '../../../domain/account/aggregates/Account.js'
 import { AccountRepository } from '../../../domain/account/repositories/AccountRepository.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 import { AccountRow } from '../tables/TableDefinitions.js'
 import { Email } from '../../../domain/shared/value_objects/Email.js'

@@ -3,7 +3,7 @@ import { BuyerNotFoundByIdException } from '../../../exceptions/buyer/BuyerNotFo
 import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
 import { SellerDoesNotOwnProductException } from '../../../exceptions/product/SellerDoesNotOwnProductException.js'
 import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type RemoveFromCartCmd = {
     cartItemId: string

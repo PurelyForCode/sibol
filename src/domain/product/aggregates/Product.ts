@@ -1,5 +1,5 @@
-import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId, Id } from '../../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../../shared/AggregateRoot.js'
+import { EntityId, Id } from '../../shared/EntityId.js'
 import { Rating } from '../../shared/value_objects/Rating.js'
 import { ProductImage } from '../entities/ProductImage.js'
 import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
@@ -13,11 +13,11 @@ import { ProductSellUnitNotFoundException } from '../../../exceptions/product/Pr
 import { ProductArchivedDomainEvent } from '../events/ProductArchivedDomainEvent.js'
 import { SmallestUnitOfMeasurement } from '../../shared/value_objects/SmallestUnitOfMeasurement.js'
 import { ProductStock } from '../value_objects/ProductStock.js'
-import { ConversionFactor } from '../../shared/value_objects/UnitValue.js'
+import { ConversionFactor } from '../../shared/value_objects/ConversionFactor.js'
 import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
 import { ProductSellUnitAlreadyDefinedException } from '../../../exceptions/product/ProductSellUnitAlreadyDefinedException.js'
-import { Quantity } from '../../shared/value_objects/Quantity.js'
-import { ProductHasInsufficientStockException } from '../../../exceptions/product/ProductHasInsufficientStockException.js'
+import { ProductHasInsufficientAvailableStockException } from '../../../exceptions/product/ProductHasInsufficientAvailableStockException.js'
+import { ProductHasInsufficientReservedStockException } from '../../../exceptions/product/ProductHasInsufficientReservedStockException.js'
 
 export class Product extends AggregateRoot {
     private constructor(
@@ -30,7 +30,8 @@ export class Product extends AggregateRoot {
         private _rating: Rating | null,
         private _images: Map<Id, ProductImage>,
         private _sellUnits: Map<Id, ProductSellUnit>,
-        private _stock: ProductStock,
+        private _availableStock: ProductStock,
+        private _reservedStock: ProductStock,
         private _createdAt: Date,
         private _updatedAt: Date,
         private _deletedAt: Date | null,
@@ -38,9 +39,24 @@ export class Product extends AggregateRoot {
         super(id)
     }
 
-    assertHasSufficientStockForReservation(stock: ProductStock) {
-        if (this.stock.value < stock.value) {
-            throw new ProductHasInsufficientStockException(this.id.value)
+    sellReservedStock(stock: ProductStock) {
+        const subtractionResult = this._reservedStock.subtract(stock)
+        if (
+            subtractionResult.isError() &&
+            subtractionResult.getErrorType() === 'negativeStock'
+        ) {
+            throw new ProductHasInsufficientReservedStockException(
+                this.id.value,
+            )
+        }
+        this._reservedStock = subtractionResult.getValue()
+    }
+
+    assertHasSufficientStockForReservation(stockToReserve: ProductStock) {
+        if (this.availableStock.value < stockToReserve.value) {
+            throw new ProductHasInsufficientAvailableStockException(
+                this.id.value,
+            )
         }
     }
 
@@ -107,9 +123,28 @@ export class Product extends AggregateRoot {
         this._description = description
     }
 
-    changeStock(stock: ProductStock) {
+    changeAvailableStock(stock: ProductStock) {
         this._updatedAt = new Date()
-        this._stock = stock
+        this._availableStock = stock
+    }
+
+    changeReservedStock(stock: ProductStock) {
+        this._updatedAt = new Date()
+        this._reservedStock = stock
+    }
+
+    reserve(stock: ProductStock) {
+        const availableStockResult = this._availableStock.subtract(stock)
+        if (
+            availableStockResult.isError() &&
+            availableStockResult.getErrorType() === 'negativeStock'
+        ) {
+            throw new ProductHasInsufficientAvailableStockException(
+                this.id.value,
+            )
+        }
+        this._availableStock = availableStockResult.getValue()
+        this._reservedStock = this._reservedStock.add(stock)
     }
 
     archive() {
@@ -137,6 +172,7 @@ export class Product extends AggregateRoot {
             new Map(),
             new Map(),
             ProductStock.zero(),
+            ProductStock.zero(),
             now,
             now,
             null,
@@ -153,7 +189,8 @@ export class Product extends AggregateRoot {
         rating: Rating | null,
         images: Map<Id, ProductImage>,
         sellUnits: Map<Id, ProductSellUnit>,
-        stock: ProductStock,
+        availableStock: ProductStock,
+        reservedStock: ProductStock,
         createdAt: Date,
         updatedAt: Date,
         deletedAt: Date | null,
@@ -168,7 +205,8 @@ export class Product extends AggregateRoot {
             rating,
             images,
             sellUnits,
-            stock,
+            availableStock,
+            reservedStock,
             createdAt,
             updatedAt,
             deletedAt,
@@ -208,7 +246,10 @@ export class Product extends AggregateRoot {
     public get images(): Map<Id, ProductImage> {
         return this._images
     }
-    public get stock(): ProductStock {
-        return this._stock
+    public get availableStock(): ProductStock {
+        return this._availableStock
+    }
+    public get reservedStock(): ProductStock {
+        return this._reservedStock
     }
 }

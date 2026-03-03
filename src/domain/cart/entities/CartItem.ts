@@ -1,5 +1,5 @@
-import { Entity } from '../../../lib/domain/Entity.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { Entity } from '../../shared/Entity.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
 
 export class CartItem extends Entity {
@@ -9,8 +9,14 @@ export class CartItem extends Entity {
         private _productId: EntityId,
         private _sellUnitId: EntityId,
         private _quantity: Quantity,
+        private _isValid: boolean,
     ) {
         super(id)
+    }
+
+    // the buyer can then edit it so that it is valid again
+    invalidate() {
+        this._isValid = false
     }
 
     changeQuantity(quantity: Quantity) {
@@ -24,7 +30,7 @@ export class CartItem extends Entity {
         sellUnitId: EntityId,
         quantity: Quantity,
     ) {
-        return new CartItem(id, cartId, productId, sellUnitId, quantity)
+        return new CartItem(id, cartId, productId, sellUnitId, quantity, true)
     }
 
     static rehydrate(
@@ -33,8 +39,16 @@ export class CartItem extends Entity {
         productId: EntityId,
         sellUnitId: EntityId,
         quantity: Quantity,
+        isValid: boolean,
     ) {
-        return new CartItem(id, cartId, productId, sellUnitId, quantity)
+        return new CartItem(
+            id,
+            cartId,
+            productId,
+            sellUnitId,
+            quantity,
+            isValid,
+        )
     }
 
     public get quantity(): Quantity {
@@ -48,5 +62,8 @@ export class CartItem extends Entity {
     }
     public get cartId(): EntityId {
         return this._cartId
+    }
+    public get isValid(): boolean {
+        return this._isValid
     }
 }

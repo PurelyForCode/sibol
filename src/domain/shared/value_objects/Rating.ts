@@ -1,4 +1,4 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
+import { SingleValueObject } from '../SingleValueObject.js'
 
 export class Rating extends SingleValueObject<number> {
     private constructor(rating: number) {

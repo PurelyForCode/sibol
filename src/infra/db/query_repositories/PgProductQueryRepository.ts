@@ -1,7 +1,8 @@
 import { Knex } from 'knex'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { ProductDto } from '../../../features/dto/ProductDto.js'
-import { ProductRow } from '../tables/TableDefinitions.js'
+import { ProductInventoryRow, ProductRow } from '../tables/TableDefinitions.js'
+import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
 
 export class PgProductQueryRepository {
     constructor(private readonly k: Knex) {}
@@ -14,7 +15,15 @@ export class PgProductQueryRepository {
         if (!product) {
             return null
         }
-        return this.map(product)
+        const inventoryRow = await this.k<ProductInventoryRow>(
+            'product_inventory',
+        )
+            .where('product_id', product.id)
+            .first()
+        if (!inventoryRow) {
+            throw new InternalServerError('Product has no inventory row')
+        }
+        return this.map(product, inventoryRow)
     }
 
     async findAll(params?: {
@@ -23,26 +32,35 @@ export class PgProductQueryRepository {
     }): Promise<readonly ProductDto[]> {
         const products = await this.k<ProductRow>('products').select('*')
         const results: ProductDto[] = []
+
         for (const product of products) {
-            results.push(this.map(product))
+            const inventoryRow = await this.k<ProductInventoryRow>(
+                'product_inventory',
+            )
+                .where('product_id', product.id)
+                .first()
+            if (!inventoryRow) {
+                throw new InternalServerError('Product has no inventory row')
+            }
+            results.push(this.map(product, inventoryRow))
         }
         return results
     }
 
-    private map(row: ProductRow): ProductDto {
+    private map(row: ProductRow, invRow: ProductInventoryRow): ProductDto {
         return {
-            createdAt: row.created_at,
-            deletedAt: row.deleted_at,
-            description: row.description,
             id: row.id,
-            name: row.name,
-            pricePerUnit: row.price_per_unit,
-            rating: row.rating,
             sellerId: row.seller_id,
-            stockQuantity: row.stock_quantity,
-            baseUnit: row.base_unit,
+            name: row.name,
+            description: row.description,
+            rating: row.rating,
             status: row.status,
+            inventoryUnitSymbol: row.inventory_unit_symbol,
+            availableStock: invRow.available_stock,
+            reservedStock: invRow.reserved_stock,
+            createdAt: row.created_at,
             updatedAt: row.updated_at,
+            deletedAt: row.deleted_at,
         }
     }
 }

@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../EntityId.js'
 
 export class Address {
     private constructor(

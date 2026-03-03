@@ -1,9 +1,10 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
-import { Result } from '../../../lib/utils/Result.js'
+import { SingleValueObject } from '../../shared/SingleValueObject.js'
+import { Result } from '../../../types/utils/Result.js'
 
 export enum ReservationStatusValues {
     Reserved = 'reserved',
     Completed = 'completed',
+    Unconfirmed = 'uncomfirmed',
     Cancelled = 'cancelled',
     Late = 'late',
 }

@@ -4,10 +4,10 @@ import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { Money } from '../../../domain/shared/value_objects/Money.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
-import { ConversionFactor } from '../../../domain/shared/value_objects/UnitValue.js'
+import { ConversionFactor } from '../../../domain/shared/value_objects/ConversionFactor.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type AddSellUnitCmd = {
     sellerId: string

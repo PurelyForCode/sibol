@@ -1,7 +1,7 @@
 import { Knex } from 'knex'
-import { DomainEvent } from '../../lib/domain/DomainEvent.js'
+import { DomainEvent } from '../../domain/shared/DomainEvent.js'
 import { OutboxEvent } from '../../domain/outbox/OutboxEvent.js'
-import { DomainEventPublisher } from '../../lib/interfaces/DomainEventPublisher.js'
+import { DomainEventPublisher } from '../../domain/shared/interfaces/DomainEventPublisher.js'
 import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
 import { OutboxRow } from '../db/tables/TableDefinitions.js'
 

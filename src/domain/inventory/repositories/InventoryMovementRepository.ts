@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { Repository } from '../../shared/interfaces/Repository.js'
 import { InventoryMovement } from '../aggregates/InventoryMovement.js'
 

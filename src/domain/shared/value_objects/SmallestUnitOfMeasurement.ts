@@ -1,6 +1,6 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
-import { ValueObject } from '../../../lib/domain/ValueObject.js'
-import { Result } from '../../../lib/utils/Result.js'
+import { SingleValueObject } from '../SingleValueObject.js'
+import { ValueObject } from '../ValueObject.js'
+import { Result } from '../../../types/utils/Result.js'
 
 export type SmallestUnitOfMeasurementValues = 'g' | 'ml' | 'cm' | 'pieces'
 

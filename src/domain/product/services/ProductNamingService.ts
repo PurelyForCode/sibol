@@ -1,5 +1,5 @@
 import { DuplicateProductNameException } from '../../../exceptions/product/DuplicateProductNameException.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { ProductNameUniquenessChecker } from '../interfaces/ProductNameUniquenessChecker.js'
 import { ProductName } from '../value_objects/ProductName.js'
 

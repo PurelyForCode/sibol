@@ -8,7 +8,7 @@ import { TransactionManager } from '../../../domain/shared/interfaces/Transactio
 import { InventoryMovementService } from '../../../domain/shared/services/InventoryMovementService.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type UpdateProductCmd = {
     productId: string
@@ -79,7 +79,7 @@ export class UpdateProductUsecase {
                     product,
                     stock,
                 )
-                product.changeStock(stock)
+                product.changeAvailableStock(stock)
                 await ir.save(movement)
             }
             await pr.save(product)

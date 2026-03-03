@@ -1,9 +1,7 @@
 import { Knex } from 'knex'
-import { DomainEvent } from '../../lib/domain/DomainEvent.js'
-import { OutboxRow } from '../db/tables/TableDefinitions.js'
-import { OutboxEvent } from '../../domain/outbox/OutboxEvent.js'
-import { EntityId } from '../../lib/domain/EntityId.js'
-import { OutboxRepository } from '../../domain/shared/interfaces/OutboxRepository.js'
+import { OutboxEvent } from '../../../domain/outbox/OutboxEvent.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
+import { OutboxRepository } from '../../../domain/shared/interfaces/OutboxRepository.js'
 
 export class PgOutboxRepository implements OutboxRepository {
     constructor(private readonly knex: Knex.Transaction) {}

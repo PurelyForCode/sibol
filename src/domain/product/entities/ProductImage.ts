@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { ImagePath } from '../../shared/value_objects/ImagePath.js'
 import { ImagePosition } from '../../shared/value_objects/ImagePosition.js'
 

@@ -1,5 +1,5 @@
-import { SingleValueObject } from '../../../lib/domain/SingleValueObject.js'
-import { Result } from '../../../lib/utils/Result.js'
+import { SingleValueObject } from '../SingleValueObject.js'
+import { Result } from '../../../types/utils/Result.js'
 
 // Only mass, volume, and distance can be converted for now
 

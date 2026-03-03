@@ -1,8 +1,7 @@
 import { PickupDateIsInPastException } from '../../../exceptions/cart/PickupDateIsInPastException.js'
-import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../../shared/AggregateRoot.js'
+import { EntityId } from '../../shared/EntityId.js'
 import { Quantity } from '../../shared/value_objects/Quantity.js'
-import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 import { ReservationStatus } from '../value_objects/ReservationStatus.js'
 
 export class Reservation extends AggregateRoot {

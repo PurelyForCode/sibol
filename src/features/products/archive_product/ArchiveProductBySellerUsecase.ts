@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'

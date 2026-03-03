@@ -8,7 +8,7 @@ import {
     productSellUnitQueryRepository,
 } from '../../../compositionRoot.js'
 import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
 import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 

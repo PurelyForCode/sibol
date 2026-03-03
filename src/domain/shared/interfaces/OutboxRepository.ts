@@ -1,4 +1,4 @@
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../EntityId.js'
 import { OutboxEvent } from '../../outbox/OutboxEvent.js'
 import { Repository } from './Repository.js'
 

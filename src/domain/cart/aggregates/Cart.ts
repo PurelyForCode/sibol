@@ -1,10 +1,9 @@
 import { CartItemNotFoundException } from '../../../exceptions/cart/CartItemNotFoundException.js'
 import { DuplicateProductSellUnitInCartException } from '../../../exceptions/cart/DuplicateProductSellUnitInCartException.js'
 import { InvalidQuantityForPiecesUnit } from '../../../exceptions/cart/InvalidQuantityForPiecesUnit.js'
-import { AggregateRoot } from '../../../lib/domain/AggregateRoot.js'
-import { EntityId, Id } from '../../../lib/domain/EntityId.js'
+import { AggregateRoot } from '../../shared/AggregateRoot.js'
+import { EntityId, Id } from '../../shared/EntityId.js'
 import { ProductSellUnit } from '../../product/entities/ProductSellUnit.js'
-import { Quantity } from '../../shared/value_objects/Quantity.js'
 import { CartItem } from '../entities/CartItem.js'
 import { CartStatus } from '../value_objects/CartStatus.js'
 
@@ -21,10 +20,18 @@ export class Cart extends AggregateRoot {
         super(buyerId)
     }
 
-    addItem(id: EntityId, sellUnit: ProductSellUnit, quantity: Quantity) {
+    invalidateItem(cartItemId: EntityId) {
+        const item = this._items.get(cartItemId.value)
+        if (!item) {
+            throw new CartItemNotFoundException(this.id.value, cartItemId.value)
+        }
+        item.invalidate()
+    }
+
+    addItem(cartItem: CartItem, sellUnit: ProductSellUnit) {
         if (
             sellUnit.unitSymbol.value === 'pieces' &&
-            !quantity.isValidQuantityForPiecesUnit()
+            !cartItem.quantity.isValidQuantityForPiecesUnit()
         ) {
             throw new InvalidQuantityForPiecesUnit()
         }
@@ -39,20 +46,20 @@ export class Cart extends AggregateRoot {
         }
 
         // TODO: Maybe add more validation to the quantity
-        const item = CartItem.new(
-            id,
-            this.buyerId,
-            sellUnit.productId,
-            sellUnit.id,
-            quantity,
-        )
-
-        this._items.set(item.id.value, item)
+        this._items.set(cartItem.id.value, cartItem)
     }
 
     removeItem(itemId: EntityId) {
         if (!this._items.delete(itemId.value)) {
             throw new CartItemNotFoundException(this.id.value, itemId.value)
+        }
+    }
+
+    removeInvalidItems() {
+        for (const [k, item] of this._items) {
+            if (!item.isValid) {
+                this._items.delete(k)
+            }
         }
     }
 

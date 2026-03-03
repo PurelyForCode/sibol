@@ -1,9 +1,11 @@
+import { CartValidityChecker } from '../../../domain/cart/services/CartItemValidityChecker.js'
 import { Reservation } from '../../../domain/reservation/aggregates/Reservation.js'
 import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { BuyerNotFoundByIdException } from '../../../exceptions/buyer/BuyerNotFoundByIdException.js'
+import { ProductsHaveInsufficientStockException } from '../../../exceptions/product/ProductsHaveInsufficientStockException.js'
 import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type ReserveItemsForPickupCmd = {
     items: string[]
@@ -17,7 +19,7 @@ export class ReserveItemsForPickupUsecase {
         private readonly idGen: IdGenerator,
     ) {}
     async execute(cmd: ReserveItemsForPickupCmd) {
-        this.tm.transaction(async uow => {
+        await this.tm.transaction(async uow => {
             const br = uow.getBuyerRepo()
             const cr = uow.getCartRepo()
             const pr = uow.getProductRepo()
@@ -35,10 +37,23 @@ export class ReserveItemsForPickupUsecase {
             if (!cart) {
                 throw new InternalServerError('Buyer exists without cart table')
             }
+
             const cartItems = cart.getItems(
                 cmd.items.map(x => EntityId.create(x)),
             )
+            const cartChecker = new CartValidityChecker(pr)
+            const itemIds = cmd.items.map(x => EntityId.create(x))
+            const productsWithInsufficientStock =
+                await cartChecker.getProductsWithInsufficientStock(
+                    cart,
+                    itemIds,
+                )
 
+            if (productsWithInsufficientStock.length > 0) {
+                throw new ProductsHaveInsufficientStockException(
+                    productsWithInsufficientStock.map(x => x.value),
+                )
+            }
             const reservations: Reservation[] = []
             for (const item of cartItems) {
                 const product = await pr.findById(item.productId)
@@ -53,8 +68,10 @@ export class ReserveItemsForPickupUsecase {
                         "Cart item's sell unit does not exist in product",
                     )
                 }
-                const stockToReserve = sellUnit.convertToBase(item.quantity)
-                product.assertHasSufficientStockForReservation(stockToReserve)
+                const stockToReserve = sellUnit.convertQuantityToProductStock(
+                    item.quantity,
+                )
+                product.reserve(stockToReserve)
 
                 const id = this.idGen.generate()
                 const reservation = Reservation.new(

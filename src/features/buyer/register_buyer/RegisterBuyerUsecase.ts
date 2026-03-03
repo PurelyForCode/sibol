@@ -9,7 +9,7 @@ import { Email } from '../../../domain/shared/value_objects/Email.js'
 import { RawPassword } from '../../../domain/shared/value_objects/RawPassword.js'
 import { Username } from '../../../domain/shared/value_objects/Username.js'
 import { BuyerEmailAlreadyTakenException } from '../../../exceptions/buyer/BuyerEmailAlreadyTakenException.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type RegisterBuyerCmd = {
     username: string

@@ -13,7 +13,7 @@ import { Account } from '../../../domain/account/aggregates/Account.js'
 import { StoreNameAlreadyExistsException } from '../../../exceptions/seller/StoreNameAlreadyExistsException.js'
 import { StoreSlugAlreadyExistsException } from '../../../exceptions/seller/StoreSlugAlreadyExistsException.js'
 import { SellerUniquenessService } from '../../../domain/seller/services/StoreUniquenessService.js'
-import { EntityId } from '../../../lib/domain/EntityId.js'
+import { EntityId } from '../../../domain/shared/EntityId.js'
 
 export type RegisterSellerCmd = {
     email: string
