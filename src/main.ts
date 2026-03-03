@@ -1,15 +1,17 @@
 import 'dotenv/config'
 import express, { json, urlencoded } from 'express'
-import { productRouter } from './features/product/infrastructure/ProductRouter.js'
-import { apiRouter } from './api.js'
+import { apiRouter } from './infra/http/api.js'
 
 function main() {
     const app = express()
     app.use(json())
     app.use(urlencoded())
     app.use('/api', apiRouter)
-    app.listen(3000, 'localhost', () => {
-        console.log('App is running')
+    const port = process.env.APP_PORT
+        ? Number.parseInt(process.env.APP_PORT)
+        : 3000
+    app.listen(port, () => {
+        console.log(`App is running on http://localhost:${port}`)
     })
 }
 

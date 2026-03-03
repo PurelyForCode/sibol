@@ -1,1 +1,0 @@
-type Either<L, R> = 

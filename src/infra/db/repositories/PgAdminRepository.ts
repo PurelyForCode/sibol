@@ -1,0 +1,29 @@
+import { Knex } from 'knex'
+import { EntityId } from '../../../domain/shared/EntityId.js'
+import { Repository } from '../../../domain/shared/interfaces/Repository.js'
+import {
+    AdminRepository,
+    AdminRepositoryFactory,
+} from '../../../domain/admin/AdminRepository.js'
+import { Admin } from '../../../domain/admin/Admin.js'
+import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
+
+export class PgAdminRepository implements AdminRepository {
+    constructor(
+        private readonly k: Knex.Transaction,
+        private readonly uow: UnitOfWork,
+    ) {}
+
+    findById(id: EntityId): Promise<Admin | null> {
+        throw new Error('Method not implemented.')
+    }
+    existsById(id: EntityId): Promise<boolean> {
+        throw new Error('Method not implemented.')
+    }
+    save(T: Admin): Promise<void> {
+        throw new Error('Method not implemented.')
+    }
+    delete(id: EntityId): Promise<void> {
+        throw new Error('Method not implemented.')
+    }
+}

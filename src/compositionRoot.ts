@@ -1,63 +1,136 @@
-import { PgSellerRepositoryFactory } from './features/account/infrastructure/repositories/PgSellerRepository.js'
-import { ProductController } from './features/product/adapters/controllers/ProductController.js'
-import { CreateProductUsecase } from './features/product/application/product/usecases/CreateProductUsecase.js'
-import { DeleteProductBySellerUsecase } from './features/product/application/product/usecases/DeleteProductBySellerUsecase.js'
-import { ProductService } from './features/product/domain/services/ProductService.js'
-import { PgProductRepositoryFactory } from './features/product/infrastructure/repositories/PgProductRepository.js'
-import { KnexTransactionManager } from './lib/implementations/KnexTransactionManager.js'
-import { Uuidv7Generator } from './lib/implementations/Uuidv7Generator.js'
-import { knexInstance } from './config/KnexInstance.js'
-import { PgProductQueryRepository } from './features/product/infrastructure/repositories/PgProductQueryRepository.js'
-import { SellerService } from './features/account/domain/services/SellerService.js'
-import { RegisterSellerUsecase } from './features/account/application/RegisterSellerUsecase.js'
-import { ArgonPasswordHasher } from './lib/implementations/ArgonPasswordHasher.js'
-import { SellerController } from './features/account/adapter/SellerController.js'
-import { PgSellerQueryRepository } from './features/account/infrastructure/repositories/PgSellerQueryRepository.js'
+import { BuyerController } from './features/buyer/BuyerController.js'
+import { RegisterBuyerUsecase } from './features/buyer/RegisterBuyerUsecase.js'
+import { knexInstance } from './infra/config/KnexInstance.js'
+import { KnexTransactionManager } from './infra/implementations/KnexTransactionManager.js'
+import { Uuidv7Generator } from './infra/implementations/Uuidv7Generator.js'
+import { ArgonPasswordUtil } from './infra/implementations/ArgonPasswordUtil.js'
+import { SellerController } from './features/seller/SellerController.js'
+import { RegisterSellerUsecase } from './features/seller/RegisterSellerUsecase.js'
+import { AuthenticationController } from './features/authentication/AuthenticationController.js'
+import { LoginSellerUsecase } from './features/authentication/LoginSeller.js'
+import { LoginBuyerUsecase } from './features/authentication/LoginBuyer.js'
+import { ProductController } from './features/products/ProductController.js'
+import { CreateProductUsecase } from './features/products/CreateProductUsecase.js'
+import { ArchiveProductBySellerUsecase } from './features/products/ArchiveProductBySellerUsecase.js'
+import { PgProductQueryRepository } from './infra/db/query_repositories/PgProductQueryRepository.js'
+import { AddSellUnitUsecase } from './features/products/AddSellUnitUsecase.js'
+import { DiscontinueSellUnitUsecase } from './features/products/DiscontinueSellUnitUsecase.js'
+import { PgProductSellUnitQueryRepository } from './infra/db/query_repositories/PgProductSellUnitQueryRepository.js'
+import { CartController } from './features/shopping/CartController.js'
+import { AddToCartUsecase } from './features/shopping/AddToCartUsecase.js'
+import { RemoveFromCartUsecase } from './features/shopping/RemoveFromCartUsecase.js'
+import { ReserveItemsForPickupUsecase } from './features/shopping/ReserveItemsForPickupUsecase.js'
+import { UpdateProductUsecase } from './features/products/UpdateProductUsecase.js'
+import { PgCartQueryRepository } from './infra/db/query_repositories/PgCartQueryRepository.js'
+import { PgReservationQueryRepository } from './infra/db/query_repositories/PgReservationQueryRepository.js'
+import { ReservationController } from './features/reservation/ReservationController.js'
+import { FulfillReservationUsecase } from './features/reservation/FulfillReservation.js'
+import { ConfirmReservationUsecase } from './features/reservation/ConfirmReservation.js'
+import { PgSaleQueryRepository } from './infra/db/query_repositories/PgSaleQueryRepository.js'
 
-export const transactionManager = new KnexTransactionManager(knexInstance)
-export const passwordHasher = new ArgonPasswordHasher()
-// Interfaces
+// Singletons
 export const idGenerator = new Uuidv7Generator()
-
-// Repositories
-export const productRepositoryFactory = new PgProductRepositoryFactory()
-export const productQueryRepository = new PgProductQueryRepository(knexInstance)
-export const sellerRepositoryFactory = new PgSellerRepositoryFactory()
-export const sellerQueryRepository = new PgSellerQueryRepository(knexInstance)
-
-// Domain
-export const productService = new ProductService()
-export const sellerService = new SellerService()
-
-// Application
-// Product
-export const deleteProductBySellerUsecase = new DeleteProductBySellerUsecase(
-    transactionManager,
-    productRepositoryFactory,
-    sellerRepositoryFactory,
-    productService,
-)
-export const createProductUsecase = new CreateProductUsecase(
-    transactionManager,
-    productRepositoryFactory,
-    sellerRepositoryFactory,
-    productService,
+export const passwordUtility = new ArgonPasswordUtil()
+export const transactionManager = new KnexTransactionManager(
+    knexInstance,
     idGenerator,
 )
 
-// Seller
+// Usecases
+
+// Registration
+export const registerBuyerUsecase = new RegisterBuyerUsecase(
+    transactionManager,
+    idGenerator,
+    passwordUtility,
+)
 export const registerSellerUsecase = new RegisterSellerUsecase(
     transactionManager,
-    sellerRepositoryFactory,
-    sellerService,
     idGenerator,
-    passwordHasher,
+    passwordUtility,
 )
 
-// Adapters
+// Login
+export const loginSellerUsecase = new LoginSellerUsecase(
+    transactionManager,
+    passwordUtility,
+)
+export const loginBuyerUsecase = new LoginBuyerUsecase(
+    transactionManager,
+    passwordUtility,
+)
+
+// Product
+export const createProductUsecase = new CreateProductUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const archiveProductBySellerUsecase = new ArchiveProductBySellerUsecase(
+    transactionManager,
+)
+export const updateProductUsecase = new UpdateProductUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const addSellUnitUsecase = new AddSellUnitUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const discontinueSellUnitUsecase = new DiscontinueSellUnitUsecase(
+    transactionManager,
+)
+// Cart
+export const reserveItemsForPickupUsecase = new ReserveItemsForPickupUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const addToCartUsecase = new AddToCartUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const removeFromCartUsecase = new RemoveFromCartUsecase(
+    transactionManager,
+)
+// Reservations
+export const fulfillReservationUsecase = new FulfillReservationUsecase(
+    transactionManager,
+)
+export const confirmReservationUsecase = new ConfirmReservationUsecase(
+    transactionManager,
+    idGenerator,
+)
+
+// Controllers
+export const buyerController = new BuyerController(registerBuyerUsecase)
+export const sellerController = new SellerController(registerSellerUsecase)
 export const productController = new ProductController(
     createProductUsecase,
-    deleteProductBySellerUsecase,
+    archiveProductBySellerUsecase,
+    addSellUnitUsecase,
+    discontinueSellUnitUsecase,
+    updateProductUsecase,
+)
+export const authenticationController = new AuthenticationController(
+    loginSellerUsecase,
+    loginBuyerUsecase,
+    null,
+)
+export const cartController = new CartController(
+    addToCartUsecase,
+    removeFromCartUsecase,
+    reserveItemsForPickupUsecase,
+)
+export const reservationController = new ReservationController(
+    fulfillReservationUsecase,
+    confirmReservationUsecase,
 )
 
-export const sellerController = new SellerController(registerSellerUsecase)
+// Query Repositories
+export const productQueryRepository = new PgProductQueryRepository(knexInstance)
+export const productSellUnitQueryRepository =
+    new PgProductSellUnitQueryRepository(knexInstance)
+export const cartQueryRepository = new PgCartQueryRepository(knexInstance)
+export const reservationQueryRepository = new PgReservationQueryRepository(
+    knexInstance,
+)
+export const saleQueryRepository = new PgSaleQueryRepository(knexInstance)

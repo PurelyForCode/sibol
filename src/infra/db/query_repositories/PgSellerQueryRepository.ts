@@ -1,0 +1,17 @@
+import { Knex } from 'knex'
+import { EntityId } from '../../../domain/shared/EntityId.js'
+import { SellerDto } from '../../../features/dto/SellerDto.js'
+
+export class PgSellerQueryRepository {
+    constructor(private readonly k: Knex | Knex.Transaction) {}
+
+    findById(id: EntityId): Promise<SellerDto | null> {
+        throw new Error('Method not implemented.')
+    }
+    findAll(params?: {
+        filter?: unknown
+        pagination?: { page?: number; limit?: number }
+    }): Promise<readonly SellerDto[]> {
+        throw new Error('Method not implemented.')
+    }
+}

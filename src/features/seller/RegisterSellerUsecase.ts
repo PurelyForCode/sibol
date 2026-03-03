@@ -1,0 +1,85 @@
+import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
+import { PasswordUtil } from '../../domain/shared/interfaces/PasswordUtil.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { Email } from '../../domain/shared/value_objects/Email.js'
+import { RawPassword } from '../../domain/shared/value_objects/RawPassword.js'
+import { StoreName } from '../../domain/seller/value_objects/StoreName.js'
+import { SellerEmailAlreadyExistsException } from '../../exceptions/seller/SellerEmailAlreadyExistsException.js'
+import { Seller } from '../../domain/seller/aggregates/Seller.js'
+import { StoreSlug } from '../../domain/seller/value_objects/StoreSlug.js'
+import { SellerDescription } from '../../domain/seller/value_objects/SellerDescription.js'
+import { MobilePhoneNumber } from '../../domain/shared/value_objects/MobilePhoneNumber.js'
+import { Account } from '../../domain/account/aggregates/Account.js'
+import { SellerUniquenessService } from '../../domain/seller/services/StoreUniquenessService.js'
+import { EntityId } from '../../domain/shared/EntityId.js'
+
+export type RegisterSellerCmd = {
+    email: string
+    password: string
+    storeName: string
+    storeSlug: string
+    description: string | null
+    supportEmail: string | null
+    supportPhone: string | null
+    addressId: string
+}
+
+export class RegisterSellerUsecase {
+    constructor(
+        private readonly tm: TransactionManager,
+        private readonly idGen: IdGenerator,
+        private readonly passwordHasher: PasswordUtil,
+    ) {}
+    async execute(cmd: RegisterSellerCmd) {
+        await this.tm.transaction(async uow => {
+            const sr = uow.getSellerRepo()
+            const ar = uow.getAccountRepo()
+            const uniquenessService = new SellerUniquenessService(sr)
+
+            const email = Email.create(cmd.email).unwrapOrThrow('email')
+            await uniquenessService.assertEmailIsUnique(email)
+            const storeName = StoreName.create(cmd.storeName).unwrapOrThrow(
+                'storeName',
+            )
+            await uniquenessService.assertStoreNameIsUnique(storeName)
+            const storeSlug = StoreSlug.create(cmd.storeSlug).unwrapOrThrow(
+                'storeSlug',
+            )
+            await uniquenessService.assertStoreSlugIsUnique(storeSlug)
+
+            const rawPassword = RawPassword.create(cmd.password).unwrapOrThrow(
+                'password',
+            )
+            const hash = await this.passwordHasher.hash(rawPassword)
+            const description = cmd.description
+                ? SellerDescription.create(cmd.description).unwrapOrThrow(
+                      'description',
+                  )
+                : null
+            const supportEmail = cmd.supportEmail
+                ? Email.create(cmd.supportEmail).unwrapOrThrow('supportEmail')
+                : null
+            const supportPhone = cmd.supportPhone
+                ? MobilePhoneNumber.create(cmd.supportPhone).unwrapOrThrow(
+                      'supportPhone',
+                  )
+                : null
+            const id = this.idGen.generate()
+            const account = Account.new(id, email, hash)
+            const addressId = EntityId.create(cmd.addressId)
+            const seller = Seller.new(
+                id,
+                addressId,
+                storeName,
+                storeSlug,
+                description,
+                supportEmail,
+                supportPhone,
+            )
+
+            await ar.save(account)
+            await sr.save(seller)
+            await uow.publishEvents()
+        })
+    }
+}

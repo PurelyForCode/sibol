@@ -1,0 +1,83 @@
+import { Knex } from 'knex'
+import { UnitOfWork } from '../../domain/shared/interfaces/UnitOfWork.js'
+import { SellerRepository } from '../../domain/seller/repositories/SellerRepository.js'
+import { PgSellerRepository } from '../db/repositories/PgSellerRepository.js'
+import { ProductRepository } from '../../domain/product/repositories/ProductRepository.js'
+import { PgProductRepository } from '../db/repositories/PgProductRepository.js'
+import { BuyerRepository } from '../../domain/buyer/repositories/BuyerRepository.js'
+import { AccountRepository } from '../../domain/account/repositories/AccountRepository.js'
+import { AggregateRoot } from '../../domain/shared/AggregateRoot.js'
+import { DomainEvent } from '../../domain/shared/DomainEvent.js'
+import { PgAccountRepository } from '../db/repositories/PgAccountRepository.js'
+import { DomainEventPublisher } from '../../domain/shared/interfaces/DomainEventPublisher.js'
+import { KnexDomainEventPublisher } from './KnexDomainEventPublisher.js'
+import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
+import { PgBuyerRepository } from '../db/repositories/PgBuyerRepository.js'
+import { CartRepository } from '../../domain/cart/repositories/CartRepository.js'
+import { PgCartRepository } from '../db/repositories/PgCartRepository.js'
+import { ReservationRepository } from '../../domain/reservation/repositories/ReservationRepository.js'
+import { PgReservationRepository } from '../db/repositories/PgReservationRepository.js'
+import { InventoryMovementRepository } from '../../domain/inventory/repositories/InventoryMovementRepository.js'
+import { PgInventoryMovementRepository } from '../db/repositories/PgInventoryMovementRepository.js'
+import { SaleRepository } from '../../domain/sale/repositories/SaleRepository.js'
+import { PgSaleRepository } from '../db/repositories/PgSaleRepository.js'
+
+export class KnexUnitOfWork implements UnitOfWork {
+    private aggregates: AggregateRoot[] = []
+
+    constructor(
+        private readonly trx: Knex.Transaction,
+        private readonly idGenerator: IdGenerator,
+    ) {}
+
+    async publishEvents() {
+        const events = this.pullDomainEvents()
+        const outboxRepo = this.getOutboxRepo()
+        for (const event of events) {
+            await outboxRepo.publish(event)
+        }
+    }
+
+    registerAggregate(aggregate: AggregateRoot): void {
+        this.aggregates.push(aggregate)
+    }
+
+    getOutboxRepo(): DomainEventPublisher {
+        return new KnexDomainEventPublisher(this.trx, this.idGenerator)
+    }
+
+    pullDomainEvents(): DomainEvent[] {
+        return this.aggregates.flatMap(a => a.pullEvents())
+    }
+
+    getCartRepo(): CartRepository {
+        return new PgCartRepository(this.trx, this)
+    }
+
+    getAccountRepo(): AccountRepository {
+        return new PgAccountRepository(this.trx, this)
+    }
+
+    getSellerRepo(): SellerRepository {
+        return new PgSellerRepository(this.trx, this)
+    }
+
+    getProductRepo(): ProductRepository {
+        return new PgProductRepository(this.trx, this)
+    }
+
+    getBuyerRepo(): BuyerRepository {
+        return new PgBuyerRepository(this.trx, this)
+    }
+
+    getReservationRepo(): ReservationRepository {
+        return new PgReservationRepository(this.trx, this)
+    }
+
+    getInventoryMovementRepo(): InventoryMovementRepository {
+        return new PgInventoryMovementRepository(this.trx, this)
+    }
+    getSaleRepo(): SaleRepository {
+        return new PgSaleRepository(this.trx, this)
+    }
+}
