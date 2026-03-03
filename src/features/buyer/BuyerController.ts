@@ -1,7 +1,7 @@
 import {
     RegisterBuyerCmd,
     RegisterBuyerUsecase,
-} from './register_buyer/RegisterBuyerUsecase.js'
+} from './RegisterBuyerUsecase.js'
 
 export class BuyerController {
     constructor(private readonly registerBuyerUsecase: RegisterBuyerUsecase) {}

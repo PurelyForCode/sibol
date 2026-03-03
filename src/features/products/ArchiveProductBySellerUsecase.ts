@@ -1,8 +1,8 @@
-import { EntityId } from '../../../domain/shared/EntityId.js'
-import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
-import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
+import { EntityId } from '../../domain/shared/EntityId.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
+import { ProductNotFoundException } from '../../exceptions/product/ProductNotFoundException.js'
+import { ProductOwnershipService } from '../../domain/product/services/ProductOwnershipService.js'
 
 export type ArchiveProductBySellerCmd = {
     sellerId: string

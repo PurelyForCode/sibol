@@ -1,14 +1,9 @@
-import { EntityId } from '../../../domain/shared/EntityId.js'
-import {
-    ImageFile,
-    ImageStorage,
-} from '../../../domain/shared/interfaces/ImageStorage.js'
-import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
-import { ReservationNotFoundException } from '../../../exceptions/reservation/ReservationNotFoundException.js'
-import { SellerNotFoundByEmailException } from '../../../exceptions/seller/SellerNotFoundByEmailException.js'
-import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
+import { EntityId } from '../../domain/shared/EntityId.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { ProductNotFoundException } from '../../exceptions/product/ProductNotFoundException.js'
+import { ReservationNotFoundException } from '../../exceptions/reservation/ReservationNotFoundException.js'
+import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
+import { InternalServerError } from '../../exceptions/shared/InternalServerError.js'
 
 export type FulfillReservationCmd = {
     sellerId: string

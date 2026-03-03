@@ -1,12 +1,8 @@
-import { ProductOwnershipService } from '../../../domain/product/services/ProductOwnershipService.js'
-import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import {
-    UnitOfMeasurement,
-    UnitOfMeasurementValues,
-} from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
-import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
-import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { EntityId } from '../../../domain/shared/EntityId.js'
+import { ProductOwnershipService } from '../../domain/product/services/ProductOwnershipService.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { ProductNotFoundException } from '../../exceptions/product/ProductNotFoundException.js'
+import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
+import { EntityId } from '../../domain/shared/EntityId.js'
 
 export type DiscontinueSellUnitCmd = {
     productId: string

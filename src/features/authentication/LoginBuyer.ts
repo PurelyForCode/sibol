@@ -1,13 +1,12 @@
-import { PasswordUtil } from '../../../domain/shared/interfaces/PasswordUtil.js'
-import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { Email } from '../../../domain/shared/value_objects/Email.js'
-import { HashedPassword } from '../../../domain/shared/value_objects/HashedPassword.js'
-import { RawPassword } from '../../../domain/shared/value_objects/RawPassword.js'
-import { BuyerNotFoundByEmailException } from '../../../exceptions/buyer/BuyerNotFoundByEmailException.js'
-import { BuyerNotFoundByIdException } from '../../../exceptions/buyer/BuyerNotFoundByIdException.js'
-import { IncorrectPasswordException } from '../../../exceptions/shared/IncorrectPasswordException.js'
-import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
-import { ValidationException } from '../../../exceptions/ValidationException.js'
+import { PasswordUtil } from '../../domain/shared/interfaces/PasswordUtil.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { Email } from '../../domain/shared/value_objects/Email.js'
+import { HashedPassword } from '../../domain/shared/value_objects/HashedPassword.js'
+import { RawPassword } from '../../domain/shared/value_objects/RawPassword.js'
+import { BuyerNotFoundByEmailException } from '../../exceptions/buyer/BuyerNotFoundByEmailException.js'
+import { BuyerNotFoundByIdException } from '../../exceptions/buyer/BuyerNotFoundByIdException.js'
+import { IncorrectPasswordException } from '../../exceptions/shared/IncorrectPasswordException.js'
+import { InternalServerError } from '../../exceptions/shared/InternalServerError.js'
 
 export type LoginBuyerCmd = {
     password: string
@@ -34,10 +33,9 @@ export class LoginBuyerUsecase {
             if (credentials === null) {
                 throw new BuyerNotFoundByIdException(buyer.id.value)
             }
-            const raw = RawPassword.create(cmd.password)
-            if (raw.isError()) {
-                throw new ValidationException('password', raw.message!)
-            }
+            const raw = RawPassword.create(cmd.password).unwrapOrThrow(
+                'password',
+            )
             const hash = HashedPassword.create(credentials.password)
             if (hash.isError()) {
                 throw new InternalServerError(
@@ -45,10 +43,7 @@ export class LoginBuyerUsecase {
                 )
             }
 
-            const passwordMatches = await this.pu.verify(
-                raw.getValue(),
-                hash.getValue(),
-            )
+            const passwordMatches = await this.pu.verify(raw, hash.getValue())
 
             if (!passwordMatches) {
                 throw new IncorrectPasswordException()

@@ -1,23 +1,20 @@
-import {
-    AddSellUnitCmd,
-    AddSellUnitUsecase,
-} from './add_sell_unit/AddSellUnitUsecase.js'
+import { AddSellUnitCmd, AddSellUnitUsecase } from './AddSellUnitUsecase.js'
 import {
     CreateProductCmd,
     CreateProductUsecase,
-} from './create_product/CreateProductUsecase.js'
+} from './CreateProductUsecase.js'
 import {
     ArchiveProductBySellerCmd,
     ArchiveProductBySellerUsecase,
-} from './archive_product/ArchiveProductBySellerUsecase.js'
+} from './ArchiveProductBySellerUsecase.js'
 import {
     UpdateProductCmd,
     UpdateProductUsecase,
-} from './update_product/UpdateProductUsecase.js'
+} from './UpdateProductUsecase.js'
 import {
     DiscontinueSellUnitCmd,
     DiscontinueSellUnitUsecase,
-} from './discontinue_sell_unit/DiscontinueSellUnitUsecase.js'
+} from './DiscontinueSellUnitUsecase.js'
 
 export class ProductController {
     constructor(

@@ -1,7 +1,7 @@
 import {
     RegisterSellerCmd,
     RegisterSellerUsecase,
-} from './register_seller/RegisterSellerUsecase.js'
+} from './RegisterSellerUsecase.js'
 
 export class SellerController {
     constructor(

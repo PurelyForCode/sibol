@@ -1,11 +1,9 @@
-import { idGenerator } from '../../../compositionRoot.js'
-import { Sale } from '../../../domain/sale/aggregates/Sale.js'
-import { EntityId } from '../../../domain/shared/EntityId.js'
-import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
-import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { BuyerNotFoundByIdException } from '../../../exceptions/buyer/BuyerNotFoundByIdException.js'
-import { ReservationNotFoundException } from '../../../exceptions/reservation/ReservationNotFoundException.js'
-import { SellerNotFoundByEmailException } from '../../../exceptions/seller/SellerNotFoundByEmailException.js'
+import { Sale } from '../../domain/sale/aggregates/Sale.js'
+import { EntityId } from '../../domain/shared/EntityId.js'
+import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { BuyerNotFoundByIdException } from '../../exceptions/buyer/BuyerNotFoundByIdException.js'
+import { ReservationNotFoundException } from '../../exceptions/reservation/ReservationNotFoundException.js'
 
 export type ConfirmReservationCmd = {
     buyerId: string

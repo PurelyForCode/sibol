@@ -1,13 +1,12 @@
-import { Product } from '../../../domain/product/aggregates/Product.js'
-import { ProductNamingService } from '../../../domain/product/services/ProductNamingService.js'
-import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
-import { ProductName } from '../../../domain/product/value_objects/ProductName.js'
-import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
-import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
-import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
-import { DuplicateProductNameException } from '../../../exceptions/product/DuplicateProductNameException.js'
-import { SellerNotFoundByIdException } from '../../../exceptions/seller/SellerNotFoundByIdException.js'
-import { EntityId } from '../../../domain/shared/EntityId.js'
+import { Product } from '../../domain/product/aggregates/Product.js'
+import { ProductNamingService } from '../../domain/product/services/ProductNamingService.js'
+import { ProductDescription } from '../../domain/product/value_objects/ProductDescription.js'
+import { ProductName } from '../../domain/product/value_objects/ProductName.js'
+import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
+import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
+import { SmallestUnitOfMeasurement } from '../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
+import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
+import { EntityId } from '../../domain/shared/EntityId.js'
 
 export type CreateProductCmd = {
     description: string | null
