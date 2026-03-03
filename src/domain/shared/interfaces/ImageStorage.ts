@@ -1,4 +1,4 @@
-import { ImagePath } from '../../domain/shared/value_objects/ImagePath.js'
+import { ImagePath } from '../value_objects/ImagePath.js'
 
 export interface ImageFile {
     readonly data: Buffer

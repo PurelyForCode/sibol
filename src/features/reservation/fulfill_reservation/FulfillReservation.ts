@@ -1,5 +1,8 @@
 import { EntityId } from '../../../domain/shared/EntityId.js'
-import { IdGenerator } from '../../../domain/shared/interfaces/IdGenerator.js'
+import {
+    ImageFile,
+    ImageStorage,
+} from '../../../domain/shared/interfaces/ImageStorage.js'
 import { TransactionManager } from '../../../domain/shared/interfaces/TransactionManager.js'
 import { ProductNotFoundException } from '../../../exceptions/product/ProductNotFoundException.js'
 import { ReservationNotFoundException } from '../../../exceptions/reservation/ReservationNotFoundException.js'
@@ -10,12 +13,10 @@ import { InternalServerError } from '../../../exceptions/shared/InternalServerEr
 export type FulfillReservationCmd = {
     sellerId: string
     reservationId: string
+    evidence: string
 }
 export class FulfillReservationUsecase {
-    constructor(
-        private readonly tm: TransactionManager,
-        private readonly idGen: IdGenerator,
-    ) {}
+    constructor(private readonly tm: TransactionManager) {}
 
     async execute(cmd: FulfillReservationCmd) {
         await this.tm.transaction(async uow => {
@@ -48,13 +49,9 @@ export class FulfillReservationUsecase {
             const toBeSoldStock = sellUnit.convertQuantityToProductStock(
                 reservation.quantity,
             )
-
             product.sellReservedStock(toBeSoldStock)
-
+            reservation.fulfill()
             await pr.save(product)
-
-            await rr.delete(reservation.id)
-
             await uow.publishEvents()
         })
     }

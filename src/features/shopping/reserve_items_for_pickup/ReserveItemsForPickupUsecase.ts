@@ -83,7 +83,9 @@ export class ReserveItemsForPickupUsecase {
                     cmd.pickupDate,
                 )
                 reservations.push(reservation)
+                await pr.save(product)
             }
+
             for (const item of cartItems) {
                 cart.removeItem(item.id)
             }

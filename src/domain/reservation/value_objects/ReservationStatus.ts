@@ -1,16 +1,15 @@
-import { SingleValueObject } from '../../shared/SingleValueObject.js'
 import { Result } from '../../../types/utils/Result.js'
+import { SingleValueObject } from '../../shared/SingleValueObject.js'
 
 export enum ReservationStatusValues {
-    Reserved = 'reserved',
-    Completed = 'completed',
-    Unconfirmed = 'uncomfirmed',
+    Active = 'active',
     Cancelled = 'cancelled',
-    Late = 'late',
+    FulfilledBySeller = 'fulfilled_by_seller',
+    ConfirmedByBuyer = 'confirmed_by_buyer',
 }
 
-export class ReservationStatus extends SingleValueObject<string> {
-    constructor(value: ReservationStatusValues) {
+export class ReservationStatus extends SingleValueObject<ReservationStatusValues> {
+    private constructor(value: ReservationStatusValues) {
         super(value)
     }
 
@@ -18,19 +17,19 @@ export class ReservationStatus extends SingleValueObject<string> {
         return Result.ok(new ReservationStatus(value))
     }
 
-    static reserved() {
-        return new ReservationStatus(ReservationStatusValues.Reserved)
+    static active() {
+        return new ReservationStatus(ReservationStatusValues.Active)
     }
 
     static cancelled() {
         return new ReservationStatus(ReservationStatusValues.Cancelled)
     }
 
-    static late() {
-        return new ReservationStatus(ReservationStatusValues.Late)
+    static fulfilledBySeller() {
+        return new ReservationStatus(ReservationStatusValues.FulfilledBySeller)
     }
 
-    static completed() {
-        return new ReservationStatus(ReservationStatusValues.Completed)
+    static confirmedByBuyer() {
+        return new ReservationStatus(ReservationStatusValues.ConfirmedByBuyer)
     }
 }

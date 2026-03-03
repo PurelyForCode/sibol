@@ -19,6 +19,21 @@ export class Reservation extends AggregateRoot {
         super(id)
     }
 
+    fulfill() {
+        this._updatedAt = new Date()
+        this._status = ReservationStatus.fulfilledBySeller()
+    }
+
+    confirm() {
+        this._updatedAt = new Date()
+        this._status = ReservationStatus.confirmedByBuyer()
+    }
+
+    cancel() {
+        this._updatedAt = new Date()
+        this._status = ReservationStatus.cancelled()
+    }
+
     assertPickupDateIsInFuture() {
         if (this._pickupDate < new Date()) {
             throw new PickupDateIsInPastException()
