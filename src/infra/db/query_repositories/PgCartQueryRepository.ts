@@ -12,7 +12,7 @@ import { CartDto } from '../../../features/dto/CartDto.js'
 import { CartItemDto } from '../../../features/dto/CartItemDto.js'
 
 export class PgCartQueryRepository {
-    constructor(private readonly k: Knex) {}
+    constructor(private readonly k: Knex | Knex.Transaction) {}
 
     async findByBuyerId(id: EntityId): Promise<CartDto | null> {
         const cart = await this.k<CartRow>('carts')

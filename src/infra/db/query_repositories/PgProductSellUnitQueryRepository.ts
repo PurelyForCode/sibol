@@ -1,9 +1,10 @@
 import { Knex } from 'knex'
 import { ProductSellUnitDto } from '../../../features/dto/ProductSellUnitDto.js'
 import { SellUnitRow } from '../tables/TableDefinitions.js'
+import { SellUnitQueryRepository } from '../../../domain/product/repositories/SellUnitQueryRepository.js'
 
 export class PgProductSellUnitQueryRepository {
-    constructor(private readonly k: Knex) {}
+    constructor(private readonly k: Knex | Knex.Transaction) {}
 
     async findById(
         id: string,

@@ -23,6 +23,10 @@ import { ReserveItemsForPickupUsecase } from './features/shopping/ReserveItemsFo
 import { UpdateProductUsecase } from './features/products/UpdateProductUsecase.js'
 import { PgCartQueryRepository } from './infra/db/query_repositories/PgCartQueryRepository.js'
 import { PgReservationQueryRepository } from './infra/db/query_repositories/PgReservationQueryRepository.js'
+import { ReservationController } from './features/reservation/ReservationController.js'
+import { FulfillReservationUsecase } from './features/reservation/FulfillReservation.js'
+import { ConfirmReservationUsecase } from './features/reservation/ConfirmReservation.js'
+import { PgSaleQueryRepository } from './infra/db/query_repositories/PgSaleQueryRepository.js'
 
 // Singletons
 export const idGenerator = new Uuidv7Generator()
@@ -87,6 +91,14 @@ export const addToCartUsecase = new AddToCartUsecase(
 export const removeFromCartUsecase = new RemoveFromCartUsecase(
     transactionManager,
 )
+// Reservations
+export const fulfillReservationUsecase = new FulfillReservationUsecase(
+    transactionManager,
+)
+export const confirmReservationUsecase = new ConfirmReservationUsecase(
+    transactionManager,
+    idGenerator,
+)
 
 // Controllers
 export const buyerController = new BuyerController(registerBuyerUsecase)
@@ -108,6 +120,10 @@ export const cartController = new CartController(
     removeFromCartUsecase,
     reserveItemsForPickupUsecase,
 )
+export const reservationController = new ReservationController(
+    fulfillReservationUsecase,
+    confirmReservationUsecase,
+)
 
 // Query Repositories
 export const productQueryRepository = new PgProductQueryRepository(knexInstance)
@@ -117,3 +133,4 @@ export const cartQueryRepository = new PgCartQueryRepository(knexInstance)
 export const reservationQueryRepository = new PgReservationQueryRepository(
     knexInstance,
 )
+export const saleQueryRepository = new PgSaleQueryRepository(knexInstance)

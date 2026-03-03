@@ -5,7 +5,7 @@ import { ProductInventoryRow, ProductRow } from '../tables/TableDefinitions.js'
 import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
 
 export class PgProductQueryRepository {
-    constructor(private readonly k: Knex) {}
+    constructor(private readonly k: Knex | Knex.Transaction) {}
 
     async findById(id: EntityId): Promise<ProductDto | null> {
         const product = await this.k<ProductRow>('products')

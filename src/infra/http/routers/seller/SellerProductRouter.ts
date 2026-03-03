@@ -1,22 +1,22 @@
 import { NextFunction, Router, Request, Response } from 'express'
 import z from 'zod'
-import { fakeSellerId } from '../../../fakeData/fakeId.js'
-import { validateInput } from '../middleware/InputValidationMiddleware.js'
 import {
     productController,
     productQueryRepository,
     productSellUnitQueryRepository,
-} from '../../../compositionRoot.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
-import { EntityId } from '../../../domain/shared/EntityId.js'
-import { ProductSellUnitNotFoundException } from '../../../exceptions/product/ProductSellUnitNotFoundException.js'
-import { SmallestUnitOfMeasurement } from '../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
+} from '../../../../compositionRoot.js'
+import { validateInput } from '../../middleware/InputValidationMiddleware.js'
+import { EntityId } from '../../../../domain/shared/EntityId.js'
+import { SmallestUnitOfMeasurement } from '../../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
+import { fakeSellerId } from '../../../../fakeData/fakeId.js'
+import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
+import { UnitOfMeasurement } from '../../../../domain/shared/value_objects/UnitOfMeasurement.js'
 
-export const productRouter = Router({
+export const sellerProductRouter = Router({
     mergeParams: true,
 })
 
-productRouter.get(
+sellerProductRouter.get(
     '/',
     async (_: Request, res: Response, next: NextFunction) => {
         try {
@@ -32,7 +32,7 @@ const getProductBySellerIdSchema = z.object({
     params: z.object({ productId: z.uuidv7() }),
 })
 
-productRouter.get(
+sellerProductRouter.get(
     '/:productId',
     validateInput(getProductBySellerIdSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -57,7 +57,7 @@ const createProductRequestSchema = z.object({
     }),
 })
 
-productRouter.post(
+sellerProductRouter.post(
     '/',
     validateInput(createProductRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -83,7 +83,7 @@ const deleteProductBySellerSchema = z.object({
     params: z.object({ productId: z.uuidv7() }),
 })
 
-productRouter.delete(
+sellerProductRouter.delete(
     '/:productId',
     validateInput(deleteProductBySellerSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -104,7 +104,7 @@ productRouter.delete(
 const getSellUnitsRequestSchema = z.object({
     params: z.object({ productId: z.uuidv7() }),
 })
-productRouter.get(
+sellerProductRouter.get(
     '/:productId/sell-units',
     validateInput(getSellUnitsRequestSchema),
     async (req, res, next) => {
@@ -127,7 +127,7 @@ productRouter.get(
 const getSellUnitByIdRequestSchema = z.object({
     params: z.object({ productId: z.uuidv7(), sellUnitId: z.uuidv7() }),
 })
-productRouter.get(
+sellerProductRouter.get(
     '/:productId/sell-units/:sellUnitId',
     validateInput(getSellUnitByIdRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -164,7 +164,7 @@ const addSellUnitRequestSchema = z.object({
         productId: z.uuidv7(),
     }),
 })
-productRouter.post(
+sellerProductRouter.post(
     '/:productId/sell-units',
     validateInput(addSellUnitRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -196,7 +196,7 @@ const removeSellUnitRequestSchema = z.object({
     }),
 })
 
-productRouter.delete(
+sellerProductRouter.delete(
     '/:productId/sell-units/:sellUnitId',
     validateInput(removeSellUnitRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -229,7 +229,7 @@ const updateProductRequestSchema = z.object({
         .partial(),
 })
 
-productRouter.patch(
+sellerProductRouter.patch(
     '/:productId',
     validateInput(updateProductRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {

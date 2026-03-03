@@ -33,6 +33,22 @@ export class PgProductRepository
         super()
     }
 
+    async getSellUnitPricePerUnit(
+        sellUnitId: EntityId,
+        productId: EntityId,
+    ): Promise<Money | null> {
+        const row = (await this.k('products as p')
+            .select('s.price_per_unit')
+            .leftJoin('sell_units as s', 'p.id', 's.product_id')
+            .where('p.id', productId.value)
+            .where('s.id', sellUnitId.value)
+            .first()) as { price_per_unit: number }
+        if (!row) {
+            return null
+        }
+        return Money.create(row.price_per_unit).getValue()
+    }
+
     async findProducts(ids: EntityId[]): Promise<Map<Id, Product>> {
         const productRows = (await this.k<
             ProductRow &

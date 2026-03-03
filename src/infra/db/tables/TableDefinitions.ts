@@ -114,3 +114,14 @@ export type ReservationRow = {
     created_at: Date
     updated_at: Date
 }
+
+export type SaleRow = {
+    id: string
+    buyer_id: string
+    product_id: string
+    sell_unit_id: string
+    quantity: number
+    total: number
+    created_at: Date
+    updated_at: Date
+}

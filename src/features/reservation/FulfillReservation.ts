@@ -8,7 +8,7 @@ import { InternalServerError } from '../../exceptions/shared/InternalServerError
 export type FulfillReservationCmd = {
     sellerId: string
     reservationId: string
-    evidence: string
+    evidence: null
 }
 export class FulfillReservationUsecase {
     constructor(private readonly tm: TransactionManager) {}
@@ -47,6 +47,7 @@ export class FulfillReservationUsecase {
             product.sellReservedStock(toBeSoldStock)
             reservation.fulfill()
             await pr.save(product)
+            await rr.save(reservation)
             await uow.publishEvents()
         })
     }

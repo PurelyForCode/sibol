@@ -59,7 +59,7 @@ export class Reservation extends AggregateRoot {
             sellUnitId,
             quantity,
             pickupDate,
-            ReservationStatus.reserved(),
+            ReservationStatus.active(),
             now,
             now,
         )

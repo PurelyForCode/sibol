@@ -1,49 +1,16 @@
 import { Router, Request, Response, NextFunction } from 'express'
 import z from 'zod'
-import { sellerController } from '../../../compositionRoot.js'
+import { buyerController, sellerController } from '../../../compositionRoot.js'
 import { validateInput } from '../middleware/InputValidationMiddleware.js'
 import { phoneNumberSchema } from '../validation/phoneNumberSchema.js'
-import { fakeSellerAddressId } from '../../../fakeData/fakeId.js'
+import {
+    fakeBuyerAddressId,
+    fakeSellerAddressId,
+} from '../../../fakeData/fakeId.js'
 
-export const sellerRouter = Router({
+export const registrationRouter = Router({
     mergeParams: true,
 })
-//
-// sellerRouter.get(
-//     '/',
-//     async (req: Request, res: Response, next: NextFunction) => {
-//         try {
-//         } catch (e: unknown) {
-//             next(e)
-//         }
-//     },
-// )
-//
-// const getSellerBySellerIdSchema = z.object({
-//     params: z.object({ sellerId: z.uuidv7() }),
-// })
-//
-// sellerRouter.get(
-//     '/:sellerId',
-//     validateInput(getSellerBySellerIdSchema),
-//     async (req: Request, res: Response, next: NextFunction) => {
-//         try {
-//             const validated = req.validated as z.infer<
-//                 typeof getSellerBySellerIdSchema
-//             >
-//             const sellerId = EntityId.create(validated.params.sellerId)
-//             const seller = await sellerQueryRepository.findById(sellerId)
-//             if (!seller) {
-//                 res.status(404).json({ message: 'Seller could not be found' })
-//                 return
-//             }
-//
-//             res.status(200).json({ data: seller })
-//         } catch (e: unknown) {
-//             next(e)
-//         }
-//     },
-// )
 
 const createSellerRequestSchema = z.object({
     body: z.object({
@@ -57,8 +24,8 @@ const createSellerRequestSchema = z.object({
     }),
 })
 
-sellerRouter.post(
-    '/register',
+registrationRouter.post(
+    '/sellers/register',
     validateInput(createSellerRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
@@ -79,6 +46,39 @@ sellerRouter.post(
 
             res.status(201).json({
                 message: 'Successfully registered seller account',
+            })
+        } catch (e: unknown) {
+            next(e)
+        }
+    },
+)
+
+const createBuyerRequestSchema = z.object({
+    body: z.object({
+        email: z.email(),
+        password: z.string().min(8),
+        username: z.string().min(3),
+    }),
+})
+
+registrationRouter.post(
+    '/buyers/register',
+    validateInput(createBuyerRequestSchema),
+    async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const { body } = req.validated as z.infer<
+                typeof createBuyerRequestSchema
+            >
+
+            await buyerController.register({
+                email: body.email,
+                password: body.password,
+                username: body.username,
+                addressId: fakeBuyerAddressId,
+            })
+
+            res.status(201).json({
+                message: 'Successfully registered buyer account',
             })
         } catch (e: unknown) {
             next(e)

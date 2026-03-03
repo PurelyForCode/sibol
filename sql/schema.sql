@@ -234,3 +234,14 @@ CREATE TABLE reservations(
 );
 
 
+CREATE TABLE sales (
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE SET NULL ON UPDATE CASCADE,
+	product_id UUID NOT NULL REFERENCES products(id),
+	sell_unit_id UUID NOT NULL REFERENCES sell_units(id),
+	quantity INTEGER NOT NULL CHECK(quantity > 0),
+	total INTEGER NOT NULL CHECK(total > 0),
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
+);
+

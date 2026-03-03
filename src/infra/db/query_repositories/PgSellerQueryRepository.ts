@@ -3,7 +3,7 @@ import { EntityId } from '../../../domain/shared/EntityId.js'
 import { SellerDto } from '../../../features/dto/SellerDto.js'
 
 export class PgSellerQueryRepository {
-    constructor(private readonly k: Knex) {}
+    constructor(private readonly k: Knex | Knex.Transaction) {}
 
     findById(id: EntityId): Promise<SellerDto | null> {
         throw new Error('Method not implemented.')

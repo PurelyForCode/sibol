@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction, Router } from 'express'
-import { validateInput } from '../middleware/InputValidationMiddleware.js'
 import z from 'zod'
+import { fakeBuyerId } from '../../../../fakeData/fakeId.js'
+import { EntityId } from '../../../../domain/shared/EntityId.js'
 import {
     cartController,
     cartQueryRepository,
-} from '../../../compositionRoot.js'
-import { fakeBuyerId } from '../../../fakeData/fakeId.js'
-import { EntityId } from '../../../domain/shared/EntityId.js'
+} from '../../../../compositionRoot.js'
+import { validateInput } from '../../middleware/InputValidationMiddleware.js'
 
-export const cartRouter = Router({ mergeParams: true })
+export const buyerCartRouter = Router({ mergeParams: true })
 
-cartRouter.get('/', async (req, res, next) => {
+buyerCartRouter.get('/', async (req, res, next) => {
     try {
         const buyerId = EntityId.create(fakeBuyerId)
         const data = await cartQueryRepository.findByBuyerId(buyerId)
@@ -28,7 +28,7 @@ const addToCartRequestSchema = z.object({
     }),
 })
 
-cartRouter.post(
+buyerCartRouter.post(
     '/items',
     validateInput(addToCartRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -56,7 +56,7 @@ const removeFromCartSchema = z.object({
     }),
 })
 
-cartRouter.delete(
+buyerCartRouter.delete(
     '/items/:itemId',
     validateInput(removeFromCartSchema),
     async (req: Request, res: Response, next: NextFunction) => {
@@ -83,7 +83,7 @@ const reserveItemsForPickupRequestSchema = z.object({
     }),
 })
 
-cartRouter.post(
+buyerCartRouter.post(
     '/items/reserve',
     validateInput(reserveItemsForPickupRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {

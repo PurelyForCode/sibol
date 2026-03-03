@@ -5,7 +5,7 @@ import { ReservationNotFoundException } from '../../../exceptions/reservation/Re
 import { ReservationDto } from '../../../features/dto/ReservationDto.js'
 
 export class PgReservationQueryRepository {
-    constructor(private readonly k: Knex) {}
+    constructor(private readonly k: Knex | Knex.Transaction) {}
 
     async findAllReservationsByBuyerId(
         id: EntityId,

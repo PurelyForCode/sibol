@@ -8,7 +8,7 @@ export class Sale extends AggregateRoot {
         id: EntityId,
         private _buyerId: EntityId,
         private _productId: EntityId,
-        private _sellItemId: EntityId,
+        private _sellUnitId: EntityId,
         private _quantity: Quantity,
         private _total: Money,
         private _createdAt: Date,
@@ -21,7 +21,7 @@ export class Sale extends AggregateRoot {
         id: EntityId,
         buyerId: EntityId,
         productId: EntityId,
-        sellItemId: EntityId,
+        sellUnitId: EntityId,
         quantity: Quantity,
         total: Money,
     ) {
@@ -30,7 +30,7 @@ export class Sale extends AggregateRoot {
             id,
             buyerId,
             productId,
-            sellItemId,
+            sellUnitId,
             quantity,
             total,
             now,
@@ -42,7 +42,7 @@ export class Sale extends AggregateRoot {
         id: EntityId,
         buyerId: EntityId,
         productId: EntityId,
-        sellItemId: EntityId,
+        sellUnitId: EntityId,
         quantity: Quantity,
         total: Money,
         createdAt: Date,
@@ -52,7 +52,7 @@ export class Sale extends AggregateRoot {
             id,
             buyerId,
             productId,
-            sellItemId,
+            sellUnitId,
             quantity,
             total,
             createdAt,
@@ -72,8 +72,8 @@ export class Sale extends AggregateRoot {
     public get quantity(): Quantity {
         return this._quantity
     }
-    public get sellItemId(): EntityId {
-        return this._sellItemId
+    public get sellUnitId(): EntityId {
+        return this._sellUnitId
     }
     public get productId(): EntityId {
         return this._productId
