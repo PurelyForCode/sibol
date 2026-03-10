@@ -16,6 +16,7 @@ export class ProductSellUnit extends Entity {
         private _pricePerUnit: Money,
         private _displayName: SellUnitDisplayName,
         private _discontinuedAt: Date | null,
+        private _isDefault: boolean,
     ) {
         super(id)
     }
@@ -37,6 +38,11 @@ export class ProductSellUnit extends Entity {
 
     discontinue() {
         this._discontinuedAt = new Date()
+        this._isDefault = false
+    }
+
+    toggleDefault() {
+        this._isDefault = !this._isDefault
     }
 
     static rehydrate(
@@ -47,6 +53,7 @@ export class ProductSellUnit extends Entity {
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
         discontinuedAt: Date | null,
+        isDefault: boolean,
     ) {
         return new ProductSellUnit(
             id,
@@ -56,6 +63,7 @@ export class ProductSellUnit extends Entity {
             pricePerUnit,
             displayName,
             discontinuedAt,
+            isDefault,
         )
     }
 
@@ -66,6 +74,7 @@ export class ProductSellUnit extends Entity {
         conversionFactor: ConversionFactor,
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
+        isDefault: boolean,
     ) {
         return new ProductSellUnit(
             id,
@@ -75,6 +84,7 @@ export class ProductSellUnit extends Entity {
             pricePerUnit,
             displayName,
             null,
+            isDefault,
         )
     }
 
@@ -95,5 +105,8 @@ export class ProductSellUnit extends Entity {
     }
     public get discontinuedAt(): Date | null {
         return this._discontinuedAt
+    }
+    public get isDefault(): boolean {
+        return this._isDefault
     }
 }

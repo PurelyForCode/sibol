@@ -1,3 +1,4 @@
+// TODO: Add review count
 export type ProductDto = {
     id: string
     sellerId: string
@@ -7,7 +8,12 @@ export type ProductDto = {
     availableStock: number
     reservedStock: number
     rating: number | null
+    reviewCount: number
+    defaultPricePerUnit: number
+    defaultUnitDisplayName: string
     status: string
+    imageUrl: string
+    sellerAddress: string
     createdAt: Date
     updatedAt: Date
     deletedAt: Date | null

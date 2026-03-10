@@ -1,15 +1,18 @@
+import { Entity } from '../../shared/Entity.js'
 import { EntityId } from '../../shared/EntityId.js'
 import { ImagePath } from '../../shared/value_objects/ImagePath.js'
 import { ImagePosition } from '../../shared/value_objects/ImagePosition.js'
 
-export class ProductImage {
+export class ProductImage extends Entity {
     private constructor(
-        private _id: EntityId,
+        id: EntityId,
         private _productId: EntityId,
         private _url: ImagePath,
         private _position: ImagePosition,
         private _createdAt: Date,
-    ) {}
+    ) {
+        super(id)
+    }
 
     changeUrl(url: ImagePath) {
         this._url = url
@@ -47,9 +50,6 @@ export class ProductImage {
     }
     public get url(): ImagePath {
         return this._url
-    }
-    public get id(): EntityId {
-        return this._id
     }
     public get productId(): EntityId {
         return this._productId

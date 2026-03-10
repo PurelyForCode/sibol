@@ -18,6 +18,8 @@ import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
 import { ProductSellUnitAlreadyDefinedException } from '../../../exceptions/product/ProductSellUnitAlreadyDefinedException.js'
 import { ProductHasInsufficientAvailableStockException } from '../../../exceptions/product/ProductHasInsufficientAvailableStockException.js'
 import { ProductHasInsufficientReservedStockException } from '../../../exceptions/product/ProductHasInsufficientReservedStockException.js'
+import { CanNotDiscontinueDefaultSellUnitException } from '../../../exceptions/product/CanNotDiscontinueDefaultSellUnitException.js'
+import { SellUnitIsNotDefaultException } from '../../../exceptions/product/SellUnitIsNotDefaultException.js'
 
 export class Product extends AggregateRoot {
     private constructor(
@@ -75,6 +77,10 @@ export class Product extends AggregateRoot {
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
     ) {
+        let isDefault = false
+        if (this._sellUnits.size === 0) {
+            isDefault = true
+        }
         const sellUnit = ProductSellUnit.new(
             id,
             this.id,
@@ -82,6 +88,7 @@ export class Product extends AggregateRoot {
             unitValue,
             pricePerUnit,
             displayName,
+            isDefault,
         )
         for (const [_key, value] of this._sellUnits) {
             if (
@@ -98,6 +105,23 @@ export class Product extends AggregateRoot {
         this._sellUnits.set(sellUnit.id.value, sellUnit)
     }
 
+    toggleActiveIfSellUnitAndImageIsAvailable() {
+        let hasImage = false
+        if (this._images.size > 0) {
+            hasImage = true
+        }
+        let hasDefaultSellUnit = false
+        for (const [_, v] of this._sellUnits) {
+            if (v.isDefault) {
+                hasDefaultSellUnit = true
+                break
+            }
+        }
+        if (hasImage && hasDefaultSellUnit) {
+            this._status = ProductStatus.active()
+        }
+    }
+
     discontinueSellUnit(sellUnitId: EntityId) {
         const sellUnit = this._sellUnits.get(sellUnitId.value)
         if (!sellUnit) {
@@ -106,7 +130,34 @@ export class Product extends AggregateRoot {
                 this.id.value,
             )
         }
+        if (sellUnit.isDefault) {
+            throw new CanNotDiscontinueDefaultSellUnitException(
+                sellUnit.id.value,
+            )
+        }
         sellUnit.discontinue()
+    }
+
+    replaceDefaultSellUnit(from: EntityId, to: EntityId) {
+        const oldS = this._sellUnits.get(from.value)
+        if (!oldS) {
+            throw new ProductSellUnitNotFoundException(
+                from.value,
+                this.id.value,
+            )
+        }
+        const newS = this._sellUnits.get(to.value)
+        if (!newS) {
+            throw new ProductSellUnitNotFoundException(to.value, this.id.value)
+        }
+        if (oldS.isDefault !== true) {
+            throw new SellUnitIsNotDefaultException(
+                oldS.id.value,
+                this.id.value,
+            )
+        }
+        oldS.toggleDefault()
+        newS.toggleDefault()
     }
 
     addImage(image: ProductImage) {}
@@ -158,6 +209,7 @@ export class Product extends AggregateRoot {
         name: ProductName,
         description: ProductDescription | null,
         unit: SmallestUnitOfMeasurement,
+        images?: ProductImage[],
     ) {
         const now = new Date()
 
@@ -167,7 +219,7 @@ export class Product extends AggregateRoot {
             name,
             description,
             unit,
-            ProductStatus.active(),
+            ProductStatus.inactive(),
             null,
             new Map(),
             new Map(),

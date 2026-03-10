@@ -1,4 +1,3 @@
-* Order Completion Logic
- Cart -> Reservation -> Seller( fulfill reservation ) -> Buyer( confirm fulfillment )-> Sale
- * Handle the confirmation logic for reservations
-
+* Admin stuff
+* ratings
+* accounts

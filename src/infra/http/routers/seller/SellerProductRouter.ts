@@ -11,6 +11,8 @@ import { SmallestUnitOfMeasurement } from '../../../../domain/shared/value_objec
 import { fakeSellerId } from '../../../../fakeData/fakeId.js'
 import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
 import { UnitOfMeasurement } from '../../../../domain/shared/value_objects/UnitOfMeasurement.js'
+import { fileStorage } from '../../../config/MulterConfig.js'
+import { Multer } from 'multer'
 
 export const sellerProductRouter = Router({
     mergeParams: true,
@@ -59,18 +61,30 @@ const createProductRequestSchema = z.object({
 
 sellerProductRouter.post(
     '/',
+    fileStorage.array(
+        'productImages',
+        Number.parseInt(process.env.MAXIMUM_PRODUCT_IMAGE_COUNT!),
+    ),
     validateInput(createProductRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
+            const files = req.files as Express.Multer.File[]
             const { body } = req.validated as z.infer<
                 typeof createProductRequestSchema
             >
             const sellerId = fakeSellerId
+            const images: { url: string; position: number }[] = []
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i]
+                images.push({ url: file.path, position: i })
+            }
+
             const { id } = await productController.createProduct({
                 description: body.description,
                 name: body.name,
                 sellerId: sellerId,
                 unitOfMeasurement: body.unitOfMeasurement,
+                images: images,
             })
             res.status(201).json({ data: { productId: id } })
         } catch (e: unknown) {

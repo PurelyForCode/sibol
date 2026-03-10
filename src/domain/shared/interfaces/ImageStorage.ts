@@ -1,6 +1,14 @@
 import { ImagePath } from '../value_objects/ImagePath.js'
 
+
+	id UUID PRIMARY KEY,
+	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	url TEXT NOT NULL,
+	position SMALLINT NOT NULL,
+	created_at TIMESTAMPTZ NOT NULL
+
 export interface ImageFile {
+    
     readonly data: Buffer
     readonly mimeType: string
     readonly filename?: string

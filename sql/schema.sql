@@ -118,6 +118,7 @@ CREATE TABLE sell_units (
 	price_per_unit INTEGER NOT NULL CHECK(price_per_unit > 0),
 	display_name VARCHAR(20) NOT NULL,
 	discontinued_at TIMESTAMPTZ,
+	is_default BOOLEAN NOT NULL,
 	UNIQUE (product_id, conversion_factor, unit_symbol)
 );
 

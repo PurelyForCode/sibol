@@ -1,43 +1,37 @@
+import { Result } from '../../../types/utils/Result.js'
 import { SingleValueObject } from '../SingleValueObject.js'
-import path from 'path'
+import { extname } from 'path'
 
 export class ImagePath extends SingleValueObject<string> {
     private constructor(value: string) {
         super(value)
     }
 
-    static create(input: string, baseDir?: string): ImagePath {
-        if (input.startsWith('http://') || input.startsWith('https://')) {
+    static create(path: string): Result<ImagePath> {
+        if (path.startsWith('http://') || path.startsWith('https://')) {
             try {
-                const parsed = new URL(input)
-                return new ImagePath(parsed.toString())
+                const parsed = new URL(path)
+                return Result.ok(new ImagePath(parsed.href))
             } catch {
-                throw new Error(`Invalid URL: ${input}`)
+                return Result.fail(`Invalid URL: ${path}`)
             }
         }
 
-        if (!baseDir) {
-            throw new Error('baseDir is required for local files')
+        const ext = extname(path).toLowerCase()
+        if (!['.png', '.jpg', '.jpeg', '.webp', '.gif'].includes(ext)) {
+            return Result.fail(`Invalid image file extension: ${ext}`)
         }
 
-        const resolved = path.resolve(baseDir, input)
-
-        // if (!fs.existsSync(resolved)) {
-        //     throw new Error(`Local file does not exist: ${resolved}`)
-        // }
-
-        if (!resolved.match(/\.(png|jpg|jpeg|webp|gif)$/i)) {
-            throw new Error(`Invalid image file extension: ${resolved}`)
-        }
-
-        return new ImagePath(resolved)
+        return Result.ok(new ImagePath(path))
+    }
+    isRemote(): boolean {
+        return (
+            this.value.startsWith('http://') ||
+            this.value.startsWith('https://')
+        )
     }
 
     isLocal(): boolean {
-        return !this.value.startsWith('http')
-    }
-
-    isRemote(): boolean {
-        return !this.isLocal()
+        return !this.isRemote()
     }
 }

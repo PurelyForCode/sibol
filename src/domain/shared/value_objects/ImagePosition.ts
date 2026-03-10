@@ -6,7 +6,7 @@ export class ImagePosition extends SingleValueObject<number> {
         super(value)
     }
 
-    static create(value: number) {
+    static create(value: number): Result<ImagePosition> {
         if (value < 0) {
             return Result.fail('Image position can not be lower than 0')
         }

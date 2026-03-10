@@ -155,7 +155,12 @@ export class PgProductRepository
                 snapshot.sellUnits,
                 product.sellUnits,
             )
+            const deletedImages = this.getDeletedIds(
+                snapshot.images,
+                product.images,
+            )
             await this.k('sell_units').delete().whereIn('id', deletedSellUnits)
+            await this.k('product_images').delete().whereIn('id', deletedImages)
         }
 
         await this.k<ProductRow>('products')
@@ -201,6 +206,18 @@ export class PgProductRepository
             .onConflict('product_id')
             .merge()
 
+        for (const [_, image] of product.images) {
+            await this.k<ProductImageRow>('product_images')
+                .insert({
+                    id: image.id.value,
+                    created_at: image.createdAt,
+                    position: image.position.value,
+                    product_id: image.productId.value,
+                    url: image.url.value,
+                })
+                .onConflict('id')
+                .merge()
+        }
         this.uow.registerAggregate(product)
     }
 
