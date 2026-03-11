@@ -214,6 +214,7 @@ export class PgProductRepository
                     created_at: image.createdAt,
                     position: image.position.value,
                     product_id: image.productId.value,
+                    is_thumbnail: image.isThumbnail,
                     url: image.url.value,
                 })
                 .onConflict('id')

@@ -1,6 +1,7 @@
 import { NextFunction, Router, Request, Response } from 'express'
 import z from 'zod'
 import {
+    imageBaseUrl,
     productQueryRepository,
     productSellUnitQueryRepository,
 } from '../../../../compositionRoot.js'
@@ -34,6 +35,9 @@ buyerProductRouter.get(
                     },
                     { limit: query.limit, offset: query.offset },
                 )
+            products.forEach(p => {
+                p.imageUrl = `${imageBaseUrl}/${p.imageUrl}`
+            })
             res.status(200).json({ data: products })
         } catch (e: unknown) {
             next(e)

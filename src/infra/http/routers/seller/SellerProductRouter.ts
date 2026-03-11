@@ -11,45 +11,45 @@ import { SmallestUnitOfMeasurement } from '../../../../domain/shared/value_objec
 import { fakeSellerId } from '../../../../fakeData/fakeId.js'
 import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
 import { UnitOfMeasurement } from '../../../../domain/shared/value_objects/UnitOfMeasurement.js'
-import { fileStorage } from '../../../config/MulterConfig.js'
+import { imageStorageMiddleware } from '../../../config/MulterConfig.js'
 import { getRelativePath } from '../../../../utils/getRelativePath.js'
 
 export const sellerProductRouter = Router({
     mergeParams: true,
 })
 
-sellerProductRouter.get(
-    '/',
-    async (_: Request, res: Response, next: NextFunction) => {
-        try {
-            const products = await productQueryRepository.findAll()
-            res.status(200).json({ data: products })
-        } catch (e: unknown) {
-            next(e)
-        }
-    },
-)
-
-const getProductBySellerIdSchema = z.object({
-    params: z.object({ productId: z.uuidv7() }),
-})
-
-sellerProductRouter.get(
-    '/:productId',
-    validateInput(getProductBySellerIdSchema),
-    async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const { params } = req.validated as z.infer<
-                typeof getProductBySellerIdSchema
-            >
-            const productId = EntityId.create(params.productId)
-            const products = await productQueryRepository.findById(productId)
-            res.status(200).json({ data: products })
-        } catch (e: unknown) {
-            next(e)
-        }
-    },
-)
+// sellerProductRouter.get(
+//     '/',
+//     async (_: Request, res: Response, next: NextFunction) => {
+//         try {
+//             const products = await productQueryRepository.findProductCatalogueItems()
+//             res.status(200).json({ data: products })
+//         } catch (e: unknown) {
+//             next(e)
+//         }
+//     },
+// )
+//
+// const getProductBySellerIdSchema = z.object({
+//     params: z.object({ productId: z.uuidv7() }),
+// })
+//
+// sellerProductRouter.get(
+//     '/:productId',
+//     validateInput(getProductBySellerIdSchema),
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         try {
+//             const { params } = req.validated as z.infer<
+//                 typeof getProductBySellerIdSchema
+//             >
+//             const productId = EntityId.create(params.productId)
+//             const products = await productQueryRepository.findById(productId)
+//             res.status(200).json({ data: products })
+//         } catch (e: unknown) {
+//             next(e)
+//         }
+//     },
+// )
 
 const createProductRequestSchema = z.object({
     body: z.object({
@@ -61,19 +61,22 @@ const createProductRequestSchema = z.object({
 
 sellerProductRouter.post(
     '/',
-    fileStorage.array(
+    imageStorageMiddleware.array(
         'images',
         Number.parseInt(process.env.MAXIMUM_PRODUCT_IMAGE_COUNT!),
     ),
     validateInput(createProductRequestSchema),
     async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const files = req.files as Express.Multer.File[]
+            const files = req.files as Express.Multer.File[] | undefined
+            let paths: string[] = []
+            if (files) {
+                paths = files.map(x => getRelativePath(x.path))
+            }
             const { body } = req.validated as z.infer<
                 typeof createProductRequestSchema
             >
             const sellerId = fakeSellerId
-            const paths = files.map(x => getRelativePath(x.path))
 
             const { id } = await productController.createProduct({
                 description: body.description,
@@ -96,7 +99,7 @@ const addImagesRequestSchema = z.object({
 sellerProductRouter.post(
     '/:productId/images',
     validateInput(addImagesRequestSchema),
-    fileStorage.array('images'),
+    imageStorageMiddleware.array('images'),
     async (req, res, next) => {
         try {
             const { params } = req.validated as z.infer<
@@ -104,6 +107,7 @@ sellerProductRouter.post(
             >
             const files = req.files as Express.Multer.File[]
             const paths = files.map(x => getRelativePath(x.path))
+            console.log(paths)
             await productController.addImages({
                 paths: paths,
                 productId: params.productId,

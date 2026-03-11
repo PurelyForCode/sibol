@@ -1,4 +1,4 @@
-import { Knex } from 'knex'
+import knex, { Knex } from 'knex'
 import { ProductDetailsDto } from '../../http/query/dto/ProductDetailsDto.js'
 import { Pagination } from '../../../types/query/Pagination.js'
 import {
@@ -17,29 +17,33 @@ export class PgProductQueryRepository {
             .leftJoin('product_inventory as inv', 'p.id', 'inv.product_id')
             .leftJoin('sellers as se', 'p.seller_id', 'se.id')
             .leftJoin('addresses as a', 'se.address_id', 'a.id')
-            .where('p.status', 'active')
+            .leftJoin(
+                this.k('sales as sa')
+                    .leftJoin('reviews as r', 'sa.id', 'r.sale_id')
+                    .select('sa.product_id')
+                    .count('r.id as review_count')
+                    .groupBy('sa.product_id')
+                    .as('rc'),
+                'p.id',
+                'rc.product_id',
+            )
+            // .where('p.status', 'active')
             .where('p.id', id)
             .select([
                 'p.id',
-                `p.seller_id as "sellerId"`,
+                `p.seller_id as sellerId`,
                 'p.name',
                 'p.description',
                 'p.rating',
                 'p.status',
-                `p.inventory_unit_symbol as "inventoryUnitSymbol"`,
-                `p.created_at as "createdAt"`,
-                `p.updated_at as "updatedAt"`,
-                `p.deleted_at as "deletedAt"`,
-                `inv.available_stock as "availableStock"`,
-                `inv.reserved_stock as "reservedStock"`,
-                `'hard coded address' as "sellerAddress"`,
-                this.k.raw(`
-                    (
-                        select count(*)
-                        from reviews r
-                        where r.product_id = p.id
-                    ) as "reviewCount"
-                `),
+                `p.inventory_unit_symbol as inventoryUnitSymbol`,
+                `p.created_at as createdAt`,
+                `p.updated_at as updatedAt`,
+                `p.deleted_at as deletedAt`,
+                `inv.available_stock as availableStock`,
+                `inv.reserved_stock as reservedStock`,
+                `rc.review_count as reviewCount`,
+                this.k.raw(`'hard coded address' as sellerAddress`),
             ])
             .first()) as {
             id: string
@@ -57,6 +61,7 @@ export class PgProductQueryRepository {
             reviewCount: number
             sellerAddress: string
         } | null
+
         if (!data) {
             return null
         }
@@ -90,7 +95,24 @@ export class PgProductQueryRepository {
             })
         }
 
-        return {}
+        return {
+            id: data.id,
+            sellerId: data.sellerId,
+            name: data.name,
+            description: data.description,
+            status: data.status,
+            inventoryUnitSymbol: data.inventoryUnitSymbol,
+            availableStock: data.availableStock,
+            reservedStock: data.reservedStock,
+            rating: data.rating,
+            reviewCount: data.reviewCount,
+            sellerAddress: data.sellerAddress,
+            createdAt: data.createdAt,
+            updatedAt: data.updatedAt,
+            deletedAt: data.deletedAt,
+            images: images,
+            sellUnits: sellUnits,
+        }
     }
 
     async findProductCatalogueItems(
@@ -99,42 +121,66 @@ export class PgProductQueryRepository {
         }>,
         pagination: Pagination,
     ): Promise<ProductCatalogueItemDto[]> {
-        let builder = this.k<ProductRow>('products as p')
-            .leftJoin('sell_units as s', 'p.id', 's.product_id')
-            .leftJoin('product_images as pi', 'p.id', 'pi.product_id')
+        const baseProducts = this.k('products as p').select(
+            'p.id',
+            'p.name',
+            'p.seller_id',
+            'p.rating',
+        )
+        // .where('p.status', 'active')
+
+        if (filters?.sellerId) {
+            baseProducts.where('p.seller_id', filters.sellerId)
+        }
+
+        if (pagination?.limit) {
+            baseProducts.limit(pagination.limit)
+        }
+
+        if (pagination?.offset) {
+            baseProducts.offset(pagination.offset)
+        }
+
+        const k = this.k
+        const query = this.k(baseProducts.as('p'))
+            .leftJoin('sell_units as s', function () {
+                this.on('p.id', 's.product_id').andOn(
+                    's.is_default',
+                    k.raw('true'),
+                )
+            })
+            .leftJoin('product_images as pi', function () {
+                this.on('p.id', 'pi.product_id').andOn(
+                    'pi.is_thumbnail',
+                    k.raw('true'),
+                )
+            })
             .leftJoin('sellers as se', 'p.seller_id', 'se.id')
             .leftJoin('addresses as a', 'se.address_id', 'a.id')
+            .leftJoin(
+                this.k('sales as sa')
+                    .leftJoin('reviews as r', 'sa.id', 'r.sale_id')
+                    .select('sa.product_id')
+                    .count('r.id as review_count')
+                    .groupBy('sa.product_id')
+                    .as('rc'),
+                'p.id',
+                'rc.product_id',
+            )
             .select(
                 'p.id',
                 'p.name',
-                'p.seller_id as "sellerId"',
+                'p.seller_id as sellerId',
                 'p.rating',
-                this.k.raw(`
-                    (
-                        select count(*)
-                        from reviews r
-                        where r.product_id = p.id
-                    ) as "reviewCount"
-                `),
-                's.price_per_unit as "defaultPricePerUnit"',
-                's.display_name as "defaultUnitDisplayName"',
-                `'hard coded address' as "sellerAddress"`,
-                'pi.url as "imageUrl"',
+                's.price_per_unit as defaultPricePerUnit',
+                's.display_name as defaultUnitDisplayName',
+                'pi.url as imageUrl',
+                this.k.raw("'somewhere over the rainbow' as sellerAddress"),
+                this.k.raw('COALESCE(rc.review_count,0) as reviewCount'),
             )
-            .where('p.status', 'active')
-            .where('s.is_default', true)
-            .where('pi.is_thumbnail', true)
 
-        if (pagination) {
-            builder.limit(pagination.limit)
-            builder.offset(pagination.offset)
-        }
+        const rows = await query
 
-        if (filters) {
-            if (filters.sellerId) {
-                builder.where('seller_id', filters.sellerId)
-            }
-        }
-        return await builder
+        return rows as ProductCatalogueItemDto[]
     }
 }

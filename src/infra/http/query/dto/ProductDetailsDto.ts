@@ -13,7 +13,6 @@ export type ProductDetailsDto = {
     createdAt: Date
     updatedAt: Date
     deletedAt: Date | null
-    imageUrl: string
     images: {
         id: string
         url: string

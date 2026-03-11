@@ -36,6 +36,8 @@ import { ReviewController } from './features/ReviewController.js'
 import { ReviewProductUsecase } from './features/reviews/ReviewProductUsecase.js'
 import { DeleteReviewUsecase } from './features/reviews/DeleteReviewUsecase.js'
 
+export const imageBaseUrl = `${process.env.DOMAIN_NAME}/images`
+
 // Singletons
 export const idGenerator = new Uuidv7Generator()
 export const passwordUtility = new ArgonPasswordUtil()

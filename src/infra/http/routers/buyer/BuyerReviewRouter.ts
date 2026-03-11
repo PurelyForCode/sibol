@@ -2,7 +2,7 @@ import { Router } from 'express'
 import { reviewController } from '../../../../compositionRoot.js'
 import { validateInput } from '../../middleware/InputValidationMiddleware.js'
 import z from 'zod'
-import { fileStorage } from '../../../config/MulterConfig.js'
+import { imageStorageMiddleware } from '../../../config/MulterConfig.js'
 import { getRelativePath } from '../../../../utils/getRelativePath.js'
 import { fakeBuyerId } from '../../../../fakeData/fakeId.js'
 
@@ -18,7 +18,7 @@ const reviewProductRequestSchema = z.object({
 buyerReviewRouter.post(
     '/',
     validateInput(reviewProductRequestSchema),
-    fileStorage.array('images'),
+    imageStorageMiddleware.array('images'),
     async (req, res, next) => {
         try {
             const { body } = req.validated as z.infer<
