@@ -1,26 +1,25 @@
 import { EntityId } from '../../domain/shared/EntityId.js'
-import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
+import { ImageStorage } from '../../domain/shared/interfaces/ImageStorage.js'
 import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
-import { ImagePath } from '../../domain/shared/value_objects/ImagePath.js'
 import { ProductNotFoundException } from '../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
-import { InternalServerError } from '../../exceptions/shared/InternalServerError.js'
 
-export type AddImagesCmd = {
+export type RemoveImageCmd = {
     productId: string
+    imageId: string
     sellerId: string
-    paths: string[]
 }
-
-export class AddImagesUsecase {
+export class RemoveImageUsecase {
     constructor(
         private readonly tm: TransactionManager,
-        private readonly idGen: IdGenerator,
+        private readonly imageStorage: ImageStorage,
     ) {}
-    async execute(cmd: AddImagesCmd) {
+
+    async execute(cmd: RemoveImageCmd) {
         await this.tm.transaction(async uow => {
             const pr = uow.getProductRepo()
             const sr = uow.getSellerRepo()
+
             const sellerId = EntityId.create(cmd.sellerId)
             const seller = await sr.findById(sellerId)
             if (!seller) {
@@ -34,15 +33,10 @@ export class AddImagesUsecase {
             if (!product) {
                 throw new ProductNotFoundException(cmd.productId)
             }
-            for (const path of cmd.paths) {
-                const imagePathResult = ImagePath.create(path)
-                if (imagePathResult.isError()) {
-                    throw new InternalServerError('image path is invalid')
-                }
-                const imagePath = imagePathResult.getValue()
-                product.addImage(this.idGen.generate(), imagePath)
-            }
+            const imageId = EntityId.create(cmd.imageId)
+            const imagePath = product.removeImage(imageId)
             await pr.save(product)
+            await this.imageStorage.delete(imagePath)
         })
     }
 }

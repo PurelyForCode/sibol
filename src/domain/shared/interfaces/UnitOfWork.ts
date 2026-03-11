@@ -9,7 +9,7 @@ import { ProductRepository } from '../../product/repositories/ProductRepository.
 import { ReservationRepository } from '../../reservation/repositories/ReservationRepository.js'
 import { SellerRepository } from '../../seller/repositories/SellerRepository.js'
 import { SaleRepository } from '../../sale/repositories/SaleRepository.js'
-import { SellUnitQueryRepository } from '../../product/repositories/SellUnitQueryRepository.js'
+import { ReviewRepository } from '../../review/ReviewRepository.js'
 
 export interface UnitOfWork {
     registerAggregate(aggregate: AggregateRoot): void
@@ -24,4 +24,5 @@ export interface UnitOfWork {
     getReservationRepo(): ReservationRepository
     getInventoryMovementRepo(): InventoryMovementRepository
     getSaleRepo(): SaleRepository
+    getReviewRepo(): ReviewRepository
 }

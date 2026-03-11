@@ -62,6 +62,7 @@ export type SellUnitRow = {
     price_per_unit: number
     display_name: string
     discontinued_at: Date | null
+    is_default: boolean
 }
 
 export type InventoryMovementRow = {
@@ -85,6 +86,7 @@ export type ProductImageRow = {
     url: string
     position: number
     created_at: Date
+    is_thumbnail: boolean
 }
 
 export type CartRow = {
@@ -122,6 +124,24 @@ export type SaleRow = {
     sell_unit_id: string
     quantity: number
     total: number
+    is_reviewed: boolean
     created_at: Date
     updated_at: Date
+}
+
+export type ReviewRow = {
+    id: string
+    buyer_id: string
+    sale_id: string
+    rating: number
+    message: string | null
+    created_at: Date
+    updated_at: Date
+}
+
+export type ReviewImageRow = {
+    id: string
+    review_id: string
+    url: string
+    position: number
 }

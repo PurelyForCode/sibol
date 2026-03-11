@@ -24,6 +24,7 @@ export class ImagePath extends SingleValueObject<string> {
 
         return Result.ok(new ImagePath(path))
     }
+
     isRemote(): boolean {
         return (
             this.value.startsWith('http://') ||

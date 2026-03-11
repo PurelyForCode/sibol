@@ -1,5 +1,5 @@
 import { NextFunction, Router, Request, Response } from 'express'
-import z from 'zod'
+import { z } from 'zod'
 import {
     productController,
     productQueryRepository,
@@ -12,7 +12,7 @@ import { fakeSellerId } from '../../../../fakeData/fakeId.js'
 import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
 import { UnitOfMeasurement } from '../../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { fileStorage } from '../../../config/MulterConfig.js'
-import { Multer } from 'multer'
+import { getRelativePath } from '../../../../utils/getRelativePath.js'
 
 export const sellerProductRouter = Router({
     mergeParams: true,
@@ -62,7 +62,7 @@ const createProductRequestSchema = z.object({
 sellerProductRouter.post(
     '/',
     fileStorage.array(
-        'productImages',
+        'images',
         Number.parseInt(process.env.MAXIMUM_PRODUCT_IMAGE_COUNT!),
     ),
     validateInput(createProductRequestSchema),
@@ -73,22 +73,99 @@ sellerProductRouter.post(
                 typeof createProductRequestSchema
             >
             const sellerId = fakeSellerId
-            const images: { url: string; position: number }[] = []
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]
-                images.push({ url: file.path, position: i })
-            }
+            const paths = files.map(x => getRelativePath(x.path))
 
             const { id } = await productController.createProduct({
                 description: body.description,
                 name: body.name,
                 sellerId: sellerId,
                 unitOfMeasurement: body.unitOfMeasurement,
-                images: images,
+                paths: paths,
             })
             res.status(201).json({ data: { productId: id } })
         } catch (e: unknown) {
             next(e)
+        }
+    },
+)
+const addImagesRequestSchema = z.object({
+    params: z.object({
+        productId: z.uuidv7(),
+    }),
+})
+sellerProductRouter.post(
+    '/:productId/images',
+    validateInput(addImagesRequestSchema),
+    fileStorage.array('images'),
+    async (req, res, next) => {
+        try {
+            const { params } = req.validated as z.infer<
+                typeof addImagesRequestSchema
+            >
+            const files = req.files as Express.Multer.File[]
+            const paths = files.map(x => getRelativePath(x.path))
+            await productController.addImages({
+                paths: paths,
+                productId: params.productId,
+                sellerId: fakeSellerId,
+            })
+            res.status(201).json({ message: 'Successfully added images' })
+        } catch (error) {
+            next(error)
+        }
+    },
+)
+
+const makeThumbnailRequestSchema = z.object({
+    params: z.object({
+        productId: z.uuidv7(),
+        imageId: z.uuidv7(),
+    }),
+})
+
+sellerProductRouter.post(
+    '/:productId/images/:imageId/thumbnail',
+    validateInput(makeThumbnailRequestSchema),
+    async (req, res, next) => {
+        try {
+            const { params } = req.validated as z.infer<
+                typeof makeThumbnailRequestSchema
+            >
+            await productController.removeImage({
+                productId: params.productId,
+                imageId: params.imageId,
+                sellerId: fakeSellerId,
+            })
+            res.status(204).end()
+        } catch (error) {
+            next(error)
+        }
+    },
+)
+
+const removeImageRequestSchema = z.object({
+    params: z.object({
+        productId: z.uuidv7(),
+        imageId: z.uuidv7(),
+    }),
+})
+
+sellerProductRouter.delete(
+    '/:productId/images/:imageId',
+    validateInput(removeImageRequestSchema),
+    async (req, res, next) => {
+        try {
+            const { params } = req.validated as z.infer<
+                typeof removeImageRequestSchema
+            >
+            await productController.removeImage({
+                productId: params.productId,
+                imageId: params.imageId,
+                sellerId: fakeSellerId,
+            })
+            res.status(204).end()
+        } catch (error) {
+            next(error)
         }
     },
 )

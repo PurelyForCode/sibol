@@ -1,3 +1,4 @@
+import { Result } from '../../../types/utils/Result.js'
 import { SingleValueObject } from '../SingleValueObject.js'
 
 export class Rating extends SingleValueObject<number> {
@@ -5,10 +6,10 @@ export class Rating extends SingleValueObject<number> {
         super(rating)
     }
 
-    static create(rating: number) {
+    static create(rating: number): Result<Rating> {
         if (rating > 5 || rating < 0) {
-            throw new Error('Rating can only be between 0-5')
+            Result.fail('Rating can only be between 0-5')
         }
-        return new Rating(rating)
+        return Result.ok(new Rating(rating))
     }
 }

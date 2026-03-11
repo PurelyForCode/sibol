@@ -9,6 +9,7 @@ export class ProductImage extends Entity {
         private _productId: EntityId,
         private _url: ImagePath,
         private _position: ImagePosition,
+        private _isThumbnail: boolean,
         private _createdAt: Date,
     ) {
         super(id)
@@ -22,14 +23,26 @@ export class ProductImage extends Entity {
         this._position = position
     }
 
+    toggleThumbnail() {
+        this._isThumbnail = !this._isThumbnail
+    }
+
     static new(
         id: EntityId,
         productId: EntityId,
         url: ImagePath,
         position: ImagePosition,
+        isThumbnail: boolean,
         createdAt: Date,
     ) {
-        return new ProductImage(id, productId, url, position, createdAt)
+        return new ProductImage(
+            id,
+            productId,
+            url,
+            position,
+            isThumbnail,
+            createdAt,
+        )
     }
 
     static rehydrate(
@@ -37,9 +50,17 @@ export class ProductImage extends Entity {
         productId: EntityId,
         url: ImagePath,
         position: ImagePosition,
+        isThumbnail: boolean,
         createdAt: Date,
     ) {
-        return new ProductImage(id, productId, url, position, createdAt)
+        return new ProductImage(
+            id,
+            productId,
+            url,
+            position,
+            isThumbnail,
+            createdAt,
+        )
     }
 
     public get createdAt(): Date {
@@ -53,5 +74,8 @@ export class ProductImage extends Entity {
     }
     public get productId(): EntityId {
         return this._productId
+    }
+    public get isThumbnail(): boolean {
+        return this._isThumbnail
     }
 }

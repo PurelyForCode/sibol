@@ -1,32 +1,40 @@
-import { BuyerController } from './features/buyer/BuyerController.js'
+import { BuyerController } from './features/BuyerController.js'
 import { RegisterBuyerUsecase } from './features/buyer/RegisterBuyerUsecase.js'
 import { knexInstance } from './infra/config/KnexInstance.js'
 import { KnexTransactionManager } from './infra/implementations/KnexTransactionManager.js'
 import { Uuidv7Generator } from './infra/implementations/Uuidv7Generator.js'
 import { ArgonPasswordUtil } from './infra/implementations/ArgonPasswordUtil.js'
-import { SellerController } from './features/seller/SellerController.js'
+import { SellerController } from './features/SellerController.js'
 import { RegisterSellerUsecase } from './features/seller/RegisterSellerUsecase.js'
-import { AuthenticationController } from './features/authentication/AuthenticationController.js'
+import { AuthenticationController } from './features/AuthenticationController.js'
 import { LoginSellerUsecase } from './features/authentication/LoginSeller.js'
 import { LoginBuyerUsecase } from './features/authentication/LoginBuyer.js'
-import { ProductController } from './features/products/ProductController.js'
+import { ProductController } from './features/ProductController.js'
 import { CreateProductUsecase } from './features/products/CreateProductUsecase.js'
 import { ArchiveProductBySellerUsecase } from './features/products/ArchiveProductBySellerUsecase.js'
 import { PgProductQueryRepository } from './infra/db/query_repositories/PgProductQueryRepository.js'
 import { AddSellUnitUsecase } from './features/products/AddSellUnitUsecase.js'
 import { DiscontinueSellUnitUsecase } from './features/products/DiscontinueSellUnitUsecase.js'
 import { PgProductSellUnitQueryRepository } from './infra/db/query_repositories/PgProductSellUnitQueryRepository.js'
-import { CartController } from './features/shopping/CartController.js'
+import { CartController } from './features/CartController.js'
 import { AddToCartUsecase } from './features/shopping/AddToCartUsecase.js'
 import { RemoveFromCartUsecase } from './features/shopping/RemoveFromCartUsecase.js'
 import { ReserveItemsForPickupUsecase } from './features/shopping/ReserveItemsForPickupUsecase.js'
 import { UpdateProductUsecase } from './features/products/UpdateProductUsecase.js'
 import { PgCartQueryRepository } from './infra/db/query_repositories/PgCartQueryRepository.js'
 import { PgReservationQueryRepository } from './infra/db/query_repositories/PgReservationQueryRepository.js'
-import { ReservationController } from './features/reservation/ReservationController.js'
+import { ReservationController } from './features/ReservationController.js'
 import { FulfillReservationUsecase } from './features/reservation/FulfillReservation.js'
 import { ConfirmReservationUsecase } from './features/reservation/ConfirmReservation.js'
 import { PgSaleQueryRepository } from './infra/db/query_repositories/PgSaleQueryRepository.js'
+import { AddImagesUsecase } from './features/products/AddImageUsecase.js'
+import { RemoveImageUsecase } from './features/products/RemoveImageUsecase.js'
+import { MakeThumbnailUsecase } from './features/products/MakeThumbnailUsecase.js'
+import { FileSystemImageStorage } from './infra/implementations/FileSystemImageStorage.js'
+import path from 'path'
+import { ReviewController } from './features/ReviewController.js'
+import { ReviewProductUsecase } from './features/reviews/ReviewProductUsecase.js'
+import { DeleteReviewUsecase } from './features/reviews/DeleteReviewUsecase.js'
 
 // Singletons
 export const idGenerator = new Uuidv7Generator()
@@ -34,6 +42,9 @@ export const passwordUtility = new ArgonPasswordUtil()
 export const transactionManager = new KnexTransactionManager(
     knexInstance,
     idGenerator,
+)
+export const imageStorage = new FileSystemImageStorage(
+    path.resolve(process.cwd(), 'uploads'),
 )
 
 // Usecases
@@ -79,6 +90,15 @@ export const addSellUnitUsecase = new AddSellUnitUsecase(
 export const discontinueSellUnitUsecase = new DiscontinueSellUnitUsecase(
     transactionManager,
 )
+export const addImagesUsecase = new AddImagesUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const removeImageUsecase = new RemoveImageUsecase(
+    transactionManager,
+    imageStorage,
+)
+export const makeThumbnailUsecase = new MakeThumbnailUsecase(transactionManager)
 // Cart
 export const reserveItemsForPickupUsecase = new ReserveItemsForPickupUsecase(
     transactionManager,
@@ -91,6 +111,7 @@ export const addToCartUsecase = new AddToCartUsecase(
 export const removeFromCartUsecase = new RemoveFromCartUsecase(
     transactionManager,
 )
+
 // Reservations
 export const fulfillReservationUsecase = new FulfillReservationUsecase(
     transactionManager,
@@ -98,6 +119,15 @@ export const fulfillReservationUsecase = new FulfillReservationUsecase(
 export const confirmReservationUsecase = new ConfirmReservationUsecase(
     transactionManager,
     idGenerator,
+)
+// Reviews
+export const reviewProductUsecase = new ReviewProductUsecase(
+    transactionManager,
+    idGenerator,
+)
+export const deleteReviewUsecase = new DeleteReviewUsecase(
+    transactionManager,
+    imageStorage,
 )
 
 // Controllers
@@ -109,6 +139,9 @@ export const productController = new ProductController(
     addSellUnitUsecase,
     discontinueSellUnitUsecase,
     updateProductUsecase,
+    addImagesUsecase,
+    removeImageUsecase,
+    makeThumbnailUsecase,
 )
 export const authenticationController = new AuthenticationController(
     loginSellerUsecase,
@@ -123,6 +156,10 @@ export const cartController = new CartController(
 export const reservationController = new ReservationController(
     fulfillReservationUsecase,
     confirmReservationUsecase,
+)
+export const reviewController = new ReviewController(
+    reviewProductUsecase,
+    deleteReviewUsecase,
 )
 
 // Query Repositories

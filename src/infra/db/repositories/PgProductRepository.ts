@@ -191,6 +191,7 @@ export class PgProductRepository
                     display_name: sellUnit.displayName.value,
                     price_per_unit: sellUnit.pricePerUnit.value,
                     discontinued_at: sellUnit.discontinuedAt,
+                    is_default: sellUnit.isDefault,
                 })
                 .onConflict('id')
                 .merge()
@@ -255,6 +256,7 @@ export class PgProductRepository
                 pricePerUnit,
                 displayName,
                 row.discontinued_at,
+                row.is_default,
             )
             sellUnits.set(sellUnit.id.value, sellUnit)
         }
@@ -265,7 +267,7 @@ export class PgProductRepository
             ? ProductDescription.create(productRow.description).getValue()
             : null
         const rating = productRow.rating
-            ? Rating.create(productRow.rating)
+            ? Rating.create(productRow.rating).getValue()
             : null
         const status = ProductStatus.create(productRow.status).getValue()
         const availableStock = ProductStock.create(

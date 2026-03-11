@@ -1,11 +1,11 @@
 import {
     ConfirmReservationCmd,
     ConfirmReservationUsecase,
-} from './ConfirmReservation.js'
+} from './reservation/ConfirmReservation.js'
 import {
     FulfillReservationCmd,
     FulfillReservationUsecase,
-} from './FulfillReservation.js'
+} from './reservation/FulfillReservation.js'
 
 export class ReservationController {
     constructor(

@@ -1,20 +1,32 @@
-import { AddSellUnitCmd, AddSellUnitUsecase } from './AddSellUnitUsecase.js'
+import {
+    AddSellUnitCmd,
+    AddSellUnitUsecase,
+} from './products/AddSellUnitUsecase.js'
 import {
     CreateProductCmd,
     CreateProductUsecase,
-} from './CreateProductUsecase.js'
+} from './products/CreateProductUsecase.js'
 import {
     ArchiveProductBySellerCmd,
     ArchiveProductBySellerUsecase,
-} from './ArchiveProductBySellerUsecase.js'
+} from './products/ArchiveProductBySellerUsecase.js'
 import {
     UpdateProductCmd,
     UpdateProductUsecase,
-} from './UpdateProductUsecase.js'
+} from './products/UpdateProductUsecase.js'
 import {
     DiscontinueSellUnitCmd,
     DiscontinueSellUnitUsecase,
-} from './DiscontinueSellUnitUsecase.js'
+} from './products/DiscontinueSellUnitUsecase.js'
+import { AddImagesCmd, AddImagesUsecase } from './products/AddImageUsecase.js'
+import {
+    RemoveImageCmd,
+    RemoveImageUsecase,
+} from './products/RemoveImageUsecase.js'
+import {
+    MakeThumbnailCmd,
+    MakeThumbnailUsecase,
+} from './products/MakeThumbnailUsecase.js'
 
 export class ProductController {
     constructor(
@@ -23,6 +35,9 @@ export class ProductController {
         private readonly addSellUnitUsecase: AddSellUnitUsecase,
         private readonly discontinueSellUnitUsecase: DiscontinueSellUnitUsecase,
         private readonly updateProductUsecase: UpdateProductUsecase,
+        private readonly addImagesUsecase: AddImagesUsecase,
+        private readonly removeImageUsecase: RemoveImageUsecase,
+        private readonly makeThumbnailUsecase: MakeThumbnailUsecase,
     ) {}
 
     async createProduct(cmd: CreateProductCmd) {
@@ -43,5 +58,17 @@ export class ProductController {
 
     async updateProduct(cmd: UpdateProductCmd) {
         await this.updateProductUsecase.execute(cmd)
+    }
+
+    async addImages(cmd: AddImagesCmd) {
+        await this.addImagesUsecase.execute(cmd)
+    }
+
+    async removeImage(cmd: RemoveImageCmd) {
+        await this.removeImageUsecase.execute(cmd)
+    }
+
+    async makeThumnail(cmd: MakeThumbnailCmd) {
+        await this.makeThumbnailUsecase.execute(cmd)
     }
 }

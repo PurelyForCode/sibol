@@ -1,12 +1,12 @@
-import { AddToCartCmd, AddToCartUsecase } from './AddToCartUsecase.js'
+import { AddToCartCmd, AddToCartUsecase } from './shopping/AddToCartUsecase.js'
 import {
     RemoveFromCartCmd,
     RemoveFromCartUsecase,
-} from './RemoveFromCartUsecase.js'
+} from './shopping/RemoveFromCartUsecase.js'
 import {
     ReserveItemsForPickupCmd,
     ReserveItemsForPickupUsecase,
-} from './ReserveItemsForPickupUsecase.js'
+} from './shopping/ReserveItemsForPickupUsecase.js'
 
 export class CartController {
     constructor(

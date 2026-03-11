@@ -13,7 +13,7 @@ export type ProductDto = {
     defaultUnitDisplayName: string
     status: string
     imageUrl: string
-    sellerAddress: string
+    sellerAddress: string | null
     createdAt: Date
     updatedAt: Date
     deletedAt: Date | null

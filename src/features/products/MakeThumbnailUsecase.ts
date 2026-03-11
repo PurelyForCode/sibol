@@ -1,26 +1,21 @@
 import { EntityId } from '../../domain/shared/EntityId.js'
-import { IdGenerator } from '../../domain/shared/interfaces/IdGenerator.js'
 import { TransactionManager } from '../../domain/shared/interfaces/TransactionManager.js'
-import { ImagePath } from '../../domain/shared/value_objects/ImagePath.js'
 import { ProductNotFoundException } from '../../exceptions/product/ProductNotFoundException.js'
 import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
-import { InternalServerError } from '../../exceptions/shared/InternalServerError.js'
 
-export type AddImagesCmd = {
-    productId: string
+export type MakeThumbnailCmd = {
     sellerId: string
-    paths: string[]
+    productId: string
+    imageId: string
 }
 
-export class AddImagesUsecase {
-    constructor(
-        private readonly tm: TransactionManager,
-        private readonly idGen: IdGenerator,
-    ) {}
-    async execute(cmd: AddImagesCmd) {
+export class MakeThumbnailUsecase {
+    constructor(private readonly tm: TransactionManager) {}
+    async execute(cmd: MakeThumbnailCmd) {
         await this.tm.transaction(async uow => {
             const pr = uow.getProductRepo()
             const sr = uow.getSellerRepo()
+
             const sellerId = EntityId.create(cmd.sellerId)
             const seller = await sr.findById(sellerId)
             if (!seller) {
@@ -34,14 +29,8 @@ export class AddImagesUsecase {
             if (!product) {
                 throw new ProductNotFoundException(cmd.productId)
             }
-            for (const path of cmd.paths) {
-                const imagePathResult = ImagePath.create(path)
-                if (imagePathResult.isError()) {
-                    throw new InternalServerError('image path is invalid')
-                }
-                const imagePath = imagePathResult.getValue()
-                product.addImage(this.idGen.generate(), imagePath)
-            }
+            const imageId = EntityId.create(cmd.imageId)
+            product.setImageAsThumbnail(imageId)
             await pr.save(product)
         })
     }

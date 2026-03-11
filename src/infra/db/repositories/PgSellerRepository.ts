@@ -133,7 +133,7 @@ export class PgSellerRepository implements SellerRepository {
         const supportPhone = row.support_phone
             ? MobilePhoneNumber.create(row.support_phone).getValue()
             : null
-        const rating = row.rating ? Rating.create(row.rating) : null
+        const rating = row.rating ? Rating.create(row.rating).getValue() : null
         const storeName = StoreName.create(row.store_name).getValue()
         const description = row.description
             ? SellerDescription.create(row.description).getValue()

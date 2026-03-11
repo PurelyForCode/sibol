@@ -7,16 +7,14 @@ import { TransactionManager } from '../../domain/shared/interfaces/TransactionMa
 import { SmallestUnitOfMeasurement } from '../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../domain/shared/EntityId.js'
-import { ProductImage } from '../../domain/product/entities/ProductImage.js'
 import { ImagePath } from '../../domain/shared/value_objects/ImagePath.js'
-import { ImagePosition } from '../../domain/shared/value_objects/ImagePosition.js'
 
 export type CreateProductCmd = {
     description: string | null
     name: string
     sellerId: string
     unitOfMeasurement: string
-    images: { url: string; position: number }[]
+    paths: string[]
 }
 
 export class CreateProductUsecase {
@@ -56,33 +54,13 @@ export class CreateProductUsecase {
             ).unwrapOrThrow('unitOfMeasurement')
 
             const id = this.idGen.generate()
-            const now = new Date()
-            const images = []
-            for (const image of cmd.images) {
-                const path = ImagePath.create(image.url).unwrapOrThrow(
-                    'imageUrl',
-                )
-                const position = ImagePosition.create(
-                    image.position,
-                ).unwrapOrThrow('imagePosition')
-                images.push(
-                    ProductImage.new(
-                        this.idGen.generate(),
-                        id,
-                        path,
-                        position,
-                        now,
-                    ),
-                )
+            const product = Product.new(id, sellerId, pName, pDescription, unit)
+            for (const path of cmd.paths) {
+                const imagePath =
+                    ImagePath.create(path).unwrapOrThrow('imageUrl')
+                product.addImage(id, imagePath)
             }
-            const product = Product.new(
-                id,
-                sellerId,
-                pName,
-                pDescription,
-                unit,
-                images,
-            )
+
             await pr.save(product)
             return {
                 id: product.id.value,

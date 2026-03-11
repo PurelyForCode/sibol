@@ -5,18 +5,35 @@ import {
     productSellUnitQueryRepository,
 } from '../../../../compositionRoot.js'
 import { validateInput } from '../../middleware/InputValidationMiddleware.js'
-import { EntityId } from '../../../../domain/shared/EntityId.js'
 import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
 
 export const buyerProductRouter = Router({
     mergeParams: true,
 })
 
+const getCatalogueRequestSchema = z.object({
+    query: z.object({
+        sellerId: z.uuidv7().optional(),
+        limit: z.int().positive().optional(),
+        offset: z.int().positive().optional(),
+    }),
+})
+
 buyerProductRouter.get(
     '/',
-    async (_: Request, res: Response, next: NextFunction) => {
+    validateInput(getCatalogueRequestSchema),
+    async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const products = await productQueryRepository.findAll()
+            const { query } = req.validated as z.infer<
+                typeof getCatalogueRequestSchema
+            >
+            const products =
+                await productQueryRepository.findProductCatalogueItems(
+                    {
+                        sellerId: query.sellerId,
+                    },
+                    { limit: query.limit, offset: query.offset },
+                )
             res.status(200).json({ data: products })
         } catch (e: unknown) {
             next(e)
@@ -27,7 +44,6 @@ buyerProductRouter.get(
 const getProductBySellerIdSchema = z.object({
     params: z.object({ productId: z.uuidv7() }),
 })
-
 buyerProductRouter.get(
     '/:productId',
     validateInput(getProductBySellerIdSchema),
@@ -36,9 +52,15 @@ buyerProductRouter.get(
             const { params } = req.validated as z.infer<
                 typeof getProductBySellerIdSchema
             >
-            const productId = EntityId.create(params.productId)
-            const products = await productQueryRepository.findById(productId)
-            res.status(200).json({ data: products })
+            const products =
+                await productQueryRepository.findActiveProductDetailById(
+                    params.productId,
+                )
+            if (products) {
+                res.status(200).json({ data: products })
+            } else {
+                res.status(404).end()
+            }
         } catch (e: unknown) {
             next(e)
         }

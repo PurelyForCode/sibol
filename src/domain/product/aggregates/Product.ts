@@ -20,6 +20,9 @@ import { ProductHasInsufficientAvailableStockException } from '../../../exceptio
 import { ProductHasInsufficientReservedStockException } from '../../../exceptions/product/ProductHasInsufficientReservedStockException.js'
 import { CanNotDiscontinueDefaultSellUnitException } from '../../../exceptions/product/CanNotDiscontinueDefaultSellUnitException.js'
 import { SellUnitIsNotDefaultException } from '../../../exceptions/product/SellUnitIsNotDefaultException.js'
+import { ImagePath } from '../../shared/value_objects/ImagePath.js'
+import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
+import { ProductImageNotFoundException } from '../../../exceptions/product/ProductImageNotFoundException.js'
 
 export class Product extends AggregateRoot {
     private constructor(
@@ -105,7 +108,7 @@ export class Product extends AggregateRoot {
         this._sellUnits.set(sellUnit.id.value, sellUnit)
     }
 
-    toggleActiveIfSellUnitAndImageIsAvailable() {
+    activateIfSellUnitAndImageIsAvailable() {
         let hasImage = false
         if (this._images.size > 0) {
             hasImage = true
@@ -135,6 +138,7 @@ export class Product extends AggregateRoot {
                 sellUnit.id.value,
             )
         }
+        this.activateIfSellUnitAndImageIsAvailable()
         sellUnit.discontinue()
     }
 
@@ -160,9 +164,106 @@ export class Product extends AggregateRoot {
         newS.toggleDefault()
     }
 
-    addImage(image: ProductImage) {}
-    removeImage(imageId: EntityId) {}
-    changeImagePosition(imageId: EntityId, position: ImagePosition) {}
+    addImage(id: EntityId, url: ImagePath) {
+        const image = ProductImage.new(
+            id,
+            this.id,
+            url,
+            ImagePosition.create(this._images.size).getValue(),
+            false,
+            new Date(),
+        )
+        this._images.set(id.value, image)
+
+        // if first image, set as thumbnail
+        if (this._images.size === 1) {
+            image.toggleThumbnail()
+        }
+    }
+
+    swapImagePositions(image1: ProductImage, image2: ProductImage) {
+        const temp = image1.position
+        image1.moveTo(image2.position)
+        image2.moveTo(temp)
+    }
+
+    setImageAsThumbnail(imageId: EntityId) {
+        const thumbnail = this._images.get(imageId.value)
+
+        if (!thumbnail) {
+            throw new ProductImageNotFoundException(
+                imageId.value,
+                this.id.value,
+            )
+        }
+
+        if (thumbnail.isThumbnail) {
+            return
+        }
+
+        for (const img of this._images.values()) {
+            if (img.isThumbnail) {
+                img.toggleThumbnail()
+                this.swapImagePositions(img, thumbnail)
+                break
+            }
+        }
+        thumbnail.toggleThumbnail()
+    }
+
+    removeImage(imageId: EntityId): ImagePath {
+        const image = this._images.get(imageId.value)
+        if (!image) {
+            throw new ProductImageNotFoundException(
+                imageId.value,
+                this.id.value,
+            )
+        }
+        const position = image.position.value
+        // change positions
+        for (const [_, v] of this._images) {
+            if (v.position.value > position) {
+                v.moveTo(ImagePosition.create(v.position.value - 1).getValue())
+            }
+        }
+        this._images.delete(imageId.value)
+
+        // if removed was thumbnail, change the first image into the thumbnail
+        if (image.isThumbnail) {
+            if (this._images.size === 0) {
+                // deactive cause thumbnail
+                this.deactivate()
+            }
+            for (const i of this._images.values()) {
+                if (i.position.value === 0) {
+                    i.toggleThumbnail()
+                }
+            }
+        }
+        return image.url
+    }
+
+    private deactivate() {
+        this._status = ProductStatus.inactive()
+        this._updatedAt = new Date()
+    }
+
+    private activate() {}
+
+    changeImagePositions(
+        input: { imageId: EntityId; position: ImagePosition }[],
+    ) {
+        for (const v of input) {
+            const image = this._images.get(v.imageId.value)
+            if (!image) {
+                throw new ProductImageNotFoundException(
+                    v.imageId.value,
+                    this.id.value,
+                )
+            }
+            image.moveTo(v.position)
+        }
+    }
 
     changeName(name: ProductName) {
         this._updatedAt = new Date()
@@ -209,7 +310,6 @@ export class Product extends AggregateRoot {
         name: ProductName,
         description: ProductDescription | null,
         unit: SmallestUnitOfMeasurement,
-        images?: ProductImage[],
     ) {
         const now = new Date()
 

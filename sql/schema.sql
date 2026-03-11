@@ -137,24 +137,17 @@ CREATE TABLE product_inventory(
 	updated_at TIMESTAMPTZ NOT NULL
 );
 
-
-CREATE TABLE product_reviews (
-	id UUID PRIMARY KEY,
-	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
-	rating NUMERIC(2,1) NOT NULL CHECK (rating BETWEEN 0 AND 5),
-	content TEXT,
-	created_at TIMESTAMPTZ NOT NULL,
-	updated_at TIMESTAMPTZ NOT NULL
-);
-
 CREATE TABLE product_images (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	url TEXT NOT NULL,
 	position SMALLINT NOT NULL,
-	created_at TIMESTAMPTZ NOT NULL
+	created_at TIMESTAMPTZ NOT NULL,
+	is_thumbnail BOOLEAN NOT NULL
 );
+
+
+
 
 CREATE TYPE product_complaint_status AS ENUM (
 	'CONFIRMED',
@@ -242,7 +235,25 @@ CREATE TABLE sales (
 	sell_unit_id UUID NOT NULL REFERENCES sell_units(id),
 	quantity INTEGER NOT NULL CHECK(quantity > 0),
 	total INTEGER NOT NULL CHECK(total > 0),
+	is_reviewed BOOLEAN NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL
 );
 
+
+CREATE TABLE reviews (
+	id UUID PRIMARY KEY,
+	buyer_id UUID NOT NULL REFERENCES buyers(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	sale_id UUID NOT NULL REFERENCES sales(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	rating NUMERIC(2,1) NOT NULL CHECK (rating BETWEEN 0 AND 5),
+	message TEXT,
+	created_at TIMESTAMPTZ NOT NULL,
+	updated_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE TABLE review_images (
+	id UUID PRIMARY KEY,
+	review_id UUID NOT NULL REFERENCES reviews(id) ON DELETE CASCADE ON UPDATE CASCADE,
+	url TEXT NOT NULL,
+	position SMALLINT NOT NULL
+);

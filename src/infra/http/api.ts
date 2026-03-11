@@ -7,6 +7,7 @@ import { registrationRouter } from './routers/RegistrationRouter.js'
 import { buyerReservationRouter } from './routers/buyer/BuyerReservationRouter.js'
 import { sellerProductRouter } from './routers/seller/SellerProductRouter.js'
 import { sellerSaleRouter } from './routers/seller/SellerSaleRouter.js'
+import { buyerReviewRouter } from './routers/buyer/BuyerReviewRouter.js'
 
 export const apiRouter = express()
 
@@ -22,6 +23,7 @@ export const buyerApiRouter = Router({ mergeParams: true })
 buyerApiRouter.use('/products', buyerProductRouter)
 buyerApiRouter.use('/cart', buyerCartRouter)
 buyerApiRouter.use('/reservations', buyerReservationRouter)
+buyerApiRouter.use('/reviews', buyerReviewRouter)
 
 // seller routes
 export const sellerApiRouter = Router({ mergeParams: true })
