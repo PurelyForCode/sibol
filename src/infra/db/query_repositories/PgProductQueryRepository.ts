@@ -119,7 +119,7 @@ export class PgProductQueryRepository {
         filters: Partial<{
             sellerId: string
         }>,
-        pagination: Pagination,
+        page: number = 1,
     ): Promise<ProductCatalogueItemDto[]> {
         const baseProducts = this.k('products as p').select(
             'p.id',
@@ -133,12 +133,9 @@ export class PgProductQueryRepository {
             baseProducts.where('p.seller_id', filters.sellerId)
         }
 
-        if (pagination?.limit) {
-            baseProducts.limit(pagination.limit)
-        }
-
-        if (pagination?.offset) {
-            baseProducts.offset(pagination.offset)
+        baseProducts.limit(20)
+        if (page > 1) {
+            baseProducts.offset(page - 1 * 20)
         }
 
         const k = this.k
@@ -178,6 +175,8 @@ export class PgProductQueryRepository {
                 this.k.raw("'somewhere over the rainbow' as sellerAddress"),
                 this.k.raw('COALESCE(rc.review_count,0) as reviewCount'),
             )
+            .orderBy('p.rating', 'desc')
+            .orderByRaw('COALESCE(rc.review_count,0) desc')
 
         const rows = await query
 
