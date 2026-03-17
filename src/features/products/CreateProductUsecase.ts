@@ -8,13 +8,22 @@ import { SmallestUnitOfMeasurement } from '../../domain/shared/value_objects/Sma
 import { SellerNotFoundByIdException } from '../../exceptions/seller/SellerNotFoundByIdException.js'
 import { EntityId } from '../../domain/shared/EntityId.js'
 import { ImagePath } from '../../domain/shared/value_objects/ImagePath.js'
+import { ConversionFactor } from '../../domain/shared/value_objects/ConversionFactor.js'
+import { Money } from '../../domain/shared/value_objects/Money.js'
+import { SellUnitDisplayName } from '../../domain/product/value_objects/SellUnitDisplayName.js'
 
 export type CreateProductCmd = {
     description: string | null
     name: string
     sellerId: string
     unitOfMeasurement: string
-    paths: string[]
+    imagePaths: string[]
+    sellUnits: {
+        displayName: string
+        price: number
+        conversionFactor: number
+        isDefault: boolean
+    }[]
 }
 
 export class CreateProductUsecase {
@@ -55,10 +64,29 @@ export class CreateProductUsecase {
 
             const id = this.idGen.generate()
             const product = Product.new(id, sellerId, pName, pDescription, unit)
-            for (const path of cmd.paths) {
+            for (const path of cmd.imagePaths) {
                 const imagePath =
                     ImagePath.create(path).unwrapOrThrow('imageUrl')
                 product.addImage(id, imagePath)
+            }
+            for (const unit of cmd.sellUnits) {
+                const conversionFactor = ConversionFactor.create(
+                    unit.conversionFactor,
+                ).unwrapOrThrow('conversionFactor')
+                const pricePerUnit = Money.create(unit.price).unwrapOrThrow(
+                    'pricePerUnit',
+                )
+                const displayName = SellUnitDisplayName.create(
+                    unit.displayName,
+                ).unwrapOrThrow('displayName]')
+
+                product.addSellUnit(
+                    this.idGen.generate(),
+                    conversionFactor,
+                    pricePerUnit,
+                    displayName,
+                    unit.isDefault,
+                )
             }
 
             await pr.save(product)

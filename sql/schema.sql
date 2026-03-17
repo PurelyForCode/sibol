@@ -105,6 +105,7 @@ CREATE TABLE products (
 	inventory_unit_symbol VARCHAR(10) NOT NULL,
 	rating NUMERIC(2,1) CHECK (rating BETWEEN 0 AND 5),
 	status VARCHAR(20) NOT NULL,
+	review_count INTEGER NOT NULL,
 	created_at TIMESTAMPTZ NOT NULL,
 	updated_at TIMESTAMPTZ NOT NULL,
 	deleted_at TIMESTAMPTZ
@@ -114,12 +115,11 @@ CREATE TABLE sell_units (
 	id UUID PRIMARY KEY,
 	product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE ON UPDATE CASCADE,
 	conversion_factor INTEGER NOT NULL CHECK(conversion_factor > 0),
-	unit_symbol VARCHAR(10) NOT NULL,
 	price_per_unit INTEGER NOT NULL CHECK(price_per_unit > 0),
 	display_name VARCHAR(20) NOT NULL,
 	discontinued_at TIMESTAMPTZ,
 	is_default BOOLEAN NOT NULL,
-	UNIQUE (product_id, conversion_factor, unit_symbol)
+	UNIQUE (product_id, display_name)
 );
 
 CREATE TABLE inventory_movement (

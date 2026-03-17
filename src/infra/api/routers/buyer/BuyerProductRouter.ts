@@ -1,7 +1,7 @@
 import { NextFunction, Router, Request, Response } from 'express'
 import z from 'zod'
 import {
-    imageBaseUrl,
+    imageStorageLocation,
     productQueryRepository,
     productSellUnitQueryRepository,
 } from '../../../../compositionRoot.js'
@@ -15,8 +15,7 @@ export const buyerProductRouter = Router({
 const getCatalogueRequestSchema = z.object({
     query: z.object({
         sellerId: z.uuidv7().optional(),
-        limit: z.int().positive().optional(),
-        offset: z.int().positive().optional(),
+        page: z.coerce.number().int().optional(),
     }),
 })
 
@@ -33,10 +32,10 @@ buyerProductRouter.get(
                     {
                         sellerId: query.sellerId,
                     },
-                    { limit: query.limit, offset: query.offset },
+                    query.page,
                 )
             products.forEach(p => {
-                p.imageUrl = `${imageBaseUrl}/${p.imageUrl}`
+                p.imageUrl = `${imageStorageLocation}/${p.imageUrl}`
             })
             res.status(200).json({ data: products })
         } catch (e: unknown) {

@@ -10,7 +10,6 @@ import {
 } from '../tables/TableDefinitions.js'
 import { ProductDescription } from '../../../domain/product/value_objects/ProductDescription.js'
 import { ProductStock } from '../../../domain/product/value_objects/ProductStock.js'
-import { UnitOfMeasurement } from '../../../domain/shared/value_objects/UnitOfMeasurement.js'
 import { Rating } from '../../../domain/shared/value_objects/Rating.js'
 import { ProductStatus } from '../../../domain/product/value_objects/ProductStatus.js'
 import { Money } from '../../../domain/shared/value_objects/Money.js'
@@ -177,6 +176,7 @@ export class PgProductRepository
                 deleted_at: product.deletedAt ? product.deletedAt : null,
                 updated_at: product.updatedAt,
                 inventory_unit_symbol: product.inventoryUnitSymbol.value,
+                review_count: product.reviewCount.value,
             })
             .onConflict('id')
             .merge()
@@ -187,7 +187,6 @@ export class PgProductRepository
                     conversion_factor: sellUnit.conversionFactor.value,
                     id: sellUnit.id.value,
                     product_id: sellUnit.productId.value,
-                    unit_symbol: sellUnit.unitSymbol.value,
                     display_name: sellUnit.displayName.value,
                     price_per_unit: sellUnit.pricePerUnit.value,
                     discontinued_at: sellUnit.discontinuedAt,
@@ -241,9 +240,6 @@ export class PgProductRepository
             const conversionFactor = ConversionFactor.create(
                 row.conversion_factor,
             ).getValue()
-            const unitSymbol = UnitOfMeasurement.create(
-                row.unit_symbol,
-            ).getValue()
             const pricePerUnit = Money.create(row.price_per_unit).getValue()
             const displayName = SellUnitDisplayName.create(
                 row.display_name,
@@ -252,7 +248,6 @@ export class PgProductRepository
             const sellUnit = ProductSellUnit.rehydrate(
                 sellUnitId,
                 productId,
-                unitSymbol,
                 conversionFactor,
                 pricePerUnit,
                 displayName,

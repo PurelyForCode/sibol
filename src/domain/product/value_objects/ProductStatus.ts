@@ -2,9 +2,11 @@ import { SingleValueObject } from '../../shared/SingleValueObject.js'
 import { Result } from '../../../types/utils/Result.js'
 
 export class ProductStatus extends SingleValueObject<
-    'archived' | 'active' | 'banned' | 'inactive'
+    'archived' | 'active' | 'banned' | 'incomplete'
 > {
-    private constructor(value: 'archived' | 'active' | 'banned' | 'inactive') {
+    private constructor(
+        value: 'archived' | 'active' | 'banned' | 'incomplete',
+    ) {
         super(value)
     }
 
@@ -12,8 +14,8 @@ export class ProductStatus extends SingleValueObject<
         return new ProductStatus('active')
     }
 
-    static inactive() {
-        return new ProductStatus('inactive')
+    static incomplete() {
+        return new ProductStatus('incomplete')
     }
 
     static archived() {
@@ -30,7 +32,7 @@ export class ProductStatus extends SingleValueObject<
                 value === 'archived' ||
                 value === 'active' ||
                 value === 'banned' ||
-                value === 'inactive'
+                value === 'incomplete'
             )
         ) {
             return Result.fail('Invalid product status')

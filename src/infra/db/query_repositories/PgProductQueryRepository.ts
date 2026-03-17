@@ -1,12 +1,7 @@
-import knex, { Knex } from 'knex'
-import { ProductDetailsDto } from '../../http/query/dto/ProductDetailsDto.js'
-import { Pagination } from '../../../types/query/Pagination.js'
-import {
-    ProductImageRow,
-    ProductRow,
-    SellUnitRow,
-} from '../tables/TableDefinitions.js'
-import { ProductCatalogueItemDto } from '../../http/query/dto/ProductCatalogueItemDto.js'
+import { Knex } from 'knex'
+import { ProductImageRow, SellUnitRow } from '../tables/TableDefinitions.js'
+import { ProductDetailsDto } from '../../api/query/dto/ProductDetailsDto.js'
+import { ProductCatalogueItemDto } from '../../api/query/dto/ProductCatalogueItemDto.js'
 
 export class PgProductQueryRepository {
     constructor(private readonly k: Knex | Knex.Transaction) {}
@@ -17,17 +12,7 @@ export class PgProductQueryRepository {
             .leftJoin('product_inventory as inv', 'p.id', 'inv.product_id')
             .leftJoin('sellers as se', 'p.seller_id', 'se.id')
             .leftJoin('addresses as a', 'se.address_id', 'a.id')
-            .leftJoin(
-                this.k('sales as sa')
-                    .leftJoin('reviews as r', 'sa.id', 'r.sale_id')
-                    .select('sa.product_id')
-                    .count('r.id as review_count')
-                    .groupBy('sa.product_id')
-                    .as('rc'),
-                'p.id',
-                'rc.product_id',
-            )
-            // .where('p.status', 'active')
+            .where('p.status', 'active')
             .where('p.id', id)
             .select([
                 'p.id',
@@ -40,9 +25,9 @@ export class PgProductQueryRepository {
                 `p.created_at as createdAt`,
                 `p.updated_at as updatedAt`,
                 `p.deleted_at as deletedAt`,
+                `p.review_count as reviewCount`,
                 `inv.available_stock as availableStock`,
                 `inv.reserved_stock as reservedStock`,
-                `rc.review_count as reviewCount`,
                 this.k.raw(`'hard coded address' as sellerAddress`),
             ])
             .first()) as {
@@ -126,6 +111,7 @@ export class PgProductQueryRepository {
             'p.name',
             'p.seller_id',
             'p.rating',
+            'p.review_count',
         )
         // .where('p.status', 'active')
 
@@ -154,29 +140,19 @@ export class PgProductQueryRepository {
             })
             .leftJoin('sellers as se', 'p.seller_id', 'se.id')
             .leftJoin('addresses as a', 'se.address_id', 'a.id')
-            .leftJoin(
-                this.k('sales as sa')
-                    .leftJoin('reviews as r', 'sa.id', 'r.sale_id')
-                    .select('sa.product_id')
-                    .count('r.id as review_count')
-                    .groupBy('sa.product_id')
-                    .as('rc'),
-                'p.id',
-                'rc.product_id',
-            )
             .select(
                 'p.id',
                 'p.name',
                 'p.seller_id as sellerId',
                 'p.rating',
+                'p.review_count as reviewCount',
                 's.price_per_unit as defaultPricePerUnit',
                 's.display_name as defaultUnitDisplayName',
                 'pi.url as imageUrl',
-                this.k.raw("'somewhere over the rainbow' as sellerAddress"),
-                this.k.raw('COALESCE(rc.review_count,0) as reviewCount'),
+                this.k.raw(`'San Ildefonso, Bulacan' as "sellerAddress"`),
             )
             .orderBy('p.rating', 'desc')
-            .orderByRaw('COALESCE(rc.review_count,0) desc')
+            .orderBy('p.review_count', 'desc')
 
         const rows = await query
 

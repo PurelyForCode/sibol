@@ -1,6 +1,5 @@
 import { EntityId } from '../../shared/EntityId.js'
 import { ConversionFactor } from '../../shared/value_objects/ConversionFactor.js'
-import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 import { Money } from '../../shared/value_objects/Money.js'
 import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
 import { Entity } from '../../shared/Entity.js'
@@ -11,7 +10,6 @@ export class ProductSellUnit extends Entity {
     private constructor(
         id: EntityId,
         private _productId: EntityId,
-        private _unitSymbol: UnitOfMeasurement,
         private _conversionFactor: ConversionFactor,
         private _pricePerUnit: Money,
         private _displayName: SellUnitDisplayName,
@@ -41,14 +39,13 @@ export class ProductSellUnit extends Entity {
         this._isDefault = false
     }
 
-    toggleDefault() {
-        this._isDefault = !this._isDefault
+    setDefault(value: boolean) {
+        this._isDefault = value
     }
 
     static rehydrate(
         id: EntityId,
         productId: EntityId,
-        unitSymbol: UnitOfMeasurement,
         conversionFactor: ConversionFactor,
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
@@ -58,7 +55,6 @@ export class ProductSellUnit extends Entity {
         return new ProductSellUnit(
             id,
             productId,
-            unitSymbol,
             conversionFactor,
             pricePerUnit,
             displayName,
@@ -70,7 +66,6 @@ export class ProductSellUnit extends Entity {
     static new(
         id: EntityId,
         productId: EntityId,
-        unitSymbol: UnitOfMeasurement,
         conversionFactor: ConversionFactor,
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
@@ -79,7 +74,6 @@ export class ProductSellUnit extends Entity {
         return new ProductSellUnit(
             id,
             productId,
-            unitSymbol,
             conversionFactor,
             pricePerUnit,
             displayName,
@@ -88,9 +82,6 @@ export class ProductSellUnit extends Entity {
         )
     }
 
-    public get unitSymbol(): UnitOfMeasurement {
-        return this._unitSymbol
-    }
     public get productId(): EntityId {
         return this._productId
     }

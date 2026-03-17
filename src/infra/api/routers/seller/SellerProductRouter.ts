@@ -2,11 +2,9 @@ import { NextFunction, Router, Request, Response } from 'express'
 import { z } from 'zod'
 import {
     productController,
-    productQueryRepository,
     productSellUnitQueryRepository,
 } from '../../../../compositionRoot.js'
 import { validateInput } from '../../middleware/InputValidationMiddleware.js'
-import { EntityId } from '../../../../domain/shared/EntityId.js'
 import { SmallestUnitOfMeasurement } from '../../../../domain/shared/value_objects/SmallestUnitOfMeasurement.js'
 import { fakeSellerId } from '../../../../fakeData/fakeId.js'
 import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
@@ -18,44 +16,36 @@ export const sellerProductRouter = Router({
     mergeParams: true,
 })
 
-// sellerProductRouter.get(
-//     '/',
-//     async (_: Request, res: Response, next: NextFunction) => {
-//         try {
-//             const products = await productQueryRepository.findProductCatalogueItems()
-//             res.status(200).json({ data: products })
-//         } catch (e: unknown) {
-//             next(e)
-//         }
-//     },
-// )
-//
-// const getProductBySellerIdSchema = z.object({
-//     params: z.object({ productId: z.uuidv7() }),
-// })
-//
-// sellerProductRouter.get(
-//     '/:productId',
-//     validateInput(getProductBySellerIdSchema),
-//     async (req: Request, res: Response, next: NextFunction) => {
-//         try {
-//             const { params } = req.validated as z.infer<
-//                 typeof getProductBySellerIdSchema
-//             >
-//             const productId = EntityId.create(params.productId)
-//             const products = await productQueryRepository.findById(productId)
-//             res.status(200).json({ data: products })
-//         } catch (e: unknown) {
-//             next(e)
-//         }
-//     },
-// )
-
 const createProductRequestSchema = z.object({
     body: z.object({
         name: z.string(),
+
         description: z.string().nullable(),
+
         unitOfMeasurement: z.enum(SmallestUnitOfMeasurement.unitValues),
+
+        sellUnits: z.preprocess(
+            val => {
+                if (typeof val === 'string') {
+                    try {
+                        return JSON.parse(val)
+                    } catch {
+                        return val // let Zod handle the invalid format
+                    }
+                }
+                return val
+            },
+            z
+                .array(
+                    z.object({
+                        displayName: z.string(),
+                        price: z.coerce.number().int().positive(),
+                        conversionFactor: z.coerce.number().int().positive(),
+                        isDefault: z.coerce.boolean(),
+                    }),
+                )
+                .min(1),
+        ),
     }),
 })
 
@@ -83,7 +73,8 @@ sellerProductRouter.post(
                 name: body.name,
                 sellerId: sellerId,
                 unitOfMeasurement: body.unitOfMeasurement,
-                paths: paths,
+                imagePaths: paths,
+                sellUnits: body.sellUnits,
             })
             res.status(201).json({ data: { productId: id } })
         } catch (e: unknown) {
@@ -272,7 +263,6 @@ sellerProductRouter.post(
             await productController.addSellUnit({
                 productId: params.productId,
                 sellerId: sellerId,
-                unitSymbol: body.unitSymbol,
                 conversionFactor: body.conversionFactor,
                 displayName: body.displayName,
                 pricePerUnit: body.pricePerUnit,
@@ -354,3 +344,36 @@ sellerProductRouter.patch(
 //     try {
 //     } catch (e: unknown) {}
 // })
+//
+// sellerProductRouter.get(
+//     '/',
+//     async (_: Request, res: Response, next: NextFunction) => {
+//         try {
+//             const products = await productQueryRepository.findProductCatalogueItems()
+//             res.status(200).json({ data: products })
+//         } catch (e: unknown) {
+//             next(e)
+//         }
+//     },
+// )
+//
+// const getProductBySellerIdSchema = z.object({
+//     params: z.object({ productId: z.uuidv7() }),
+// })
+//
+// sellerProductRouter.get(
+//     '/:productId',
+//     validateInput(getProductBySellerIdSchema),
+//     async (req: Request, res: Response, next: NextFunction) => {
+//         try {
+//             const { params } = req.validated as z.infer<
+//                 typeof getProductBySellerIdSchema
+//             >
+//             const productId = EntityId.create(params.productId)
+//             const products = await productQueryRepository.findById(productId)
+//             res.status(200).json({ data: products })
+//         } catch (e: unknown) {
+//             next(e)
+//         }
+//     },
+// )

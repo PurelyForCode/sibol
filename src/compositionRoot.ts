@@ -36,7 +36,7 @@ import { ReviewController } from './features/ReviewController.js'
 import { ReviewProductUsecase } from './features/reviews/ReviewProductUsecase.js'
 import { DeleteReviewUsecase } from './features/reviews/DeleteReviewUsecase.js'
 
-export const imageBaseUrl = `${process.env.DOMAIN_NAME}/images`
+export const imageStorageLocation = `${process.env.DOMAIN_NAME}/images`
 
 // Singletons
 export const idGenerator = new Uuidv7Generator()
@@ -46,7 +46,7 @@ export const transactionManager = new KnexTransactionManager(
     idGenerator,
 )
 export const imageStorage = new FileSystemImageStorage(
-    path.resolve(process.cwd(), 'uploads'),
+    path.resolve(process.cwd(), 'public/images'),
 )
 
 // Usecases

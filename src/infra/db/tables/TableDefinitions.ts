@@ -52,6 +52,7 @@ export type ProductRow = {
     created_at: Date
     updated_at: Date
     deleted_at: Date | null
+    review_count: number
 }
 
 export type SellUnitRow = {

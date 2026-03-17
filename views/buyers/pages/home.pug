@@ -1,0 +1,13 @@
+html
+  head
+    title hello
+    link(type="text/css", rel="stylesheet", href="/css/buyers/global.css")
+    link(type="text/css", rel="stylesheet", href="/css/buyers/home.css")
+  body
+    include ../partials/bottom_navigation.pug
+    div.product-catalogue
+      each product in products
+        div.product
+          img.product__thumbnail
+          p.product__thumbnail
+

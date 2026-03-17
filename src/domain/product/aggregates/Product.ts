@@ -2,7 +2,6 @@ import { AggregateRoot } from '../../shared/AggregateRoot.js'
 import { EntityId, Id } from '../../shared/EntityId.js'
 import { Rating } from '../../shared/value_objects/Rating.js'
 import { ProductImage } from '../entities/ProductImage.js'
-import { UnitOfMeasurement } from '../../shared/value_objects/UnitOfMeasurement.js'
 import { ProductDescription } from '../value_objects/ProductDescription.js'
 import { ProductName } from '../value_objects/ProductName.js'
 import { ProductStatus } from '../value_objects/ProductStatus.js'
@@ -15,16 +14,20 @@ import { SmallestUnitOfMeasurement } from '../../shared/value_objects/SmallestUn
 import { ProductStock } from '../value_objects/ProductStock.js'
 import { ConversionFactor } from '../../shared/value_objects/ConversionFactor.js'
 import { SellUnitDisplayName } from '../value_objects/SellUnitDisplayName.js'
-import { ProductSellUnitAlreadyDefinedException } from '../../../exceptions/product/ProductSellUnitAlreadyDefinedException.js'
+import { SellUnitDisplayNameIsAlreadyDeclaredException } from '../../../exceptions/product/ProductSellUnitAlreadyDefinedException.js'
 import { ProductHasInsufficientAvailableStockException } from '../../../exceptions/product/ProductHasInsufficientAvailableStockException.js'
 import { ProductHasInsufficientReservedStockException } from '../../../exceptions/product/ProductHasInsufficientReservedStockException.js'
 import { CanNotDiscontinueDefaultSellUnitException } from '../../../exceptions/product/CanNotDiscontinueDefaultSellUnitException.js'
 import { SellUnitIsNotDefaultException } from '../../../exceptions/product/SellUnitIsNotDefaultException.js'
 import { ImagePath } from '../../shared/value_objects/ImagePath.js'
-import { InternalServerError } from '../../../exceptions/shared/InternalServerError.js'
 import { ProductImageNotFoundException } from '../../../exceptions/product/ProductImageNotFoundException.js'
+import { DuplicateDefaultSellUnitException } from '../../../exceptions/product/DuplicateDefaultSellUnitException.js'
+import { ReviewCount } from '../value_objects/ReviewCount.js'
 
 export class Product extends AggregateRoot {
+    public get reviewCount(): ReviewCount {
+        return this._reviewCount
+    }
     private constructor(
         id: EntityId,
         private _sellerId: EntityId,
@@ -37,6 +40,7 @@ export class Product extends AggregateRoot {
         private _sellUnits: Map<Id, ProductSellUnit>,
         private _availableStock: ProductStock,
         private _reservedStock: ProductStock,
+        private _reviewCount: ReviewCount,
         private _createdAt: Date,
         private _updatedAt: Date,
         private _deletedAt: Date | null,
@@ -75,54 +79,36 @@ export class Product extends AggregateRoot {
 
     addSellUnit(
         id: EntityId,
-        unitSymbol: UnitOfMeasurement,
-        unitValue: ConversionFactor,
+        conversionFactor: ConversionFactor,
         pricePerUnit: Money,
         displayName: SellUnitDisplayName,
+        isDefault: boolean = false,
     ) {
-        let isDefault = false
-        if (this._sellUnits.size === 0) {
-            isDefault = true
-        }
         const sellUnit = ProductSellUnit.new(
             id,
             this.id,
-            unitSymbol,
-            unitValue,
+            conversionFactor,
             pricePerUnit,
             displayName,
             isDefault,
         )
         for (const [_key, value] of this._sellUnits) {
-            if (
-                value.conversionFactor.value ===
-                    sellUnit.conversionFactor.value &&
-                value.unitSymbol.value === sellUnit.unitSymbol.value
-            ) {
-                throw new ProductSellUnitAlreadyDefinedException(
-                    sellUnit.unitSymbol.value,
+            if (value.displayName.value === sellUnit.displayName.value) {
+                throw new SellUnitDisplayNameIsAlreadyDeclaredException(
+                    sellUnit.displayName.value,
                     this.id.value,
                 )
             }
         }
-        this._sellUnits.set(sellUnit.id.value, sellUnit)
-    }
-
-    activateIfSellUnitAndImageIsAvailable() {
-        let hasImage = false
-        if (this._images.size > 0) {
-            hasImage = true
-        }
-        let hasDefaultSellUnit = false
-        for (const [_, v] of this._sellUnits) {
-            if (v.isDefault) {
-                hasDefaultSellUnit = true
-                break
+        if (isDefault === true) {
+            for (const [_key, value] of this._sellUnits) {
+                if (value.isDefault) {
+                    throw new DuplicateDefaultSellUnitException()
+                }
             }
         }
-        if (hasImage && hasDefaultSellUnit) {
-            this._status = ProductStatus.active()
-        }
+        this._sellUnits.set(sellUnit.id.value, sellUnit)
+        this.activateIfSellUnitAndImageIsAvailable()
     }
 
     discontinueSellUnit(sellUnitId: EntityId) {
@@ -138,7 +124,6 @@ export class Product extends AggregateRoot {
                 sellUnit.id.value,
             )
         }
-        this.activateIfSellUnitAndImageIsAvailable()
         sellUnit.discontinue()
     }
 
@@ -160,8 +145,28 @@ export class Product extends AggregateRoot {
                 this.id.value,
             )
         }
-        oldS.toggleDefault()
-        newS.toggleDefault()
+        oldS.setDefault(false)
+        newS.setDefault(true)
+    }
+
+    activateIfSellUnitAndImageIsAvailable() {
+        let hasThumbnail = false
+        for (const [_, v] of this._images) {
+            if (v.isThumbnail) {
+                hasThumbnail = true
+                break
+            }
+        }
+        let hasDefaultSellUnit = false
+        for (const [_, v] of this._sellUnits) {
+            if (v.isDefault) {
+                hasDefaultSellUnit = true
+                break
+            }
+        }
+        if (hasThumbnail && hasDefaultSellUnit) {
+            this._status = ProductStatus.active()
+        }
     }
 
     addImage(id: EntityId, url: ImagePath) {
@@ -179,6 +184,7 @@ export class Product extends AggregateRoot {
         if (this._images.size === 1) {
             image.toggleThumbnail()
         }
+        this.activateIfSellUnitAndImageIsAvailable()
     }
 
     swapImagePositions(image1: ProductImage, image2: ProductImage) {
@@ -231,8 +237,8 @@ export class Product extends AggregateRoot {
         // if removed was thumbnail, change the first image into the thumbnail
         if (image.isThumbnail) {
             if (this._images.size === 0) {
-                // deactive cause thumbnail
-                this.deactivate()
+                // deactive cause thumbnail is missing
+                this.incomplete()
             }
             for (const i of this._images.values()) {
                 if (i.position.value === 0) {
@@ -243,12 +249,15 @@ export class Product extends AggregateRoot {
         return image.url
     }
 
-    private deactivate() {
-        this._status = ProductStatus.inactive()
+    private incomplete() {
+        this._status = ProductStatus.incomplete()
         this._updatedAt = new Date()
     }
 
-    private activate() {}
+    private activate() {
+        this._status = ProductStatus.active()
+        this._updatedAt = new Date()
+    }
 
     changeImagePositions(
         input: { imageId: EntityId; position: ImagePosition }[],
@@ -319,12 +328,13 @@ export class Product extends AggregateRoot {
             name,
             description,
             unit,
-            ProductStatus.inactive(),
+            ProductStatus.incomplete(),
             null,
             new Map(),
             new Map(),
             ProductStock.zero(),
             ProductStock.zero(),
+            ReviewCount.zero(),
             now,
             now,
             null,
@@ -343,6 +353,7 @@ export class Product extends AggregateRoot {
         sellUnits: Map<Id, ProductSellUnit>,
         availableStock: ProductStock,
         reservedStock: ProductStock,
+        reviewCount: ReviewCount,
         createdAt: Date,
         updatedAt: Date,
         deletedAt: Date | null,
@@ -359,6 +370,7 @@ export class Product extends AggregateRoot {
             sellUnits,
             availableStock,
             reservedStock,
+            reviewCount,
             createdAt,
             updatedAt,
             deletedAt,
