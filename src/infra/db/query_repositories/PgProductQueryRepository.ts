@@ -28,7 +28,7 @@ export class PgProductQueryRepository {
                 `p.review_count as reviewCount`,
                 `inv.available_stock as availableStock`,
                 `inv.reserved_stock as reservedStock`,
-                this.k.raw(`'hard coded address' as sellerAddress`),
+                this.k.raw(`'San Ildefonso, Bulacan' as "sellerAddress"`),
             ])
             .first()) as {
             id: string

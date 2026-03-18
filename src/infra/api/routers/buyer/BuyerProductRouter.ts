@@ -7,6 +7,7 @@ import {
 } from '../../../../compositionRoot.js'
 import { validateInput } from '../../middleware/InputValidationMiddleware.js'
 import { ProductSellUnitNotFoundException } from '../../../../exceptions/product/ProductSellUnitNotFoundException.js'
+import { formatImageUrl } from '../../../../utils/formatImageUrl.js'
 
 export const buyerProductRouter = Router({
     mergeParams: true,
@@ -34,8 +35,9 @@ buyerProductRouter.get(
                     },
                     query.page,
                 )
+
             products.forEach(p => {
-                p.imageUrl = `${imageStorageLocation}/${p.imageUrl}`
+                p.imageUrl = formatImageUrl(p.imageUrl)
             })
             res.status(200).json({ data: products })
         } catch (e: unknown) {
@@ -55,12 +57,15 @@ buyerProductRouter.get(
             const { params } = req.validated as z.infer<
                 typeof getProductBySellerIdSchema
             >
-            const products =
+            const product =
                 await productQueryRepository.findActiveProductDetailById(
                     params.productId,
                 )
-            if (products) {
-                res.status(200).json({ data: products })
+            if (product) {
+                product.images.forEach(x => {
+                    x.url = formatImageUrl(x.url)
+                })
+                res.status(200).json({ data: product })
             } else {
                 res.status(404).end()
             }
