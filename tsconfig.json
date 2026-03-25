@@ -1,4 +1,12 @@
 {
-    "extends": "@tsconfig/node24/tsconfig.json",
+    "compilerOptions": {
+        "module": "esnext",
+        "moduleResolution": "bundler",
+        "target": "es2022",
+
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true
+    },
     "include": ["src/**/*", "scripts/**/*", "main.ts"]
 }

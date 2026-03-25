@@ -7,9 +7,10 @@ import { CartRepository } from '../../cart/repositories/CartRepository.js'
 import { InventoryMovementRepository } from '../../inventory/repositories/InventoryMovementRepository.js'
 import { ProductRepository } from '../../product/repositories/ProductRepository.js'
 import { ReservationRepository } from '../../reservation/repositories/ReservationRepository.js'
-import { SellerRepository } from '../../seller/repositories/SellerRepository.js'
 import { SaleRepository } from '../../sale/repositories/SaleRepository.js'
 import { ReviewRepository } from '../../review/ReviewRepository.js'
+import { StoreRepository } from '../../shopping/store/StoreRepository.js'
+import { SellerRepository } from '../../shopping/seller/repositories/SellerRepository.js'
 
 export interface UnitOfWork {
     registerAggregate(aggregate: AggregateRoot): void
@@ -25,4 +26,6 @@ export interface UnitOfWork {
     getInventoryMovementRepo(): InventoryMovementRepository
     getSaleRepo(): SaleRepository
     getReviewRepo(): ReviewRepository
+    getStoreRepo(): StoreRepository
+    getAddressRepo(): AddressRepository
 }

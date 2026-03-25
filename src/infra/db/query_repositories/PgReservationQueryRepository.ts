@@ -1,6 +1,6 @@
 import { Knex } from 'knex'
 import { EntityId } from '../../../domain/shared/EntityId.js'
-import { ReservationRow } from '../tables/TableDefinitions.js'
+import { OrderRow } from '../tables/TableDefinitions.js'
 import { ReservationNotFoundException } from '../../../exceptions/reservation/ReservationNotFoundException.js'
 import { ReservationDto } from '../../../features/dto/ReservationDto.js'
 
@@ -10,7 +10,7 @@ export class PgReservationQueryRepository {
     async findAllReservationsByBuyerId(
         id: EntityId,
     ): Promise<ReservationDto[] | null> {
-        const reservations = await this.k<ReservationRow>('reservations')
+        const reservations = await this.k<OrderRow>('reservations')
             .select('*')
             .where('buyer_id', id.value)
 
@@ -21,7 +21,7 @@ export class PgReservationQueryRepository {
         return this.map(reservations)
     }
 
-    private map(rows: ReservationRow[]): ReservationDto[] {
+    private map(rows: OrderRow[]): ReservationDto[] {
         const reservations: ReservationDto[] = []
         for (const row of rows) {
             reservations.push({

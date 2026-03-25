@@ -38,7 +38,7 @@ registrationRouter.post(
                 storeSlug: body.storeSlug,
                 password: body.password,
                 storeName: body.storeName,
-                description: body.description,
+                storeDescription: body.description,
                 supportEmail: body.supportEmail,
                 supportPhone: body.supportPhone,
                 addressId: fakeSellerAddressId,

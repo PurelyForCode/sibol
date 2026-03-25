@@ -2,34 +2,37 @@ import { EntityId } from '../EntityId.js'
 
 export class Address {
     private constructor(
-        private _id: EntityId,
-        private _buyerId: EntityId | null,
-        private _sellerId: EntityId | null,
+        readonly id: EntityId,
+        readonly regionId: string,
+        readonly provinceId: string,
+        readonly minicipalityCityId: string,
+        readonly barangayId: string,
+        readonly addressLine1: string,
+        readonly addressLine2: string | null,
+        readonly createdAt: Date,
+        readonly updatedAt: Date,
     ) {}
-
-    static new(
+    static create(
         id: EntityId,
-        buyerId: EntityId | null,
-        sellerId: EntityId | null,
+        regionId: string,
+        provinceId: string,
+        minicipalityCityId: string,
+        barangayId: string,
+        addressLine1: string,
+        addressLine2: string | null,
+        createdAt: Date,
+        updatedAt: Date,
     ) {
-        return new Address(id, buyerId, sellerId)
-    }
-
-    static rehydrate(
-        id: EntityId,
-        buyerId: EntityId | null,
-        sellerId: EntityId | null,
-    ) {
-        return new Address(id, buyerId, sellerId)
-    }
-
-    public get sellerId(): EntityId | null {
-        return this._sellerId
-    }
-    public get buyerId(): EntityId | null {
-        return this._buyerId
-    }
-    public get id(): EntityId {
-        return this._id
+        return new Address(
+            id,
+            regionId,
+            provinceId,
+            minicipalityCityId,
+            barangayId,
+            addressLine1,
+            addressLine2,
+            createdAt,
+            updatedAt,
+        )
     }
 }

@@ -2,7 +2,7 @@ import { Knex } from 'knex'
 import { Reservation } from '../../../domain/reservation/aggregates/Reservation.js'
 import { ReservationRepository } from '../../../domain/reservation/repositories/ReservationRepository.js'
 import { EntityId } from '../../../domain/shared/EntityId.js'
-import { ReservationRow } from '../tables/TableDefinitions.js'
+import { OrderRow } from '../tables/TableDefinitions.js'
 import { Quantity } from '../../../domain/shared/value_objects/Quantity.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 import {
@@ -17,7 +17,7 @@ export class PgReservationRepository implements ReservationRepository {
     ) {}
 
     async findById(id: EntityId): Promise<Reservation | null> {
-        const row = await this.k<ReservationRow>('reservations')
+        const row = await this.k<OrderRow>('reservations')
             .where('id', id.value)
             .first()
         if (!row) {
@@ -26,14 +26,14 @@ export class PgReservationRepository implements ReservationRepository {
         return this.map(row)
     }
     async existsById(id: EntityId): Promise<boolean> {
-        const row = await this.k<ReservationRow>('reservations')
+        const row = await this.k<OrderRow>('reservations')
             .select(this.k.raw(1))
             .where('id', id.value)
             .first()
         return !!row
     }
     async save(entity: Reservation): Promise<void> {
-        await this.k<ReservationRow>('reservations')
+        await this.k<OrderRow>('reservations')
             .insert({
                 buyer_id: entity.buyerId.value,
                 created_at: entity.createdAt,
@@ -54,7 +54,7 @@ export class PgReservationRepository implements ReservationRepository {
         await this.k('reservations').delete().where('id', id.value)
     }
 
-    private map(row: ReservationRow) {
+    private map(row: OrderRow) {
         const id = EntityId.create(row.id)
         const buyerId = EntityId.create(row.buyer_id)
         const productId = EntityId.create(row.product_id)

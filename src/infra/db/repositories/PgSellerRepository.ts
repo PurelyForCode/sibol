@@ -1,15 +1,14 @@
 import { Knex } from 'knex'
 import { EntityId } from '../../../domain/shared/EntityId.js'
-import { SellerRepository } from '../../../domain/seller/repositories/SellerRepository.js'
-import { Seller } from '../../../domain/seller/aggregates/Seller.js'
+import { SellerRepository } from '../../../domain/shopping/seller/repositories/SellerRepository.js'
+import { Seller } from '../../../domain/shopping/seller/aggregates/Seller.js'
 import { Email } from '../../../domain/shared/value_objects/Email.js'
-import { StoreName } from '../../../domain/seller/value_objects/StoreName.js'
+import { StoreName } from '../../../domain/shopping/store/StoreName.js'
 import { Rating } from '../../../domain/shared/value_objects/Rating.js'
-import { TotalSales } from '../../../domain/seller/value_objects/TotalSales.js'
+import { TotalSales } from '../../../domain/shared/value_objects/TotalSales.js'
 import { AccountRow, SellerRow } from '../tables/TableDefinitions.js'
 import { MobilePhoneNumber } from '../../../domain/shared/value_objects/MobilePhoneNumber.js'
-import { StoreSlug } from '../../../domain/seller/value_objects/StoreSlug.js'
-import { SellerDescription } from '../../../domain/seller/value_objects/SellerDescription.js'
+import { StoreSlug } from '../../../domain/shopping/store/StoreSlug.js'
 import { UnitOfWork } from '../../../domain/shared/interfaces/UnitOfWork.js'
 
 export class PgSellerRepository implements SellerRepository {
@@ -18,17 +17,8 @@ export class PgSellerRepository implements SellerRepository {
         private readonly uow: UnitOfWork,
     ) {}
 
-    async isStoreNameUnique(storeName: StoreName): Promise<boolean> {
-        const row = await this.k<SellerRow>('sellers')
-            .where('store_name', storeName.value)
-            .first()
-        return !!row
-    }
-    async isStoreSlugUnique(slug: StoreSlug): Promise<boolean> {
-        const row = await this.k<SellerRow>('sellers')
-            .where('store_slug', slug.value)
-            .first()
-        return !!row
+    hasStore(sellerId: EntityId): Promise<boolean> {
+        throw new Error('Method not implemented.')
     }
 
     async findByEmail(email: Email): Promise<Seller | null> {
